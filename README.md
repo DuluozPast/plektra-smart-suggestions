@@ -4,7 +4,7 @@
 
 **Advanced (hardware) keyboard control on Android**
 
-Configure physical key mappings, keyboard bar profiles, text tools and software keyboard layouts. Built for power users. Free software under [GPLv3](LICENSE).
+Free software under [GPLv3](LICENSE), with source code you can inspect, modify and share.
 
 [Product page](https://pkb.rocks/plektra/) · [Download Stable](https://pkb.rocks/plektra/download/stable/) · [Download Nightly](https://pkb.rocks/plektra/download/nightly/) · [Installation guide](docs/getting-started.md)
 
@@ -25,47 +25,129 @@ Configure physical key mappings, keyboard bar profiles, text tools and software 
 
 ## Keys and bar
 
-Configure suggestions, character variations and menu buttons independently. Choose a full bar, compact controls, a modifier LED strip or a hidden bar. Normal and Slim profiles keep their own configuration. Place suggestions and actions in a shared row or use stacked rows.
+### Modular toolbar configuration
 
-Live indicators show active and locked modifiers in the keyboard bar or Android status bar. Physical layouts support Shift, Ctrl, Alt, SYM, long press, multi-tap, navigation and command mappings.
+Configure suggestions, character variations and menu buttons independently.
 
-![Modular toolbar configuration](docs/showcase/exports/stable/landscape/02-keyboard-bar.png)
+![Titan 2 Elite with the keyboard bar showing suggestions and menu buttons](docs/showcase/exports/stable/landscape/02-keyboard-bar.png)
 
-![Dual profiles: Normal and Slim](docs/showcase/exports/stable/landscape/04-slim-profile.png)
+### Adjustable interface density
+
+Choose a full bar, compact controls, a modifier LED strip or a hidden bar.
+
+![Four bar configurations: full bar, suggestions, LED strip and hidden](docs/showcase/exports/stable/landscape/03-bar-configurations.png)
+
+### Dual profiles: Normal and Slim
+
+Configure Normal and Slim independently, then switch between the two profiles.
+
+![Normal and Slim keyboard bar profiles compared](docs/showcase/exports/stable/landscape/04-slim-profile.png)
+
+### Flexible toolbar layouts
+
+Place suggestions and actions in a shared row or arrange them in stacked rows.
+
+![Stacked bar and shared row compared](docs/showcase/exports/stable/landscape/05-shared-row.png)
+
+### Live modifier state indicators
+
+See active and locked modifiers in the keyboard bar or Android status bar.
+
+![Keyboard bar showing an active and a locked modifier](docs/showcase/exports/stable/landscape/14-modifiers.png)
+
+### Ortholinear and staggered key geometries
+
+Choose ortholinear or staggered rows for the software keyboard.
+
+![Software keyboard with ortholinear and staggered key arrangements](docs/showcase/exports/stable/landscape/20-key-arrangement.png)
 
 ## Text and tools
 
 ### Predictive text and completions
 
-Complete words from suggestions as you type. German, English and Italian dictionaries are bundled; additional dictionaries can be installed. Plektra supports autocorrection and locally learned next words.
+Complete words from suggestions as you type. Dictionaries and locally learned next words are supported.
 
-![Predictive text and completions](docs/showcase/exports/stable/landscape/06-suggestions.png)
+![Word suggestions for a partly typed word](docs/showcase/exports/stable/landscape/06-suggestions.png)
 
-### Contextual character variations and SYM mapping
+### Contextual character variations
 
-Select accented letters and symbols from character variations. SYM pages map additional symbols to physical keys. Long-press software keys to select secondary characters. An integrated emoji picker is also available.
+Select accented letters and symbols from the variations for the current character.
+
+![Character variations for the last typed key in the bar](docs/showcase/exports/stable/landscape/07-variations.png)
+
+### Long-press secondary characters
+
+Long-press a software key to select its secondary characters.
+
+![Long-press popup with alternate characters on the software keyboard](docs/showcase/exports/stable/landscape/19-key-popup.png)
 
 ### Expandable text snippets & templates
 
-Save reusable text such as addresses, email addresses and dates. Find a snippet with a short prefix and expand its shortcut into the saved text.
+Save reusable text such as addresses, email addresses and dates. Find snippets with a short prefix.
 
-![Text shortcut expansion](docs/showcase/exports/stable/landscape/09-snippet-result.png)
+![Saved snippets for an address, an email and a date](docs/showcase/exports/stable/landscape/08-snippet-selection.png)
 
-### Clipboard, navigation and selection
+### Text shortcut expansion
 
-Browse clipboard history and insert saved entries. Use keyboard controls to select text, and Ctrl shortcuts to move the cursor, select, copy and paste.
+Expand a snippet shortcut into its saved text.
 
-![Terminal-style Ctrl navigation and selection](docs/showcase/exports/stable/landscape/21-ctrl-navigation.png)
+![A snippet shortcut before and after expansion](docs/showcase/exports/stable/landscape/09-snippet-result.png)
+
+### Direct SYM layer mapping
+
+Open SYM pages and enter symbols using the corresponding physical keys.
+
+![SYM page with symbols mapped to the physical keys](docs/showcase/exports/stable/landscape/10-symbols.png)
+
+### Integrated, low-profile emoji picker
+
+Browse and insert emoji from the keyboard.
+
+![Emoji picker below a conversation](docs/showcase/exports/stable/landscape/11-emoji.png)
+
+### Integrated clipboard manager
+
+Browse clipboard history and insert a saved entry.
+
+![Clipboard history with copied entries](docs/showcase/exports/stable/landscape/12-clipboard.png)
+
+### Keyboard text selection
+
+Select text using physical keyboard controls.
+
+![Text selected with keyboard controls](docs/showcase/exports/stable/landscape/13-selection.png)
+
+### Terminal-style Ctrl navigation and selection
+
+Use Ctrl shortcuts to move the cursor, select text, copy and paste.
+
+![Ctrl layer with navigation and editing actions on the keys](docs/showcase/exports/stable/landscape/21-ctrl-navigation.png)
 
 ## Look and layout
 
-Choose from nine built-in keyboard bar themes, including a high-contrast theme. The standalone software keyboard includes suggestions, symbols and snippets, with ortholinear and staggered key geometries.
+### Nine built-in interface themes
 
-QWERTY, AZERTY and QWERTZ layouts are supported, including German umlauts. Physical layouts also include Greek, Cyrillic, Arabic and transliteration; custom JSON layouts can be imported.
+Choose from nine built-in keyboard bar themes.
 
-![Nine built-in interface themes](docs/showcase/exports/stable/landscape/15-hardware-themes.png)
+![Nine keyboard bar themes, from Plektra Dark to Transparent Dark](docs/showcase/exports/stable/landscape/15-hardware-themes.png)
 
-![Standalone software keyboard mode](docs/showcase/exports/stable/landscape/16-software-keyboard.png)
+### Standalone software keyboard mode
+
+Use the software keyboard on phones without physical keys, with suggestions, symbols and snippets.
+
+![Software keyboard on a Pixel 7a in two themes](docs/showcase/exports/stable/landscape/16-software-keyboard.png)
+
+### Native QWERTY, AZERTY, and QWERTZ support
+
+Select QWERTY, AZERTY or QWERTZ, including German umlauts.
+
+![QWERTY, AZERTY and QWERTZ layouts](docs/showcase/exports/stable/landscape/17-layouts.png)
+
+### High-contrast mode for improved visibility
+
+Use a high-contrast theme with clear key outlines and distinct modifier indicators.
+
+![High-contrast theme on a Titan 2 Elite and a Pixel 7a](docs/showcase/exports/stable/landscape/18-high-contrast.png)
 
 Explore the complete [21-image device showcase](docs/showcase/README.md), with Stable and Nightly galleries. See [Features](docs/features.md) for voice input, local notes, backup and accessibility options.
 
@@ -142,4 +224,4 @@ Distributed forks must use their own name, application ID, update endpoints and 
 - [GitHub](https://github.com/pkb-rocks/plektra)
 - [Open Collective](https://opencollective.com/plektra)
 - [Security policy](SECURITY.md)
-- [Imprint](https://pastiera.eu/imprint)
+- [Imprint](https://pzauner.de/Notes/.hidden/Impressum.pdf)
