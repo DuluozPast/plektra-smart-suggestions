@@ -872,8 +872,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 Toast.LENGTH_LONG).show()
             startActivity(if (installed) Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            } else Intent(this, rocks.pkb.plektra.SettingsActivity::class.java).apply {
-                data = android.net.Uri.parse("plektra://setting/speech.provider")
+            } else Intent(Intent.ACTION_VIEW, android.net.Uri.parse(ExternalSpeechProvider.FUTO_DOWNLOAD_URL)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
             return

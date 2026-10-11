@@ -3,7 +3,7 @@
     <string name="speech_external_installed">FUTO Voice Input is installed.</string>
     <string name="speech_external_missing">Install FUTO Voice Input to use this provider.</string>
     <string name="speech_external_settings">Open FUTO settings</string>
-    <string name="speech_external_install">Get FUTO Voice Input</string>
+    <string name="speech_external_install">Install via F-Droid</string>
     <string name="speech_futo_description">FUTO handles dictation on your device and returns to Plektra afterward. Choose languages, models and recording options in FUTO.</string>
     <string name="app_name">Plektra</string>
     <string name="input_method_name">Plektra</string>
