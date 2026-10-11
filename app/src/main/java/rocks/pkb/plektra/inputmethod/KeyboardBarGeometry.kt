@@ -331,9 +331,14 @@ internal class KeyboardBarGeometry(private val context: Context) {
     private fun buttonInset(left: Boolean): Float {
         val density = context.resources.displayMetrics.density
         val rails = sideRails(left)
-        return density + 1f + rails.sumOf { ledStrokeWidth(it).toDouble() }.toFloat() +
+        return density + buttonLedClearancePx() + rails.sumOf { ledStrokeWidth(it).toDouble() }.toFloat() +
             (rails.size - 1).coerceAtLeast(0) * LedStatusView.CONTOUR_LED_GAP_DP * density
     }
+
+    private fun buttonLedClearancePx(): Float =
+        if (ledLayout == ModifierLedLayouts.TITAN_2_ELITE)
+            LedStatusView.CONTOUR_BUTTON_GAP_DP * context.resources.displayMetrics.density
+        else 1f
 
     private fun outerSurface(width: Float, height: Float, left: Boolean): OuterSurface {
         (if (left) leftSurface else rightSurface)?.let { return it }
@@ -342,9 +347,9 @@ internal class KeyboardBarGeometry(private val context: Context) {
         val top = ledRowTop ?: height - maxOf(corners.first, corners.second) * calibration.size + calibration.shiftYPx
         val segments = ledLayout.segments.filter { (it.x < 0.5f) == left }
         val edge = if (ledLayout == ModifierLedLayouts.TITAN_2_ELITE) {
-            // Without a button surface, the corner slot owns both rails; Ctrl only splits the right rail.
-            val corner = if (left) segments.minBy { it.x } else segments.maxBy { it.x + it.width }
-            (if (left) corner.x + corner.width else corner.x) * width
+            // Standalone rails end at the display curve instead of extending into a logical key slot.
+            val extent = (if (left) corners.first else corners.second) * calibration.size
+            (if (left) extent else width - extent) + calibration.shiftXPx
         } else {
             (if (left) segments.maxOf { it.x + it.width } else segments.minOf { it.x }) * width
         }
@@ -373,7 +378,7 @@ internal class KeyboardBarGeometry(private val context: Context) {
         val rails = sideRails(left)
         val index = rails.indexOfFirst { it.y == segment.y }
         val preceding = rails.take(index).sumOf { (ledStrokeWidth(it) + gap).toDouble() }.toFloat()
-        val offset = surface.borderHalfWidth + 1f + stroke / 2f + preceding
+        val offset = surface.borderHalfWidth + buttonLedClearancePx() + stroke / 2f + preceding
         val points = offsetContour(innerContour(width, height, left), -offset, left)
         val trimmed = trimRail(points, surface.bounds.top + stroke / 2f,
             if (left) surface.bounds.right - stroke / 2f else surface.bounds.left + stroke / 2f, left)

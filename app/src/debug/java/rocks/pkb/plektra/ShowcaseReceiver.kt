@@ -9,6 +9,15 @@ import org.json.JSONArray
 /** Shell-only, reversible configuration for real-device marketing captures. */
 class ShowcaseReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.getBooleanExtra("exportTransparent", false)) {
+            try {
+                resultData = DebugShowcaseExport.exportVisible()
+            } catch (error: Exception) {
+                resultCode = 1
+                resultData = error.message
+            }
+            return
+        }
         val prefs = SettingsManager.getPreferences(context)
         val backup = java.io.File(context.filesDir, "showcase-preferences.json")
         try {

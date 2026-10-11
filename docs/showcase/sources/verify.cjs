@@ -18,6 +18,17 @@ const {createHash}=require('node:crypto');
    crop=await sharp(path.join(root,cropFile)).ensureAlpha().raw().toBuffer({resolveWithObject:true}),
    raw=await sharp(path.join(root,'raw/titan-2-elite',name+'.png')).extract({left:0,top:1200-crop.info.height,width:1076,height:crop.info.height}).ensureAlpha().raw().toBuffer(),
    reference=await sharp(path.join(root,'raw/titan-2-elite/r5-config-hidden.png')).extract({left:0,top:1200-crop.info.height,width:1076,height:crop.info.height}).ensureAlpha().raw().toBuffer();
+  const nativeFile=path.join(root,'raw/titan-2-elite',name+'-ime.png');
+  if(fs.existsSync(nativeFile)){
+   const native=await sharp(nativeFile).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+   assert.equal(crop.info.height,native.info.height+6);
+   assert.equal(crop.info.width,native.info.width);
+   assert.deepEqual(crop.data.subarray(1076*6*4),native.data,'Native export pixels changed: '+name);
+   let visible=0,transparent=0;
+   for(let i=3;i<native.data.length;i+=4){if(native.data[i]>0)visible++;else transparent++;}
+   assert(visible>100&&transparent>0);checks.push({capture:name,native_alpha_pixels_retained:visible,transparent_pixels:transparent});
+   continue;
+  }
   let foreground=0,hidden=0;
   const corners=[raw.length-4,raw.length-1076*4];
   for(let i=0;i<raw.length;i+=4){const difference=Math.max(...[0,1,2].map(c=>Math.abs(raw[i+c]-reference[i+c]))),background=corners.some(j=>[0,1,2].every(c=>Math.abs(raw[i+c]-raw[j+c])<=1));if(difference>1&&!background){assert.equal(crop.data[i+3],255);[0,1,2].forEach(c=>assert.equal(crop.data[i+c],raw[i+c]));foreground++;}else if(crop.data[i+3]===0)hidden++;}

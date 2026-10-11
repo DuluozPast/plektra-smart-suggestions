@@ -1,10 +1,10 @@
-# Make every key yours
+# Plektra device showcase
 
-Plektra gives Android phones with physical keyboards configurable layouts, input tools and keyboard controls.
+Advanced (hardware) keyboard control on Android. Free software under GPLv3.
 
 Explore 21 presentations in the [Stable gallery](#stable-gallery) or [Nightly gallery](#nightly-gallery).
 
-The galleries use real Titan 2, Titan 2 Elite and Pixel 7a captures from 8 October 2026. Both palettes show Nightly debug UI; native screenshot colors and contents are preserved. The Notes editor contains synthetic example text. Processed photographs frame the actual app captures.
+The galleries use real Titan 2, Titan 2 Elite and Pixel 7a captures from October 2026. Both palettes show Nightly debug UI; native screenshot colors and contents are preserved. The Notes editor contains synthetic example text. Processed photographs frame the actual app captures.
 
 ## Reproduce the images
 
@@ -20,269 +20,269 @@ npm --prefix docs/showcase run verify
 
 The renderer uses the recorded inputs under `raw/`, processed frames and display geometry under `frames/`, the presentation catalog under `sources/`, and branding from `../branding/`. It does not connect to a device. Private capture-session backups and original full photographs stay local.
 
-The verifier checks all 84 image dimensions and channel backgrounds, preserves foreground colors during background removal, and checks that the Titan 2 Elite frame retains the captured bottom LEDs. These checks validate the presentation, not device behavior.
+The verifier checks all 84 image dimensions and channel backgrounds, checks native transparent exports and retained foreground colors, and checks that the Titan 2 Elite frame retains the captured bottom LEDs. These checks validate the presentation, not device behavior.
 
 Capture versions and source hashes are in [provenance.json](provenance.json). Input and published-image hashes are in [checksums.json](checksums.json). The processed frames retain photographic hardware and key lettering; no generated hardware or reconstructed key legends are used.
 
 ## Stable gallery
 
-### Make every key yours.
+### Advanced (hardware) keyboard control on Android
 
-Physical keyboards and touch input. One set of tools, on your terms.
+Free software under GPLv3, with source code you can inspect, modify and share.
 
-![Make every key yours.](exports/stable/landscape/01-devices.png)
+![Advanced (hardware) keyboard control on Android](exports/stable/landscape/01-devices.png)
 
-### Your keyboard bar. Your choice.
+### Modular toolbar configuration
 
-Suggestions, variations and menu buttons. Keep the controls you actually use.
+Configure suggestions, character variations and menu buttons independently.
 
-![Your keyboard bar. Your choice.](exports/stable/landscape/02-keyboard-bar.png)
+![Modular toolbar configuration](exports/stable/landscape/02-keyboard-bar.png)
 
-### As much as you need.
+### Adjustable interface density
 
-A full bar, suggestions with controls, or LEDs. Keep only what you need.
+Choose a full bar, compact controls, a modifier LED strip or a hidden bar.
 
-![As much as you need.](exports/stable/landscape/03-bar-configurations.png)
+![Adjustable interface density](exports/stable/landscape/03-bar-configurations.png)
 
-### A lighter setup. One switch away.
+### Dual profiles: Normal and Slim
 
-Configure Normal and Slim separately. Your minimal setup is yours to define.
+Configure Normal and Slim independently, then switch between the two profiles.
 
-![A lighter setup. One switch away.](exports/stable/landscape/04-slim-profile.png)
+![Dual profiles: Normal and Slim](exports/stable/landscape/04-slim-profile.png)
 
-### Keep your controls close.
+### Flexible toolbar layouts
 
-Choose a shared row or a stacked bar. Arrange suggestions and actions.
+Place suggestions and actions in a shared row or arrange them in stacked rows.
 
-![Keep your controls close.](exports/stable/landscape/05-shared-row.png)
+![Flexible toolbar layouts](exports/stable/landscape/05-shared-row.png)
 
-### Finish the word. Keep typing.
+### Predictive text and completions
 
-English word suggestions as you type. Choose a completion without retyping.
+Complete words from suggestions as you type. Dictionaries and locally learned next words are supported.
 
-![Finish the word. Keep typing.](exports/stable/landscape/06-suggestions.png)
+![Predictive text and completions](exports/stable/landscape/06-suggestions.png)
 
-### More characters. Within reach.
+### Contextual character variations
 
-Discover variations for the key you type. Accents and symbols stay close.
+Select accented letters and symbols from the variations for the current character.
 
-![More characters. Within reach.](exports/stable/landscape/07-variations.png)
+![Contextual character variations](exports/stable/landscape/07-variations.png)
 
-### A few keys. Useful details.
+### Expandable text snippets & templates
 
-Your address, email or a date. Saved text, inserted from a short prefix.
+Save reusable text such as addresses, email addresses and dates. Find snippets with a short prefix.
 
-![A few keys. Useful details.](exports/stable/landscape/08-snippet-selection.png)
+![Expandable text snippets & templates](exports/stable/landscape/08-snippet-selection.png)
 
-### Write it once. Use it again.
+### Text shortcut expansion
 
-Expand a shortcut into reusable text. Email addresses without retyping.
+Expand a snippet shortcut into its saved text.
 
-![Write it once. Use it again.](exports/stable/landscape/09-snippet-result.png)
+![Text shortcut expansion](exports/stable/landscape/09-snippet-result.png)
 
-### Symbols without the detour.
+### Direct SYM layer mapping
 
-Open SYM pages for extra characters. Physical key labels show the mapping.
+Open SYM pages and enter symbols using the corresponding physical keys.
 
-![Symbols without the detour.](exports/stable/landscape/10-symbols.png)
+![Direct SYM layer mapping](exports/stable/landscape/10-symbols.png)
 
-### Say it with an emoji.
+### Integrated, low-profile emoji picker
 
-Browse emoji from your keyboard. Keep the conversation in view.
+Browse and insert emoji from the keyboard.
 
-![Say it with an emoji.](exports/stable/landscape/11-emoji.png)
+![Integrated, low-profile emoji picker](exports/stable/landscape/11-emoji.png)
 
-### Your clipboard. At hand.
+### Integrated clipboard manager
 
-Keep useful copied text within reach. Pick an entry and carry on writing.
+Browse clipboard history and insert a saved entry.
 
-![Your clipboard. At hand.](exports/stable/landscape/12-clipboard.png)
+![Integrated clipboard manager](exports/stable/landscape/12-clipboard.png)
 
-### Keep your hands on the keys.
+### Keyboard text selection
 
-Select and edit text with keyboard controls. Make room for shortcuts in your workflow.
+Select text using physical keyboard controls.
 
-![Keep your hands on the keys.](exports/stable/landscape/13-selection.png)
+![Keyboard text selection](exports/stable/landscape/13-selection.png)
 
-### Know which keys are active.
+### Live modifier state indicators
 
-See active and locked modifiers. Choose where the indicators appear.
+See active and locked modifiers in the keyboard bar or Android status bar.
 
-![Know which keys are active.](exports/stable/landscape/14-modifiers.png)
+![Live modifier state indicators](exports/stable/landscape/14-modifiers.png)
 
-### Make it feel like yours.
+### Nine built-in interface themes
 
-Different themes, the same useful tools. Choose a look that fits your day.
+Choose from nine built-in keyboard bar themes.
 
-![Make it feel like yours.](exports/stable/landscape/15-hardware-themes.png)
+![Nine built-in interface themes](exports/stable/landscape/15-hardware-themes.png)
 
-### The same tools. At your fingertips.
+### Standalone software keyboard mode
 
-Use Plektra without a physical keyboard. Suggestions, symbols and snippets included.
+Use the software keyboard on phones without physical keys, with suggestions, symbols and snippets.
 
-![The same tools. At your fingertips.](exports/stable/landscape/16-software-keyboard.png)
+![Standalone software keyboard mode](exports/stable/landscape/16-software-keyboard.png)
 
-### A layout that fits you.
+### Native QWERTY, AZERTY and QWERTZ support
 
-QWERTY, AZERTY or QWERTZ with umlauts. Choose the keys you need.
+Select QWERTY, AZERTY or QWERTZ, including German umlauts.
 
-![A layout that fits you.](exports/stable/landscape/17-layouts.png)
+![Native QWERTY, AZERTY and QWERTZ support](exports/stable/landscape/17-layouts.png)
 
-### Make the keys stand out.
+### High-contrast mode for improved visibility
 
-Choose a high-contrast keyboard theme. Clear outlines and distinct indicators.
+Use a high-contrast theme with clear key outlines and distinct modifier indicators.
 
-![Make the keys stand out.](exports/stable/landscape/18-high-contrast.png)
+![High-contrast mode for improved visibility](exports/stable/landscape/18-high-contrast.png)
 
-### A long press. More possibilities.
+### Long-press secondary characters
 
-Discover alternate characters on a key. Choose the character you need.
+Long-press a software key to select its secondary characters.
 
-![A long press. More possibilities.](exports/stable/landscape/19-key-popup.png)
+![Long-press secondary characters](exports/stable/landscape/19-key-popup.png)
 
-### Straight columns. Or a familiar stagger.
+### Ortholinear and staggered key geometries
 
-Choose your software key arrangement. The same controls, your preferred geometry.
+Choose ortholinear or staggered rows for the software keyboard.
 
-![Straight columns. Or a familiar stagger.](exports/stable/landscape/20-key-arrangement.png)
+![Ortholinear and staggered key geometries](exports/stable/landscape/20-key-arrangement.png)
 
-### More control. Right on the keys.
+### Terminal-style Ctrl navigation and selection
 
-Ctrl reveals navigation and editing actions. Move, select, copy and paste from the keyboard.
+Use Ctrl shortcuts to move the cursor, select text, copy and paste.
 
-![More control. Right on the keys.](exports/stable/landscape/21-ctrl-navigation.png)
+![Terminal-style Ctrl navigation and selection](exports/stable/landscape/21-ctrl-navigation.png)
 
 ## Nightly gallery
 
-### Make every key yours.
+### Advanced (hardware) keyboard control on Android
 
-Physical keyboards and touch input. One set of tools, on your terms.
+Free software under GPLv3, with source code you can inspect, modify and share.
 
-![Make every key yours.](exports/nightly/landscape/01-devices.png)
+![Advanced (hardware) keyboard control on Android](exports/nightly/landscape/01-devices.png)
 
-### Your keyboard bar. Your choice.
+### Modular toolbar configuration
 
-Suggestions, variations and menu buttons. Keep the controls you actually use.
+Configure suggestions, character variations and menu buttons independently.
 
-![Your keyboard bar. Your choice.](exports/nightly/landscape/02-keyboard-bar.png)
+![Modular toolbar configuration](exports/nightly/landscape/02-keyboard-bar.png)
 
-### As much as you need.
+### Adjustable interface density
 
-A full bar, suggestions with controls, or LEDs. Keep only what you need.
+Choose a full bar, compact controls, a modifier LED strip or a hidden bar.
 
-![As much as you need.](exports/nightly/landscape/03-bar-configurations.png)
+![Adjustable interface density](exports/nightly/landscape/03-bar-configurations.png)
 
-### A lighter setup. One switch away.
+### Dual profiles: Normal and Slim
 
-Configure Normal and Slim separately. Your minimal setup is yours to define.
+Configure Normal and Slim independently, then switch between the two profiles.
 
-![A lighter setup. One switch away.](exports/nightly/landscape/04-slim-profile.png)
+![Dual profiles: Normal and Slim](exports/nightly/landscape/04-slim-profile.png)
 
-### Keep your controls close.
+### Flexible toolbar layouts
 
-Choose a shared row or a stacked bar. Arrange suggestions and actions.
+Place suggestions and actions in a shared row or arrange them in stacked rows.
 
-![Keep your controls close.](exports/nightly/landscape/05-shared-row.png)
+![Flexible toolbar layouts](exports/nightly/landscape/05-shared-row.png)
 
-### Finish the word. Keep typing.
+### Predictive text and completions
 
-English word suggestions as you type. Choose a completion without retyping.
+Complete words from suggestions as you type. Dictionaries and locally learned next words are supported.
 
-![Finish the word. Keep typing.](exports/nightly/landscape/06-suggestions.png)
+![Predictive text and completions](exports/nightly/landscape/06-suggestions.png)
 
-### More characters. Within reach.
+### Contextual character variations
 
-Discover variations for the key you type. Accents and symbols stay close.
+Select accented letters and symbols from the variations for the current character.
 
-![More characters. Within reach.](exports/nightly/landscape/07-variations.png)
+![Contextual character variations](exports/nightly/landscape/07-variations.png)
 
-### A few keys. Useful details.
+### Expandable text snippets & templates
 
-Your address, email or a date. Saved text, inserted from a short prefix.
+Save reusable text such as addresses, email addresses and dates. Find snippets with a short prefix.
 
-![A few keys. Useful details.](exports/nightly/landscape/08-snippet-selection.png)
+![Expandable text snippets & templates](exports/nightly/landscape/08-snippet-selection.png)
 
-### Write it once. Use it again.
+### Text shortcut expansion
 
-Expand a shortcut into reusable text. Email addresses without retyping.
+Expand a snippet shortcut into its saved text.
 
-![Write it once. Use it again.](exports/nightly/landscape/09-snippet-result.png)
+![Text shortcut expansion](exports/nightly/landscape/09-snippet-result.png)
 
-### Symbols without the detour.
+### Direct SYM layer mapping
 
-Open SYM pages for extra characters. Physical key labels show the mapping.
+Open SYM pages and enter symbols using the corresponding physical keys.
 
-![Symbols without the detour.](exports/nightly/landscape/10-symbols.png)
+![Direct SYM layer mapping](exports/nightly/landscape/10-symbols.png)
 
-### Say it with an emoji.
+### Integrated, low-profile emoji picker
 
-Browse emoji from your keyboard. Keep the conversation in view.
+Browse and insert emoji from the keyboard.
 
-![Say it with an emoji.](exports/nightly/landscape/11-emoji.png)
+![Integrated, low-profile emoji picker](exports/nightly/landscape/11-emoji.png)
 
-### Your clipboard. At hand.
+### Integrated clipboard manager
 
-Keep useful copied text within reach. Pick an entry and carry on writing.
+Browse clipboard history and insert a saved entry.
 
-![Your clipboard. At hand.](exports/nightly/landscape/12-clipboard.png)
+![Integrated clipboard manager](exports/nightly/landscape/12-clipboard.png)
 
-### Keep your hands on the keys.
+### Keyboard text selection
 
-Select and edit text with keyboard controls. Make room for shortcuts in your workflow.
+Select text using physical keyboard controls.
 
-![Keep your hands on the keys.](exports/nightly/landscape/13-selection.png)
+![Keyboard text selection](exports/nightly/landscape/13-selection.png)
 
-### Know which keys are active.
+### Live modifier state indicators
 
-See active and locked modifiers. Choose where the indicators appear.
+See active and locked modifiers in the keyboard bar or Android status bar.
 
-![Know which keys are active.](exports/nightly/landscape/14-modifiers.png)
+![Live modifier state indicators](exports/nightly/landscape/14-modifiers.png)
 
-### Make it feel like yours.
+### Nine built-in interface themes
 
-Different themes, the same useful tools. Choose a look that fits your day.
+Choose from nine built-in keyboard bar themes.
 
-![Make it feel like yours.](exports/nightly/landscape/15-hardware-themes.png)
+![Nine built-in interface themes](exports/nightly/landscape/15-hardware-themes.png)
 
-### The same tools. At your fingertips.
+### Standalone software keyboard mode
 
-Use Plektra without a physical keyboard. Suggestions, symbols and snippets included.
+Use the software keyboard on phones without physical keys, with suggestions, symbols and snippets.
 
-![The same tools. At your fingertips.](exports/nightly/landscape/16-software-keyboard.png)
+![Standalone software keyboard mode](exports/nightly/landscape/16-software-keyboard.png)
 
-### A layout that fits you.
+### Native QWERTY, AZERTY and QWERTZ support
 
-QWERTY, AZERTY or QWERTZ with umlauts. Choose the keys you need.
+Select QWERTY, AZERTY or QWERTZ, including German umlauts.
 
-![A layout that fits you.](exports/nightly/landscape/17-layouts.png)
+![Native QWERTY, AZERTY and QWERTZ support](exports/nightly/landscape/17-layouts.png)
 
-### Make the keys stand out.
+### High-contrast mode for improved visibility
 
-Choose a high-contrast keyboard theme. Clear outlines and distinct indicators.
+Use a high-contrast theme with clear key outlines and distinct modifier indicators.
 
-![Make the keys stand out.](exports/nightly/landscape/18-high-contrast.png)
+![High-contrast mode for improved visibility](exports/nightly/landscape/18-high-contrast.png)
 
-### A long press. More possibilities.
+### Long-press secondary characters
 
-Discover alternate characters on a key. Choose the character you need.
+Long-press a software key to select its secondary characters.
 
-![A long press. More possibilities.](exports/nightly/landscape/19-key-popup.png)
+![Long-press secondary characters](exports/nightly/landscape/19-key-popup.png)
 
-### Straight columns. Or a familiar stagger.
+### Ortholinear and staggered key geometries
 
-Choose your software key arrangement. The same controls, your preferred geometry.
+Choose ortholinear or staggered rows for the software keyboard.
 
-![Straight columns. Or a familiar stagger.](exports/nightly/landscape/20-key-arrangement.png)
+![Ortholinear and staggered key geometries](exports/nightly/landscape/20-key-arrangement.png)
 
-### More control. Right on the keys.
+### Terminal-style Ctrl navigation and selection
 
-Ctrl reveals navigation and editing actions. Move, select, copy and paste from the keyboard.
+Use Ctrl shortcuts to move the cursor, select text, copy and paste.
 
-![More control. Right on the keys.](exports/nightly/landscape/21-ctrl-navigation.png)
+![Terminal-style Ctrl navigation and selection](exports/nightly/landscape/21-ctrl-navigation.png)
 
 ## Capture new screenshots
 
-`scripts/capture-showcase.sh` recreates the raw screenshots in `raw/` on an emulator or a physical device. It uses the Nightly debug build, which must be installed on the device first.
+`scripts/capture-showcase.sh` captures screenshots and native transparent keyboard exports on an emulator or a physical device. It uses the Nightly debug build, which must be installed on the device first.
 
 1. Install the debug build on the device. Pass the device serial with `--device`. The script does not read `ANDROID_SERIAL`.
 
@@ -304,9 +304,22 @@ Ctrl reveals navigation and editing actions. Move, select, copy and paste from t
 
 The script changes some device settings while it runs. It turns on the system demo mode (clock 09:10, full battery, no notifications), changes the Plektra keyboard and notes settings for each scene, and sets the input method to Plektra Nightly if needed. It puts all of these back when it exits, including after an error or Ctrl-C. Check the device afterwards if a run is interrupted.
 
-Each run writes to `build/showcase-capture/<device>/<timestamp>/`. The folder holds one PNG per state and a `manifest.json` with the device, serial, app version, time and SHA-256 hash of every file. Captures are never written to `raw/` automatically. Review the PNGs against the existing references, then copy the approved files into `raw/<device>/` by hand.
+Each run writes to `build/showcase-capture/<device>/<timestamp>/`. The folder holds a screenshot per state, `*-ime.png` native alpha exports and `*-ime.json` dimensions/position metadata for visible keyboards, plus a `manifest.json` with the device, serial, app version, time and SHA-256 hash of every file. Captures are never written to `raw/` automatically. Review screenshots and transparent exports against the existing references, then copy the approved files into `raw/<device>/` by hand. The renderer uses native alpha exports when available; screenshots supply the device frames.
 
 The scene table is [capture/scenes.json](capture/scenes.json). Each entry lists the device, the keyboard settings, the theme, the typed text and key events, and the crop. States with `"manual": true` are skipped by the script; the `instruction` field says how to capture them by hand. Expect small differences from the references: the Markdown notes editor is a different screen from the older notes host, and the emulator is not detected as a Titan 2 Elite, so its keyboard layout differs.
+
+## Transparent export in Debug builds
+
+Advanced settings contains **Transparent keyboard export** and **Share PNG**. Enable export, display the keyboard with synthetic text, then return to settings to share the PNG. The setting switches off after one export. The PNG can contain visible suggestions or clipboard text.
+
+The Debug-only shell receiver can also export the current visible IME without changing preferences:
+
+```sh
+adb -s <serial> shell am broadcast -n rocks.pkb.plektra.nightly/rocks.pkb.plektra.ShowcaseReceiver --ez exportTransparent true
+adb -s <serial> exec-out run-as rocks.pkb.plektra.nightly cat cache/debug-reports/keyboard-transparent.png > keyboard-transparent.png
+```
+
+Exports draw the native keyboard children, including both LED rails, on an ARGB bitmap. Host content, window backgrounds and structural row/chrome background fills are omitted. Key surfaces, icons, gaps and antialiasing keep their native colors and alpha. Release builds contain no export control or receiver.
 
 ## Device comparison scale
 

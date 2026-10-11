@@ -29,6 +29,7 @@ class LedStatusView(
         internal const val LED_ZONE_HEIGHT_DP = 6.5f
         internal const val CONTOUR_LED_STROKE_DP = 1.4f
         internal const val CONTOUR_LED_GAP_DP = 2.2f
+        internal const val CONTOUR_BUTTON_GAP_DP = 2.2f
         private const val CONTOUR_EDGE_PADDING_DP = 1f
         private const val SEGMENT_DIVIDER_DP = 1f
         private const val LED_CONTENT_HEIGHT_DP = 5.5f

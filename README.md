@@ -129,13 +129,13 @@ Use Ctrl shortcuts to move the cursor, select text, copy and paste.
 
 Choose from nine built-in keyboard bar themes.
 
-![Nine keyboard bar themes, from Plektra Dark to Transparent Dark](docs/showcase/exports/stable/landscape/15-hardware-themes.png)
+![Nine native keyboard bar themes with both modifier LED rails](docs/showcase/exports/stable/landscape/15-hardware-themes.png)
 
 ### Standalone software keyboard mode
 
 Use the software keyboard on phones without physical keys, with suggestions, symbols and snippets.
 
-![Software keyboard on a Pixel 7a in two themes](docs/showcase/exports/stable/landscape/16-software-keyboard.png)
+![Cloud Tap and Volcanic Dusk software keyboards shown separately on Pixel 7a](docs/showcase/exports/stable/landscape/16-software-keyboard.png)
 
 ### Native QWERTY, AZERTY, and QWERTZ support
 

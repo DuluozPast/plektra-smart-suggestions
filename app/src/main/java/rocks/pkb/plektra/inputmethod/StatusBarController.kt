@@ -737,6 +737,7 @@ class StatusBarController(
             }
 
             emojiKeyboardContainer = ImeContentLayout(context).apply {
+                setTag(R.id.keyboard_artwork_container, true)
                 orientation = LinearLayout.VERTICAL
                 setPadding(0, 0, 0, 0)
                 layoutParams = LinearLayout.LayoutParams(
@@ -767,6 +768,7 @@ class StatusBarController(
             }
 
             symSurfaceStack = LinearLayout(context).apply {
+                setTag(R.id.keyboard_artwork_container, true)
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.BOTTOM
                 clipChildren = true
@@ -781,6 +783,7 @@ class StatusBarController(
             }
             symSurfaceCloseButton = createSurfaceCloseButton()
             symSurfaceContainer = FrameLayout(context).apply {
+                setTag(R.id.keyboard_artwork_container, true)
                 clipChildren = true
                 clipToPadding = true
                 layoutParams = LinearLayout.LayoutParams(

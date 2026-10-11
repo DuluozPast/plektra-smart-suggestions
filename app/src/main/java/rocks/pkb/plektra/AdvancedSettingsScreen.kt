@@ -619,6 +619,7 @@ fun AdvancedSettingsScreen(
                         }
 
                         // IME Test Screen (only in debug builds)
+                        DebugShowcaseExportSetting()
                         if (BuildConfig.DEBUG) {
                             Surface(
                                 modifier = Modifier

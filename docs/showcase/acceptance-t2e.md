@@ -6,7 +6,7 @@ Build: `26.10-nightly.11.164908Z`, installed using `scripts/build-nightly-debug.
 
 - Full bar, suggestions, LED-only, hidden, Slim and shared-row configurations were captured and visually reviewed on the Titan 2 Elite. Eight approved captures, including contextual variations, replace the corresponding raw showcase images.
 - The right LED-only hook is removed. The native rails have matching open ends; the frame verification reports zero clipped LED pixels.
-- Outer buttons follow the inner LED contour to the end of their slots, including the lower edge. The button-to-rail clearance is one physical pixel.
+- Outer buttons follow the inner LED contour to the end of their slots, including the lower edge. The initial button-to-rail clearance was one physical pixel; the later recheck below replaces it with 2.2 dp.
 - Contextual variations were triggered by entering the final E after “See you at the caf”. Selecting è produced “See you at the cafè”. The bottom keys retain their rounded outlines.
 - The emoji picker was inspected after loading completed. Its rows and footer controls are visible.
 - Settings search and back controls share the screen background. The Notes pencil, split view and preview controls share one segmented group.
@@ -40,3 +40,17 @@ The previous right LED-only rail extended to the interior Ctrl slot (32.8% of th
 The contrast grid remains opaque on repeated drawing. All four captures were visually inspected before promotion. The transparent crops and the Stable/Nightly configuration cards were also inspected. Device display size, density, profile, modifier mode and saved geometry were restored without differences. This isolated check does not repeat the other hardware-key checks listed above.
 
 The device comparison derives the T2E keyboard-bar anchor from the same measured crop as the showcase, so the grid cannot be mistaken for the bar edge.
+
+## Native transparent export and spacing recheck — 19:23 UTC
+
+Build `26.10-nightly.11.192311Z` was installed with the canonical Debug script. Sixteen T2E scenes were captured; fifteen visible keyboards also have native transparent PNGs. All four bar modes and the nine built-in themes were visually reviewed. The hidden state has no IME artwork.
+
+Button-to-inner-LED clearance is now 2.2 dp (approximately five pixels at the device's density), including the lower curve. LED-only rails end at the calibrated display curve; the 16.4%/16.0% logical-slot fallback used in the earlier recheck is superseded.
+
+Native alpha exports draw the existing keyboard children without host content or chrome background fills. Both rails and their native antialiasing survive export. No background-color subtraction is applied to these PNGs. The configuration and theme comparisons use a common light background on the Nightly website to retain contrast for inactive rails.
+
+Geometry, theme, profile, modifier mode, display size (1076×1200) and density (360) were checked against the saved state after restoration; no differences were found.
+
+A final Debug build (`26.10-nightly.11.192610Z`) restricts transparent background removal to marked structural containers. Unmarked clipboard cards keep their fill and border. Full bar, contextual variations and Cobalt were captured again; these three files carry the final build provenance. Twenty-three targeted tests, including native alpha retention and preserved card backgrounds, and the Release Kotlin compilation pass. Independent visual review accepts the configuration, snippet, theme, software-keyboard and layout cards.
+
+The Debug setting was enabled through the T2E settings UI. Opening a synthetic Notes host produced a native PNG and metadata from build `26.10-nightly.11.192610Z`; the export setting returned to false after the capture.

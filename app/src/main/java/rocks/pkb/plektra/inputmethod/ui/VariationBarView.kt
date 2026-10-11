@@ -198,6 +198,7 @@ class VariationBarView(
         val variationsContainerHeight = targetHeightPx()
 
         container = LinearLayout(context).apply {
+            setTag(R.id.keyboard_artwork_container, true)
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.START or Gravity.CENTER_VERTICAL
             setPadding(leftPadding, variationsVerticalPadding, rightPadding, variationsVerticalPadding)
@@ -241,6 +242,7 @@ class VariationBarView(
         container?.addView(buttonsContainer)
 
         wrapper = FrameLayout(context).apply {
+            setTag(R.id.keyboard_artwork_container, true)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 variationsContainerHeight

@@ -185,24 +185,25 @@
       [
         "titan-2-elite",
         "r2-expanded-address",
-        ".address \u2014 Postal address"
+        ".address — Postal address"
       ],
       [
         "titan-2-elite",
         "r2-expanded-email",
-        ".email \u2014 Email address"
+        ".email — Email address"
       ],
       [
         "titan-2-elite",
         "r2-expanded-date",
-        ".date \u2014 ISO date"
+        ".date — ISO date"
       ]
     ]
   },
   {
     "id": "09-snippet-result",
     "title": [
-      "Text shortcut expansion"
+      "Text shortcut",
+      "expansion"
     ],
     "body": [
       "Expand a snippet shortcut into its saved text."
@@ -280,7 +281,8 @@
   {
     "id": "13-selection",
     "title": [
-      "Keyboard text selection"
+      "Keyboard text",
+      "selection"
     ],
     "body": [
       "Select text using physical keyboard controls."
@@ -387,7 +389,7 @@
       "physical keys, with suggestions, symbols and",
       "snippets."
     ],
-    "layout": "devices",
+    "layout": "stacked-devices",
     "items": [
       [
         "pixel-7a",
@@ -404,8 +406,9 @@
   {
     "id": "17-layouts",
     "title": [
-      "Native QWERTY, AZERTY,",
-      "and QWERTZ support"
+      "Native QWERTY,",
+      "AZERTY and QWERTZ",
+      "support"
     ],
     "body": [
       "Select QWERTY, AZERTY or QWERTZ, including",
@@ -426,7 +429,7 @@
       [
         "pixel-7a",
         "r2-qwertz-umlauts",
-        "QWERTZ \u2014 \u00fc \u00f6 \u00e4"
+        "QWERTZ — ü ö ä"
       ]
     ]
   },

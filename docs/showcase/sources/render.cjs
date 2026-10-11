@@ -11,6 +11,19 @@ const text=(s,x,y,size=28,color='#555A60',weight=400,anchor='start')=>`<text x="
 const image=(p,x,y,w,h)=>`<image href="${uri(p)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
 const metas={},assets=new Set();
 const digest=(...paths)=>{const hash=require('crypto').createHash('sha256');paths.forEach(p=>hash.update(fs.readFileSync(p)));return hash.digest('hex').slice(0,10);};
+async function wrapText(lines,size,maxWidth,bold=false){
+ const out=[];
+ for(const line of lines){
+  let current='';
+  for(const word of line.split(' ')){
+   const candidate=current?current+' '+word:word;
+   const m=await sharp({text:{text:esc(candidate),font:`Arial ${bold?'Bold ':''}${size}`,rgba:true,dpi:72}}).metadata();
+   if(current&&m.width>maxWidth){out.push(current);current=word;}else current=candidate;
+  }
+  out.push(current);
+ }
+ return out;
+}
 async function dimensions(p){return metas[p]||(metas[p]=await sharp(p).metadata());}
 async function fit(p,x,y,w,h){let m=await dimensions(p),scale=Math.min(w/m.width,h/m.height);let rw=m.width*scale,rh=m.height*scale;return image(p,x+(w-rw)/2,y+(h-rh)/2,rw,rh);}
 function raw(item){return path.join(root,'raw',item[0],item[1]+'.png');}
@@ -55,7 +68,13 @@ async function titanBarCrop(src,out){
  return out;
 }
 async function crop(item,mode='bar'){
- const stamp=digest(raw(item),__filename,path.join(root,'raw/titan-2-elite/r5-config-hidden.png'));const out=path.join(root,'crops',item[0]+'-'+item[1]+'-'+mode+'-polished-'+stamp+'.png');assets.add(out);if(fs.existsSync(out))return out;
+ const nativeFile=path.join(root,'raw',item[0],item[1]+'-ime.png');
+ const stamp=digest(raw(item),...(fs.existsSync(nativeFile)?[nativeFile]:[]),__filename,path.join(root,'raw/titan-2-elite/r5-config-hidden.png'));const out=path.join(root,'crops',item[0]+'-'+item[1]+'-'+mode+'-polished-'+stamp+'.png');assets.add(out);if(fs.existsSync(out))return out;
+ const native=path.join(root,'raw',item[0],item[1]+'-ime.png');
+ if(fs.existsSync(native)&&(mode==='bar'||mode==='modifier')){
+   await sharp(native).extend({top:BAR_MARGIN,bottom:0,left:0,right:0,background:'#00000000'}).png().toFile(out);
+   return out;
+ }
  if(item[0]==='titan-2-elite'&&(mode==='bar'||mode==='modifier'))return titanBarCrop(raw(item),out);
  const src=raw(item),m=await dimensions(src),pixel=item[0]==='pixel-7a';let top,height;
  if(mode==='snippet-result'){
@@ -115,6 +134,13 @@ async function contents(card,box,portrait){
  let [x,y,w,h]=box, out='';
  if(card.layout==='devices'){
    out+=await deviceComparison(card.items,box,portrait);
+ }else if(card.layout==='stacked-devices'){
+   const gap=30,cell=(h-gap*(card.items.length-1))/card.items.length;
+   for(let i=0;i<card.items.length;i++){
+     const p=await frame(card.items[i]),yy=y+i*(cell+gap);
+     out+=await fit(p,x,yy,w,cell-45);
+     out+=text(card.items[i][2],x+w/2,yy+cell-8,26,'#565B60',400,'middle');
+   }
  }else if(card.layout==='pair'){
    const n=card.items.length,gap=portrait?28:32,cell=(w-gap*(n-1))/n;
    for(let i=0;i<n;i++){const p=await frame(card.items[i]);out+=await fit(p,x+i*(cell+gap),y,cell,h-55);out+=text(card.items[i][2],x+i*(cell+gap)+cell/2,y+h-12,portrait?25:26,'#565B60',400,'middle');}
@@ -154,10 +180,12 @@ async function contents(card,box,portrait){
        let body=`<rect width="${W}" height="${H}" fill="${channel==='nightly'?'#CFDDE7':'#F4F1E9'}"/>`;
        body+=image(logo,portrait?72:76,portrait?58:48,58,58)+text(channel==='stable'?'Plektra':'Plektra Nightly',portrait?148:152,portrait?99:89,31,'#292B2C',600);
        let titleY=portrait?211:296,titleSize=portrait?78:66;
-       card.title.forEach((s,i)=>body+=text(s,portrait?72:76,titleY+i*(portrait?88:78),titleSize,'#242729',700));
-       let by=titleY+(card.title.length-1)*(portrait?88:78)+(portrait?63:69);
-       card.body.forEach((s,i)=>body+=text(s,portrait?72:76,by+i*43,portrait?29:28,'#535960'));
-       const bodyEnd=by+(card.body.length-1)*43;
+       const titles=await wrapText(card.title,titleSize,portrait?936:668,true);
+       const bodyLines=await wrapText(card.body,portrait?29:28,portrait?936:668);
+       titles.forEach((s,i)=>body+=text(s,portrait?72:76,titleY+i*(portrait?88:78),titleSize,'#242729',700));
+       let by=titleY+(titles.length-1)*(portrait?88:78)+(portrait?63:69);
+       bodyLines.forEach((s,i)=>body+=text(s,portrait?72:76,by+i*43,portrait?29:28,'#535960'));
+       const bodyEnd=by+(bodyLines.length-1)*43;
        body+=`<rect x="${portrait?72:76}" y="${bodyEnd+28}" width="64" height="5" fill="${accent}"/>`;
        const box=portrait?[72,bodyEnd+65,936,H-(bodyEnd+65)-175]:[794,148,1048,790];body+=await contents(card,box,portrait);
        body+=text('Open source software under GPLv3',portrait?72:76,H-(portrait?94:55),portrait?25:25,'#535960');

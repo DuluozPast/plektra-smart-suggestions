@@ -71,7 +71,32 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
         }
     }
 
+    internal fun drawTransparentArtwork(canvas: Canvas) {
+        // Structural row backgrounds must not fill the space behind LED rails.
+        // Individual keys and custom keyboard surfaces keep their own drawing.
+        val backgrounds = mutableListOf<Pair<ViewGroup, android.graphics.drawable.Drawable>>()
+        fun clearContainerBackgrounds(group: ViewGroup) {
+            if (group === this || group.getTag(R.id.keyboard_artwork_container) == true) {
+                group.background?.let { backgrounds += group to it; group.background = null }
+            }
+            for (i in 0 until group.childCount) {
+                (group.getChildAt(i) as? ViewGroup)?.let(::clearContainerBackgrounds)
+            }
+        }
+        try {
+            clearContainerBackgrounds(this)
+            dispatchDraw(canvas)
+        } finally {
+            backgrounds.forEach { (group, drawable) -> group.background = drawable }
+        }
+    }
+
     override fun draw(canvas: Canvas) {
+        drawChrome(canvas)
+        rocks.pkb.plektra.DebugShowcaseExport.afterDraw(this)
+    }
+
+    private fun drawChrome(canvas: Canvas) {
         if (ledOnlyReservedHeightPx != null) {
             super.draw(canvas)
             return

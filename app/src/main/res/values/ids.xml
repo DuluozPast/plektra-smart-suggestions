@@ -15,4 +15,5 @@
     <item name="keyboard_bar_surface_geometry" type="id" />
     <item name="keyboard_bar_row_geometry" type="id" />
     <item name="keyboard_bar_canvas_geometry" type="id" />
+    <item name="keyboard_artwork_container" type="id" />
 </resources>

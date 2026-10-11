@@ -55,7 +55,7 @@ class LedStatusRenderingTest {
         assertEquals(0, Color.alpha(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)))
     }
 
-    @Test fun ledOnlyContoursStopAtTheOuterPhysicalSlotsOnBothSides() {
+    @Test fun ledOnlyContoursStopAtTheDisplayCurveOnBothSides() {
         val bitmap = render(true)
         var leftEnd = -1
         var rightStart = bitmap.width
@@ -71,11 +71,12 @@ class LedStatusRenderingTest {
         assertTrue("Right contour must be visible", rightStart < bitmap.width)
         val leftExtent = leftEnd + 1
         val rightExtent = bitmap.width - rightStart
-        assertEquals("Left rail follows its 16.4% outer slot", bitmap.width * 0.164f, leftExtent.toFloat(), 3f)
-        assertEquals("Right rail follows its 16.0% outer slot, not the interior Ctrl slot",
-            bitmap.width * 0.160f, rightExtent.toFloat(), 3f)
-        assertEquals("Only the physical slot width difference may remain",
-            bitmap.width * 0.004f, (leftExtent - rightExtent).toFloat(), 3f)
+        val calibration = rocks.pkb.plektra.T2eCornerCalibration.read(RuntimeEnvironment.getApplication())
+        assertEquals("Left rail stops at the calibrated 100px display corner",
+            100f * calibration.size, leftExtent.toFloat(), 3f)
+        assertEquals("Right rail stops at the display corner, without a straight extension",
+            100f * calibration.size, rightExtent.toFloat(), 3f)
+        assertEquals("Equal display corners have equal rail extents", leftExtent.toFloat(), rightExtent.toFloat(), 3f)
     }
 
     @Test fun splitAndContinuousRightRailsEndInAlignment() {
@@ -95,5 +96,34 @@ class LedStatusRenderingTest {
         }
         assertEquals("Upper ends must share a y coordinate", limits(inner).second, limits(outerTop).second)
         assertEquals("Lower ends must share an x coordinate", limits(inner).first, limits(outerBottom).first)
+    }
+
+    @Test @Config(qualifiers = "xhdpi")
+    fun innerRailLeavesVisibleSpaceAroundTheButtonIncludingItsLowerCurve() {
+        val geometry = rocks.pkb.plektra.inputmethod.KeyboardBarGeometry(RuntimeEnvironment.getApplication()).apply {
+            radii = 100 to 100
+            ledRadii = 100 to 100
+            ledsVisible = true
+            ledLayout = ModifierLedLayouts.TITAN_2_ELITE
+            leftSurface = rocks.pkb.plektra.inputmethod.KeyboardBarGeometry.OuterSurface(
+                android.graphics.RectF(0f, 0f, 180f, 140f), 12f)
+        }
+        val button = geometry.preparedSurface(1000f, 140f,
+            android.graphics.RectF(0f, 0f, 180f, 140f), 12f, true, false).region
+        val rail = android.graphics.PathMeasure(geometry.ledRailPath(1000f, 140f,
+            ModifierLedLayouts.TITAN_2_ELITE.segments.first()), false)
+        val point = FloatArray(2)
+        var lowerSamples = 0
+        for (sample in 1 until 40) {
+            assertTrue(rail.getPosTan(rail.length * sample / 40f, point, null))
+            if (point[1] > 100f) lowerSamples++
+            for (dx in -3..3) for (dy in -3..3) {
+                if (dx * dx + dy * dy <= 9) assertFalse(
+                    "Inner rail must leave space to the button at ${point[0]},${point[1]}",
+                    button.contains(kotlin.math.round(point[0]).toInt() + dx,
+                        kotlin.math.round(point[1]).toInt() + dy))
+            }
+        }
+        assertTrue("The lower curve must be checked as well", lowerSamples > 5)
     }
 }

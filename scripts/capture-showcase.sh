@@ -418,6 +418,15 @@ run_scene() {
   else
     cp "$screen_tmp" "$target"
   fi
+  if [ "$SCENE_STATE" != "r5-config-hidden" ]; then
+    local export_result
+    export_result="$(dsh am broadcast -n "$RECEIVER_COMPONENT" --ez exportTransparent true | tr -d '\r')"
+    if ! printf '%s' "$export_result" | grep -q 'result=0'; then
+      die "Transparent IME export failed for $SCENE_ID: $export_result"
+    fi
+    "$ADB_BIN" -s "$SERIAL" exec-out run-as "$PACKAGE" cat cache/debug-reports/keyboard-transparent.png > "$OUT_DIR/$SCENE_STATE-ime.png"
+    "$ADB_BIN" -s "$SERIAL" exec-out run-as "$PACKAGE" cat cache/debug-reports/keyboard-transparent.json > "$OUT_DIR/$SCENE_STATE-ime.json"
+  fi
   printf '%s\t%s\t%s\t%s\n' "$SCENE_STATE" "$SCENE_ID" "$host" "$(sha256_file "$target")" \
     >> "$WORK_DIR/captures.tsv"
   echo "Captured $SCENE_ID -> $target"
@@ -481,6 +490,13 @@ for state, scene_id, host, digest in read_rows("captures.tsv"):
         "height": size[1] if size else None,
     })
     files[file_name] = digest
+    alpha_name = f"{state}-ime.png"
+    if os.path.exists(os.path.join(out_dir, alpha_name)):
+        for exported_name in (alpha_name, f"{state}-ime.json"):
+            import hashlib
+            with open(os.path.join(out_dir, exported_name), "rb") as exported:
+                files[exported_name] = hashlib.sha256(exported.read()).hexdigest()
+        captures[-1]["transparent_ime"] = alpha_name
 
 skipped = [{"state": state, "reason": reason} for state, reason in read_rows("skipped.tsv")]
 
