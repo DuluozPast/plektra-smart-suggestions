@@ -295,7 +295,7 @@
     <string name="quick_launcher_text_field_shortcuts_description">Wenn aktiv, kann der QuickLauncher auch geöffnet werden, während der Cursor in einem App-Textfeld steht.</string>
     <string name="quick_launcher_text_field_shortcuts_hint">In Textfeldern muss SYM gehalten und dann Space gedrückt werden. Der SYM-Latch kann das nicht auslösen, weil Antippen von SYM die SYM-Seiten durchschaltet.</string>
     <string name="quick_launcher_alt_space_text_fields_title">Alt+Space in Textfeldern erlauben</string>
-    <string name="quick_launcher_alt_space_text_fields_description">QuickLauncher mit Alt+Space öffnen, statt ein Leerzeichen einzufügen. Standardmäßig aus.</string>
+    <string name="quick_launcher_alt_space_text_fields_description">Öffnet den Quick Launcher mit Alt+Leertaste. Aktivieren schaltet Alt+Leertaste für die vorherige Eingabesprache aus.</string>
     <string name="quick_launcher_alt_shortcuts_outside_fields_title">Alt-Shortcuts außerhalb von Textfeldern</string>
     <string name="quick_launcher_alt_shortcuts_outside_fields_description">Alt mit einer zugewiesenen Taste verwenden, um dieselbe App oder Aktion wie mit ihrem SYM-Tasten-Shortcut zu starten.</string>
     <string name="quick_launcher_behaviour_title">Verhalten</string>
@@ -1214,7 +1214,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="alt_key_shortcuts_modifier_link_description">Alt-Shortcuts und Zugriff in Textfeldern konfigurieren.</string>
     <string name="key_shortcuts_allow_in_text_fields_title">In Textfeldern erlauben</string>
     <string name="sym_shortcuts_in_text_fields_description">Zugewiesene SYM-Shortcuts auch beim Tippen verwenden.</string>
-    <string name="alt_shortcuts_in_text_fields_description">Zugewiesene Alt-Shortcuts auch beim Tippen verwenden.</string>
+    <string name="alt_shortcuts_in_text_fields_description">Zugewiesene Alt-Kürzel auch beim Tippen verwenden.</string>
     <string name="sym_shortcuts_compatibility_info">Informationen zur SYM-Tasten-Kompatibilität</string>
     <string name="sym_shortcuts_compatibility_title">Kompatibilität der SYM-Taste</string>
     <string name="sym_shortcuts_compatibility_description">SYM-Tasten-Shortcuts benötigen eine Tastatur, die SYM gegenüber Android als Modifier bereitstellt. Sie funktionieren derzeit nicht mit Tastaturen, deren Firmware SYM-Kombinationen bereits in fertige Zeichen oder Navigationseingaben umwandelt, bevor Plektra sie empfängt. Dazu gehört das aktuelle SYM-Verhalten des Clicks Power Keyboard.</string>
@@ -1607,4 +1607,8 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="software_ctrl_shortcut_icons_corner_letters">Große Symbole, Buchstaben unten links in Grau</string>
     <string name="software_ctrl_shortcut_corner_icons">Buchstaben mit Symbolen in der Ecke</string>
     <string name="software_ctrl_shortcut_letters_only">Nur Buchstaben</string>
+    <string name="alt_space_previous_language_title">Alt+Leertaste: vorherige Eingabesprache</string>
+    <string name="alt_space_previous_language_description">Wechselt rückwärts durch sichtbare Eingabesprachen. Aktivieren schaltet Alt+Leertaste für den Quick Launcher aus; Aktivieren des Launcher-Kürzels schaltet diese Option aus.</string>
+    <string name="ctrl_language_previous_title">Ctrl+Sprachbutton: vorherige Eingabesprache</string>
+    <string name="ctrl_language_previous_description">Auf der Software-Tastatur Ctrl halten oder aktivieren und den Sprachbutton mit dem Tastatursymbol antippen, um rückwärts zu wechseln.</string>
 </resources>

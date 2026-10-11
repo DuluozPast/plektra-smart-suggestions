@@ -100,6 +100,15 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         unavailableFallbackId = "quick_launcher.sym_shortcuts"
     ),
     SettingEntry(
+        id = "quick_launcher.alt_space_in_text_fields",
+        titleRes = R.string.quick_launcher_alt_space_text_fields_title,
+        summaryRes = R.string.quick_launcher_alt_space_text_fields_description,
+        route = SettingRoute(destination = SettingsDestination.Customization,
+            customizationDestination = "launcher_shortcuts"),
+        availabilityCheck = { SettingsManager.getQuickLauncherAltShortcutsOutsideTextFields(it) && SettingsManager.getQuickLauncherAltShortcutsInTextFields(it) },
+        unavailableFallbackId = "quick_launcher.alt_in_text_fields"
+    ),
+    SettingEntry(
         id = "quick_launcher.alt_in_text_fields",
         titleRes = R.string.key_shortcuts_allow_in_text_fields_title,
         summaryRes = R.string.alt_shortcuts_in_text_fields_description,

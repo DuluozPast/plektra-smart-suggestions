@@ -102,7 +102,7 @@ fun CustomizationSettingsScreen(
         mutableStateOf(SettingsManager.getQuickLauncherTextFieldShortcuts(context))
     }
     var quickLauncherAltSpaceInTextFields by remember {
-        mutableStateOf(SettingsManager.getQuickLauncherAltSpaceInTextFields(context))
+        mutableStateOf(SettingsManager.getQuickLauncherAltShortcutsInTextFields(context))
     }
     var quickLauncherAltShortcutsOutsideTextFields by remember {
         mutableStateOf(SettingsManager.getQuickLauncherAltShortcutsOutsideTextFields(context))
@@ -178,8 +178,8 @@ fun CustomizationSettingsScreen(
                 "quick_launcher_text_field_shortcuts" -> {
                     quickLauncherTextFieldShortcuts = SettingsManager.getQuickLauncherTextFieldShortcuts(context)
                 }
-                "quick_launcher_alt_space_in_text_fields" -> {
-                    quickLauncherAltSpaceInTextFields = SettingsManager.getQuickLauncherAltSpaceInTextFields(context)
+                "quick_launcher_alt_space_in_text_fields", "alt_space_previous_language" -> {
+                    quickLauncherAltSpaceInTextFields = SettingsManager.getQuickLauncherAltShortcutsInTextFields(context)
                 }
                 "quick_launcher_alt_shortcuts_outside_text_fields" -> {
                     quickLauncherAltShortcutsOutsideTextFields =
@@ -475,7 +475,7 @@ fun CustomizationSettingsScreen(
                     altShortcutsInTextFields = quickLauncherAltSpaceInTextFields,
                     onAltShortcutsInTextFieldsChanged = { enabled ->
                         quickLauncherAltSpaceInTextFields = enabled
-                        SettingsManager.setQuickLauncherAltSpaceInTextFields(context, enabled)
+                        SettingsManager.setQuickLauncherAltShortcutsInTextFields(context, enabled)
                     },
                     quickLauncherDefaultBlocked = quickLauncherDefaultBlocked,
                     quickLauncherShortcutKey = quickLauncherShortcutKey,
@@ -665,6 +665,18 @@ private fun StarterLauncherShortcutsSettingsScreen(
     onOpenCosmetic: () -> Unit,
     onManageAssignments: () -> Unit
 ) {
+    val context = LocalContext.current
+    var altSpaceEnabled by remember { mutableStateOf(SettingsManager.getQuickLauncherAltSpaceInTextFields(context)) }
+    DisposableEffect(context) {
+        val prefs = SettingsManager.getPreferences(context)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key in setOf("quick_launcher_alt_space_enabled", "alt_space_previous_language", "quick_launcher_alt_space_in_text_fields")) {
+                altSpaceEnabled = SettingsManager.getQuickLauncherAltSpaceInTextFields(context)
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     Scaffold(
         topBar = {
             Surface(
@@ -790,6 +802,18 @@ private fun StarterLauncherShortcutsSettingsScreen(
                     description = stringResource(R.string.alt_shortcuts_in_text_fields_description),
                     checked = altShortcutsInTextFields,
                     onCheckedChange = onAltShortcutsInTextFieldsChanged,
+                    indent = true
+                )
+            }
+
+            if (altKeyShortcutsEnabled && altShortcutsInTextFields) {
+                LauncherShortcutTriggerRow(
+                    icon = {},
+                    title = stringResource(R.string.quick_launcher_alt_space_text_fields_title),
+                    description = stringResource(R.string.quick_launcher_alt_space_text_fields_description),
+                    linkId = "quick_launcher.alt_space_in_text_fields",
+                    checked = altSpaceEnabled,
+                    onCheckedChange = { SettingsManager.setQuickLauncherAltSpaceInTextFields(context, it) },
                     indent = true
                 )
             }

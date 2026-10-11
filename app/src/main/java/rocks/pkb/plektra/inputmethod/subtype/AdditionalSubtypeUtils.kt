@@ -120,6 +120,8 @@ object AdditionalSubtypeUtils {
                     continue
                 }
 
+                if (SettingsManager.isSystemInputStyleHidden(context, localeStr, layoutName)) continue
+
                 if (isRedundantWithBaseSubtype(assets, context, localeStr, layoutName)) {
                     Log.d(TAG, "Skipping redundant custom subtype: $localeStr:$layoutName")
                     continue
@@ -558,14 +560,11 @@ object AdditionalSubtypeUtils {
         if (!shouldKeepSubtype(subtype, currentSystemLocales, systemLanguageCodes)) {
             return false
         }
-        if (isAdditionalSubtype(subtype)) {
-            return true
-        }
 
         val locale = subtype.localeString()
         val layout = getKeyboardLayoutFromSubtype(subtype)
             ?: getLayoutForLocale(assets, locale, context)
-        return !SettingsManager.isSystemInputStyleHidden(context, locale, layout)
+        return !SettingsManager.isSubtypeInputStyleHidden(context, locale, layout, isAdditionalSubtype(subtype))
     }
     
     /**

@@ -4114,17 +4114,42 @@ object SettingsManager {
             .apply()
     }
 
-    fun getQuickLauncherAltSpaceInTextFields(context: Context): Boolean {
-        return getPreferences(context).getBoolean(
-            KEY_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS,
-            DEFAULT_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS
-        )
+    fun isAltSpacePreviousLanguageEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean("alt_space_previous_language", false)
+
+    fun setAltSpacePreviousLanguageEnabled(context: Context, enabled: Boolean) {
+        val editor = getPreferences(context).edit().putBoolean("alt_space_previous_language", enabled)
+        if (enabled) editor.putBoolean("quick_launcher_alt_space_enabled", false)
+        editor.apply()
     }
 
+    fun isCtrlLanguagePreviousEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean("ctrl_language_previous", true)
+
+    fun setCtrlLanguagePreviousEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean("ctrl_language_previous", enabled).apply()
+    }
+
+    // The legacy preference name applies to every assigned Alt shortcut in text fields.
+    fun getQuickLauncherAltShortcutsInTextFields(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS,
+            DEFAULT_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS)
+
+    fun setQuickLauncherAltShortcutsInTextFields(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS, enabled).apply()
+    }
+
+    fun getQuickLauncherAltSpaceInTextFields(context: Context): Boolean =
+        getQuickLauncherAltShortcutsInTextFields(context) && !isAltSpacePreviousLanguageEnabled(context) &&
+            getPreferences(context).getBoolean("quick_launcher_alt_space_enabled", true)
+
     fun setQuickLauncherAltSpaceInTextFields(context: Context, enabled: Boolean) {
-        getPreferences(context).edit()
-            .putBoolean(KEY_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS, enabled)
-            .apply()
+        val editor = getPreferences(context).edit().putBoolean("quick_launcher_alt_space_enabled", enabled)
+        if (enabled) {
+            editor.putBoolean(KEY_QUICK_LAUNCHER_ALT_SPACE_IN_TEXT_FIELDS, true)
+            editor.putBoolean("alt_space_previous_language", false)
+        }
+        editor.apply()
     }
 
     fun getQuickLauncherAltShortcutsOutsideTextFields(context: Context): Boolean {
@@ -5707,6 +5732,17 @@ object SettingsManager {
 
     fun isSystemInputStyleHidden(context: Context, locale: String, layout: String): Boolean {
         return hiddenSystemInputStyleKeys(context).contains(inputStyleKey(locale, layout))
+    }
+
+    fun isSubtypeInputStyleHidden(context: Context, locale: String, layout: String, additional: Boolean): Boolean {
+        if (isSystemInputStyleHidden(context, locale, layout)) return true
+        if (additional) return false
+        // Android can implicitly enable another regional base subtype for the same system language.
+        val language = normalizeSuggestionLocaleTag(locale).substringBefore('-').lowercase(java.util.Locale.ROOT)
+        return hiddenSystemInputStyleKeys(context).any { key ->
+            key.substringAfter(':') == layout.trim() &&
+                key.substringBefore(':').substringBefore('-').lowercase(java.util.Locale.ROOT) == language
+        }
     }
 
     fun hideSystemInputStyle(context: Context, locale: String, layout: String) {

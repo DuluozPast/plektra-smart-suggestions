@@ -829,6 +829,18 @@ object SettingLinkRegistry {
             destination = SettingsDestination.CustomInputStyles
         ),
         entry(
+            "custom_input_styles.alt_space_previous_language",
+            R.string.alt_space_previous_language_title,
+            R.string.alt_space_previous_language_description,
+            destination = SettingsDestination.CustomInputStyles
+        ),
+        entry(
+            "custom_input_styles.ctrl_language_previous",
+            R.string.ctrl_language_previous_title,
+            R.string.ctrl_language_previous_description,
+            destination = SettingsDestination.CustomInputStyles
+        ),
+        entry(
             SettingLinkIds.CUSTOM_INPUT_STYLES_LAYOUT_SWITCH_TOAST,
             R.string.toast_on_layout_switch_title,
             R.string.toast_on_layout_switch_description,

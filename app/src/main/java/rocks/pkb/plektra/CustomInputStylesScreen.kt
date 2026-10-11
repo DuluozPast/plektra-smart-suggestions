@@ -416,6 +416,17 @@ private fun LayoutSwitchShortcutsCard() {
     var ctrlSpaceLayoutSwitch by remember {
         mutableStateOf(SettingsManager.isCtrlSpaceLayoutSwitchEnabled(context))
     }
+    var altSpacePrevious by remember { mutableStateOf(SettingsManager.isAltSpacePreviousLanguageEnabled(context)) }
+    var ctrlLanguagePrevious by remember { mutableStateOf(SettingsManager.isCtrlLanguagePreviousEnabled(context)) }
+    DisposableEffect(context) {
+        val prefs = SettingsManager.getPreferences(context)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            altSpacePrevious = SettingsManager.isAltSpacePreviousLanguageEnabled(context)
+            ctrlLanguagePrevious = SettingsManager.isCtrlLanguagePreviousEnabled(context)
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     var toastOnLayoutSwitch by remember {
         mutableStateOf(SettingsManager.isToastOnLayoutSwitchEnabled(context))
     }
@@ -474,6 +485,21 @@ private fun LayoutSwitchShortcutsCard() {
                     ctrlSpaceLayoutSwitch = enabled
                     SettingsManager.setCtrlSpaceLayoutSwitchEnabled(context, enabled)
                 }
+            )
+
+            LayoutSwitchShortcutRow(
+                title = stringResource(R.string.alt_space_previous_language_title),
+                description = stringResource(R.string.alt_space_previous_language_description),
+                checked = altSpacePrevious,
+                linkId = "custom_input_styles.alt_space_previous_language",
+                onCheckedChange = { enabled -> SettingsManager.setAltSpacePreviousLanguageEnabled(context, enabled) }
+            )
+            LayoutSwitchShortcutRow(
+                title = stringResource(R.string.ctrl_language_previous_title),
+                description = stringResource(R.string.ctrl_language_previous_description),
+                checked = ctrlLanguagePrevious,
+                linkId = "custom_input_styles.ctrl_language_previous",
+                onCheckedChange = { enabled -> SettingsManager.setCtrlLanguagePreviousEnabled(context, enabled) }
             )
 
             LayoutSwitchShortcutRow(

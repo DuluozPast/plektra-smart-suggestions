@@ -38,6 +38,15 @@ object SubtypeCycler {
         assets: AssetManager,
         showToast: Boolean = true
     ): Boolean {
+        return cycleSubtype(context, imeServiceClass, assets, showToast, backwards = false)
+    }
+
+    fun cycleToPreviousSubtype(context: Context, imeServiceClass: Class<*>, assets: AssetManager,
+                               showToast: Boolean = true): Boolean =
+        cycleSubtype(context, imeServiceClass, assets, showToast, backwards = true)
+
+    private fun cycleSubtype(context: Context, imeServiceClass: Class<*>, assets: AssetManager,
+                             showToast: Boolean, backwards: Boolean): Boolean {
         return try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
                 ?: return false
@@ -83,12 +92,11 @@ object SubtypeCycler {
             }
             
             // Get next subtype (cycle to first if at end)
-            val nextIndex = if (currentIndex >= 0 && currentIndex < enabledSubtypes.size - 1) {
-                currentIndex + 1
+            val nextIndex = if (currentIndex < 0) {
+                if (backwards) enabledSubtypes.lastIndex else 0
             } else {
-                0 // Cycle back to first
+                Math.floorMod(currentIndex + if (backwards) -1 else 1, enabledSubtypes.size)
             }
-            
             val nextSubtype = enabledSubtypes[nextIndex]
             val nextLayout = resolveSubtypeCycleLayout(assets, context, nextSubtype)
             
@@ -221,8 +229,7 @@ object SubtypeCycler {
             val locale = subtype.localeString()
             val layout = resolveSubtypeCycleLayout(assets, context, subtype)
             val hiddenSystemLocale =
-                !AdditionalSubtypeUtils.isAdditionalSubtype(subtype) &&
-                    SettingsManager.isSystemInputStyleHidden(context, locale, layout)
+                SettingsManager.isSubtypeInputStyleHidden(context, locale, layout, AdditionalSubtypeUtils.isAdditionalSubtype(subtype))
             !hiddenSystemLocale && seen.add("$locale:$layout")
         }
     }
@@ -283,7 +290,8 @@ object SubtypeCycler {
                 info.serviceName == serviceName
             } ?: return emptyList()
             
-            imm.getEnabledInputMethodSubtypeList(inputMethodInfo, true)
+            getCycleableSubtypes(context, context.assets,
+                imm.getEnabledInputMethodSubtypeList(inputMethodInfo, true))
         } catch (e: Exception) {
             Log.e(TAG, "Error getting available subtypes", e)
             emptyList()

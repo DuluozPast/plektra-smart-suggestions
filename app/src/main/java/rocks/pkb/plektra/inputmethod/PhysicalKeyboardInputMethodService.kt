@@ -172,6 +172,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    private val consumedLanguageSwitchKeys = mutableSetOf<Int>()
     private var dispatchingSoftwareKeyboardKey: Boolean = false
     
     // Aggiungi per Power Shortcuts
@@ -1688,10 +1689,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     /**
-     * Cycles to the next enabled input method subtype (language).
+     * Cycles through visible input method subtypes (languages) in either direction.
      * Prevents multiple simultaneous switches to avoid dictionary loading conflicts.
      */
-    private fun cycleToNextLanguage() {
+    private fun cycleLanguage(backwards: Boolean = false) {
         if (isLanguageSwitchInProgress) {
             Log.d(TAG, "Language switch already in progress, ignoring request")
             return
@@ -1699,12 +1700,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         isLanguageSwitchInProgress = true
         try {
-            val switched = SubtypeCycler.cycleToNextSubtype(
-                context = this,
-                imeServiceClass = PhysicalKeyboardInputMethodService::class.java,
-                assets = assets,
-                showToast = SettingsManager.isToastOnLayoutSwitchEnabled(this)
-            )
+            val cycle = if (backwards) SubtypeCycler::cycleToPreviousSubtype else SubtypeCycler::cycleToNextSubtype
+            val switched = cycle(this, PhysicalKeyboardInputMethodService::class.java, assets,
+                SettingsManager.isToastOnLayoutSwitchEnabled(this))
 
             // Reset flag; keep a short delay when a switch happened to avoid rapid repeats
             val delayMs = if (switched) 300L else 0L
@@ -1996,7 +1994,15 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 modifierStateBeforeHold = null
             }
             variationInteractedDuringHold = true
-            cycleToNextLanguage()
+            val backwards = SettingsManager.isCtrlLanguagePreviousEnabled(this) &&
+                (ctrlPressed || ctrlPhysicallyPressed || ctrlLatchActive || ctrlOneShot)
+            if (backwards) {
+                modifierStateController.clearCtrlState(resetPressedState = true)
+                navModeController.cancelNotification()
+                navModeController.refreshNavModeState()
+                updateStatusBarText()
+            }
+            cycleLanguage(backwards)
         }
 
         // Register listener for variation selection (both controllers)
@@ -2398,7 +2404,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 Log.d(TAG, "Keyboard layout auto mode/mapping changed, resolving active layout...")
                 loadKeyboardLayout()
                 switchToLayout(activeKeyboardLayoutName, showToast = false)
-            } else if (key == AdditionalSubtypeUtils.PREF_CUSTOM_INPUT_STYLES) {
+            } else if (key == AdditionalSubtypeUtils.PREF_CUSTOM_INPUT_STYLES || key == "hidden_system_input_styles") {
                 Log.d(TAG, "Custom input styles changed, re-registering subtypes...")
                 registerAdditionalSubtypes()
             } else if (key == "trackpad_gestures_enabled") {
@@ -4638,6 +4644,27 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val initialInputConnection = currentInputConnection
         val inputType = info?.inputType ?: EditorInfo.TYPE_NULL
         val hasEditableField = initialInputConnection != null && inputType != EditorInfo.TYPE_NULL
+        if (event_?.repeatCount == 0) consumedLanguageSwitchKeys.remove(keyCode_)
+        else if (keyCode_ in consumedLanguageSwitchKeys) return true
+        val languageCtrl = event?.isCtrlPressed == true || ctrlPressed || ctrlPhysicallyPressed ||
+            ctrlLatchActive || ctrlOneShot || ctrlLatchFromNavMode
+        val languageAlt = event?.isAltPressed == true || altPressed || altPhysicallyPressed || altLatchActive || altOneShot
+        val reverseAltSpace = keyCode == KeyEvent.KEYCODE_SPACE && languageAlt && !languageCtrl &&
+            event?.isSymPressed != true && !symPhysicallyPressed &&
+            SettingsManager.isAltSpacePreviousLanguageEnabled(this)
+        if (hasEditableField && event?.isMetaPressed != true && reverseAltSpace) {
+            consumedLanguageSwitchKeys.add(keyCode_)
+            modifierStateController.registerNonModifierKey()
+            otherKeyInteractedDuringHold = true
+            altModifierLayerLatched = false
+            modifierStateController.clearCtrlState(resetPressedState = true)
+            modifierStateController.clearAltState(resetPressedState = true)
+            navModeController.cancelNotification()
+            navModeController.refreshNavModeState()
+            cycleLanguage(backwards = true)
+            updateStatusBarText()
+            return true
+        }
         if (hasEditableField && !isInputViewActive) {
             isInputViewActive = true
         }
@@ -4785,7 +4812,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             hasEditableField &&
             event?.repeatCount == 0 &&
             SettingsManager.getQuickLauncherAltShortcutsOutsideTextFields(this) &&
-            SettingsManager.getQuickLauncherAltSpaceInTextFields(this) &&
+            SettingsManager.getQuickLauncherAltShortcutsInTextFields(this) &&
+            (keyCode != KeyEvent.KEYCODE_SPACE || SettingsManager.getQuickLauncherAltSpaceInTextFields(this)) &&
             SettingsManager.getLauncherShortcut(this, keyCode) != null &&
             (event.isAltPressed || altPressed || altPhysicallyPressed || altLatchActive || altOneShot)
         ) {
@@ -4998,6 +5026,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             event != null &&
             event.repeatCount == 0 &&
             SettingsManager.isAltEnterLayoutSwitchEnabled(this) &&
+            !languageCtrl && event.isMetaPressed.not() && event.isSymPressed.not() && !symPhysicallyPressed &&
             (keyCode == KeyEvent.KEYCODE_ENTER &&
                     (event.isAltPressed || altPhysicallyPressed))
         ) {
@@ -5021,8 +5050,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             hasEditableField &&
             keyCode == KeyEvent.KEYCODE_SPACE &&
             SettingsManager.isCtrlSpaceLayoutSwitchEnabled(this) &&
-            (event?.isCtrlPressed == true || ctrlPressed || ctrlLatchActive || ctrlOneShot)
+            (event?.isCtrlPressed == true || ctrlPressed || ctrlLatchActive || ctrlOneShot) &&
+            !languageAlt && event?.isMetaPressed != true && event?.isSymPressed != true && !symPhysicallyPressed
         ) {
+            consumedLanguageSwitchKeys.add(keyCode_)
             var shouldUpdateStatusBar = false
 
             // Clear Alt state if active so we don't leave Alt latched.
@@ -5295,6 +5326,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 null -> Unit
             }
         }
+        if (consumedLanguageSwitchKeys.remove(keyCode_)) return true
         val remapped = remapHardwareEvent(keyCode_, event_)
         if (remapped.consume) return true
         val keyCode = remapped.keyCode
