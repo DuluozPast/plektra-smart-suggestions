@@ -10,7 +10,7 @@ import android.view.inputmethod.InputMethodSubtype
 /** FUTO's auxiliary voice IME owns the editor connection and switches back after committing. */
 object ExternalSpeechProvider {
     const val FUTO_PACKAGE = "org.futo.voiceinput"
-    const val FUTO_DOWNLOAD_URL = "https://voiceinput.futo.org/"
+    const val FUTO_DOWNLOAD_URL = "https://app.futo.org/fdroid/repo/"
 
     data class VoiceInput(val id: String, val subtype: InputMethodSubtype)
 

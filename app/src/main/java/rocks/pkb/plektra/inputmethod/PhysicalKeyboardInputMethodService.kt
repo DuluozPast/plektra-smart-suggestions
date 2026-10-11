@@ -763,7 +763,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 val api = SpeechApiClient()
                 cloudSpeechController = SpeechSessionController(
                     scope = speechScope,
-                    recorderFactory = { PcmSpeechRecorder() },
+                    recorderFactory = { PcmSpeechRecorder(cacheDir = cacheDir) },
+                    liveRecorderFactory = { PcmSpeechRecorder(24000, cacheDir) },
                     transcribe = { request, audio -> api.transcribe(request, audio) },
                     liveTranscriber = OpenAiLiveSpeechClient(),
                     onPartial = { request, text ->
@@ -815,7 +816,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                         AutoCapitalizeHelper.shouldAutoCapitalizeAtCursor(this, connection, shouldDisableAutoCapitalize))
             }
             cloudSpeechController?.start(SpeechRequest(provider, model, apiKey,
-                languageTag, speechEditorSession, SpeechSettings.silenceMs(this)))
+                languageTag, speechEditorSession, SpeechSettings.silenceMs(this), SpeechSettings.maxDurationMs(this)))
             return
         }
 
@@ -871,8 +872,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 Toast.LENGTH_LONG).show()
             startActivity(if (installed) Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            } else Intent(this, rocks.pkb.plektra.SettingsActivity::class.java).apply {
-                data = android.net.Uri.parse("plektra://setting/speech.provider")
+            } else Intent(Intent.ACTION_VIEW, android.net.Uri.parse(ExternalSpeechProvider.FUTO_DOWNLOAD_URL)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
             return

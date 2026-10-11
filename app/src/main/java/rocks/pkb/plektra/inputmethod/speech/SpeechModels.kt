@@ -21,7 +21,8 @@ data class SpeechRequest(
     val apiKey: String,
     val languageTag: String,
     val editorSession: Long,
-    val silenceMs: Long = 3000L
+    val silenceMs: Long = 3000L,
+    val maxDurationMs: Long = SpeechSettings.DEFAULT_MAX_DURATION_MS
 ) {
     val language: String get() = Locale.forLanguageTag(languageTag).language
 
@@ -29,14 +30,54 @@ data class SpeechRequest(
     override fun toString() = "SpeechRequest(provider=$provider, model=${model.id}, language=$languageTag, editorSession=$editorSession)"
 }
 
-data class RecordedSpeech(val pcm: ByteArray, val sampleRate: Int = 16000) {
-    val durationMs: Long get() = pcm.size * 1000L / (sampleRate * 2L)
-    fun wav(): ByteArray = ByteBuffer.allocate(44 + pcm.size).order(ByteOrder.LITTLE_ENDIAN).apply {
+class RecordedSpeech(
+    val pcm: ByteArray,
+    val sampleRate: Int = 16000,
+    private val pcmFile: java.io.File? = null,
+    private val byteCount: Long = pcm.size.toLong()
+) : java.io.Closeable {
+    val durationMs: Long get() = byteCount * 1000L / (sampleRate * 2L)
+
+    /** Materialize at most two minutes per API request, independent of recording length. */
+    internal fun chunks(maxBytes: Int = sampleRate * 2 * 120): Sequence<RecordedSpeech> = sequence {
+        require(maxBytes > 0 && maxBytes % 2 == 0)
+        if (pcmFile == null) {
+            if (pcm.size <= maxBytes) yield(this@RecordedSpeech)
+            else for (offset in pcm.indices step maxBytes) {
+                yield(RecordedSpeech(pcm.copyOfRange(offset, minOf(offset + maxBytes, pcm.size)), sampleRate))
+            }
+        } else {
+            var offset = 0L
+            while (offset < byteCount) {
+                val count = minOf(maxBytes.toLong(), byteCount - offset).toInt()
+                val chunk = ByteArray(count)
+                java.io.RandomAccessFile(pcmFile, "r").use { input ->
+                    input.seek(offset)
+                    input.readFully(chunk)
+                }
+                offset += count
+                yield(RecordedSpeech(chunk, sampleRate))
+            }
+        }
+    }
+
+    override fun close() { pcmFile?.delete() }
+
+    companion object {
+        internal fun fromFile(file: java.io.File, sampleRate: Int) =
+            RecordedSpeech(ByteArray(0), sampleRate, file, file.length())
+        internal fun streamed(bytes: Long, sampleRate: Int) =
+            RecordedSpeech(ByteArray(0), sampleRate, byteCount = bytes)
+    }
+    fun wav(): ByteArray {
+        check(pcmFile == null) { "Read file-backed audio in bounded chunks" }
+        return ByteBuffer.allocate(44 + pcm.size).order(ByteOrder.LITTLE_ENDIAN).apply {
         put("RIFF".toByteArray(Charsets.US_ASCII)); putInt(36 + pcm.size)
         put("WAVEfmt ".toByteArray(Charsets.US_ASCII)); putInt(16)
         putShort(1); putShort(1); putInt(sampleRate); putInt(sampleRate * 2); putShort(2); putShort(16)
         put("data".toByteArray(Charsets.US_ASCII)); putInt(pcm.size); put(pcm)
     }.array()
+    }
 }
 
 data class SpeechResult(

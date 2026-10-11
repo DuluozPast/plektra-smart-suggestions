@@ -58,6 +58,7 @@ class SpeechRecognitionManager(
         }
     }
 
+    private val recordingDeadline = rocks.pkb.plektra.inputmethod.speech.SpeechRecordingDeadline { stopRecognition() }
     private var speechRecognizer: SpeechRecognizer? = null
     private var isComposingPartialText: Boolean = false
 
@@ -154,6 +155,7 @@ class SpeechRecognitionManager(
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)?.apply {
                 setRecognitionListener(object : RecognitionListener {
                     override fun onReadyForSpeech(params: Bundle?) {
+                        recordingDeadline.start(rocks.pkb.plektra.inputmethod.speech.SpeechSettings.maxDurationMs(context))
                         Log.d(TAG, "Speech recognition ready for speech")
                         // Reset composing state for new recognition session
                         isComposingPartialText = false
@@ -175,6 +177,7 @@ class SpeechRecognitionManager(
                     }
 
                     override fun onEndOfSpeech() {
+                        recordingDeadline.cancel()
                         onProcessing?.invoke()
                         Log.d(TAG, "Speech recognition: end of speech detected")
                         // The system automatically detected silence after speech
@@ -182,6 +185,7 @@ class SpeechRecognitionManager(
                     }
 
                     override fun onError(error: Int) {
+                        recordingDeadline.cancel()
                         // Notify that recognition is finished (due to error)
                         onRecognitionStateChanged?.invoke(false)
                         
@@ -221,6 +225,7 @@ class SpeechRecognitionManager(
                     }
 
                     override fun onResults(results: Bundle) {
+                        recordingDeadline.cancel()
                         // Notify that recognition is finished
                         onRecognitionStateChanged?.invoke(false)
                         
@@ -441,6 +446,7 @@ class SpeechRecognitionManager(
      * Stops voice input if active.
      */
     fun cancelRecognition() {
+        recordingDeadline.cancel()
         speechRecognizer?.cancel()
         if (isComposingPartialText) {
             inputConnectionProvider()?.let {
@@ -452,6 +458,7 @@ class SpeechRecognitionManager(
     }
 
     fun stopRecognition() {
+        recordingDeadline.cancel()
         speechRecognizer?.stopListening()
         Log.d(TAG, "Speech recognition stopped")
     }
@@ -460,6 +467,7 @@ class SpeechRecognitionManager(
      * Destroys the SpeechRecognizer instance.
      */
     fun destroy() {
+        recordingDeadline.cancel()
         speechRecognizer?.destroy()
         speechRecognizer = null
         // Clear any partial text

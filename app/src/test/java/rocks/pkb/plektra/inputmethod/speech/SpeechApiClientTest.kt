@@ -8,6 +8,34 @@ import org.junit.Test
 import java.util.concurrent.TimeUnit
 
 class SpeechApiClientTest {
+    @Test fun longFileRecordingUploadsBoundedOrderedSegmentsAndCombinesResults() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setBody("""{"text":"erster Teil","usage":{"input_tokens":2,"output_tokens":3}}"""))
+            server.enqueue(MockResponse().setBody("""{"text":"zweiter Teil","usage":{"input_tokens":5,"output_tokens":7}}"""))
+            val file = java.io.File.createTempFile("speech-upload-test-", ".pcm")
+            file.writeBytes(ByteArray(500) { (it % 127).toByte() })
+            RecordedSpeech.fromFile(file, 2).use { audio ->
+                val request = SpeechRequest(SpeechProvider.OPENAI, SpeechModel("test", "test"), "test-key", "de-DE", 1)
+                val result = SpeechApiClient(openAiBase = server.url("/").toString()).transcribe(request, audio)
+                assertEquals("erster Teil zweiter Teil", result.text)
+                assertEquals(7L, result.inputTokens)
+                assertEquals(10L, result.outputTokens)
+                assertNull(result.costUsd)
+                for (expected in listOf(480, 20)) {
+                    val received = server.takeRequest(3, TimeUnit.SECONDS)!!
+                    val body = received.body.readByteArray()
+                    val riff = body.toList().windowed(4).indexOfFirst { it == "RIFF".toByteArray().toList() }
+                    assertTrue(riff >= 0)
+                    val pcmSize = java.nio.ByteBuffer.wrap(body, riff + 40, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN).int
+                    assertEquals(expected, pcmSize)
+                    assertEquals("Bearer test-key", received.getHeader("Authorization"))
+                }
+                assertEquals(2, server.requestCount)
+            }
+            assertFalse(file.exists())
+        }
+    }
+
     @Test fun openRouterUsesSttEndpointAndParsesRealResponseShape() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("""{"text":"Hallo","usage":{"cost":0.001,"input_tokens":3,"output_tokens":1}}"""))

@@ -12,6 +12,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 object SpeechSettings {
+    val durationOptionsMs = listOf(60_000L, 180_000L, 300_000L, 600_000L, 900_000L, 0L)
+    const val DEFAULT_MAX_DURATION_MS = 180_000L
     private const val CREDENTIALS = "speech_credentials"
     private const val KEY_ALIAS = "plektra_speech_credentials"
     private fun prefs(context: Context) = SettingsManager.getPreferences(context)
@@ -50,6 +52,16 @@ object SpeechSettings {
 
     fun silenceMs(context: Context): Long = prefs(context).getLong("speech_silence_ms", 3000L).let {
         if (it in listOf(0L, 1500L, 3000L, 5000L)) it else 3000L
+    }
+
+    fun maxDurationMs(context: Context): Long =
+        prefs(context).getLong("speech_max_duration_ms", DEFAULT_MAX_DURATION_MS).let {
+            if (it in durationOptionsMs) it else DEFAULT_MAX_DURATION_MS
+        }
+
+    fun setMaxDurationMs(context: Context, ms: Long) {
+        require(ms in durationOptionsMs)
+        prefs(context).edit().putLong("speech_max_duration_ms", ms).apply()
     }
 
     fun setSilenceMs(context: Context, ms: Long) {
