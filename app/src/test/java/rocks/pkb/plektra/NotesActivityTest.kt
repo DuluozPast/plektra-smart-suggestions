@@ -127,10 +127,10 @@ class NotesActivityTest {
         val both = activity.findViewById<TextView>(R.id.notes_both_toggle)
         val preview = activity.findViewById<TextView>(R.id.notes_preview_toggle)
         val group = both.parent as android.view.ViewGroup
-        val navigation = group.parent as android.view.ViewGroup
-        assertTrue(navigation.indexOfChild(markdown) < navigation.indexOfChild(group))
-        assertEquals(both, group.getChildAt(0))
-        assertEquals(preview, group.getChildAt(2))
+        assertEquals(group, markdown.parent)
+        assertEquals(markdown, group.getChildAt(0))
+        assertEquals(both, group.getChildAt(2))
+        assertEquals(preview, group.getChildAt(4))
         assertTrue(markdown.isSelected)
         preview.performClick()
         assertTrue(preview.isSelected)

@@ -147,33 +147,43 @@
     },
     {
       "file": "raw/titan-2-elite/r5-config-hidden.png",
-      "sha256": "db369f22535d7603ed779d3562e72b2a12f7f9ae41387dfd31d92993668810e5",
+      "sha256": "d5ec2270ebe9a9d57835471738d11ea3ee7dde1a0de2ce01239d2f4992812458",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r5-config-leds.png",
-      "sha256": "8c32c68080a74d5098a9222565e54f79d319cadb274f155b62718b891629c72b",
+      "sha256": "c84e4553a04a1f117684e44317abf92ef0a9b21ce9fdf91679ef47af19b7cb89",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r5-config-suggestions.png",
-      "sha256": "e87ced72a46384d239555e7e6f05ddba91f37c1162648855ee562f1c5067476c",
+      "sha256": "d87a2179b71bcc3e4de9e0927e9b78b644ff05002e0f3c9abc676e030ac3b481",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r5-shared.png",
-      "sha256": "e4ec56746bb0d9e4ec7e3d365f5abec4433ba2656b2b3a496ce528b99cd876af",
+      "sha256": "c5fd81458fb7796dddff1c7e124960ecf247cd805eefc4b83c8c9398607c7706",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r5-slim.png",
-      "sha256": "8c32c68080a74d5098a9222565e54f79d319cadb274f155b62718b891629c72b",
+      "sha256": "04c4735a68703b732bab90c1ac1e28fd262e7999ab5d89f4c355f11ab44fe852",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r5-theme-cobalt.png",
@@ -225,21 +235,27 @@
     },
     {
       "file": "raw/titan-2-elite/r5-variations.png",
-      "sha256": "59fc90cc0fdce08a98c5b373d4ae2a9758f3548dcf241707daf992c01ceb2e01",
+      "sha256": "3dee8bb824f0a9085f9d3517b999164594e1325692d022e2c1395e08d69683d2",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r6-config-full.png",
-      "sha256": "1777679c64cfd4fec7909c1438e0712cbf8d97fd4c086c57e7d7fc1026fa0430",
+      "sha256": "8c56090f994ae0fb5b066c1d5181ff717b8f36f1056c9298b2cddb0b47abb9a3",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/r6-full.png",
-      "sha256": "6311dc6c9144d5869984dcb3c09b3787e5e828bb3b66a7a11b6a16934705662f",
+      "sha256": "3d5a46be9733dfd365f088c0a00500cd598b60f870fb9979d3af766ce58d1750",
       "device": "titan-2-elite",
-      "cohort": "polished"
+      "cohort": "T2E hardware acceptance 2026-10-11",
+      "captured_on": "2026-10-11",
+      "version": "26.10-nightly.11.164908Z"
     },
     {
       "file": "raw/titan-2-elite/selected-text-final.png",
@@ -268,5 +284,29 @@
     ],
     "editor": "Native spellchecker disabled on capture EditText; IME input flags and actual word suggestions retained.",
     "suggestions": "Shared row with existing menu buttons; no renderer redesign."
-  }
+  },
+  "capture_batches": [
+    {
+      "device": "titan-2-elite",
+      "captured_at": "2026-10-11T16:50:26Z",
+      "version": "26.10-nightly.11.164908Z",
+      "files": [
+        "r6-full.png",
+        "r6-config-full.png",
+        "r5-config-suggestions.png",
+        "r5-config-leds.png",
+        "r5-config-hidden.png",
+        "r5-slim.png",
+        "r5-shared.png"
+      ]
+    },
+    {
+      "device": "titan-2-elite",
+      "captured_at": "2026-10-11T17:03:44Z",
+      "version": "26.10-nightly.11.164908Z",
+      "files": [
+        "r5-variations.png"
+      ]
+    }
+  ]
 }

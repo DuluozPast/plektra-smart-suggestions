@@ -18,6 +18,55 @@ import org.robolectric.annotation.Config
 class CornerButtonThemeTest {
     @Test
     @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun outerButtonFollowsInnerLedThroughTheBottomOfTheSlot() {
+        val geometry = KeyboardBarGeometry(RuntimeEnvironment.getApplication()).apply {
+            radii = 100 to 100
+            ledsVisible = true
+            ledLayout = rocks.pkb.plektra.inputmethod.ui.ModifierLedLayouts.TITAN_2_ELITE
+            ledRowTop = 90f
+            ledRowRadius = 8f
+            leftSurface = KeyboardBarGeometry.OuterSurface(android.graphics.RectF(0f, 90f, 150f, 204f), 8f)
+        }
+        val surface = android.graphics.Region().apply {
+            setPath(geometry.surfacePath(1000f, 204f, geometry.leftSurface!!.bounds, 8f, true, false),
+                android.graphics.Region(0, 0, 1000, 204))
+        }
+        val segment = geometry.ledLayout.segments.first { it.x < 0.5f }
+        val paint = android.graphics.Paint().apply {
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = geometry.ledStrokeWidth(segment)
+        }
+        val painted = android.graphics.Path()
+        paint.getFillPath(geometry.ledRailPath(1000f, 204f, segment), painted)
+        val rail = android.graphics.Region().apply {
+            setPath(painted, android.graphics.Region(0, 0, 1000, 204))
+        }
+        for (x in 125..140) {
+            val buttonBottom = (90 until 204).last { surface.contains(x, it) }
+            val railTop = (90 until 204).first { rail.contains(x, it) }
+            org.junit.Assert.assertTrue("Button follows lower LED at x=$x: $buttonBottom / $railTop",
+                railTop - buttonBottom in 1..3)
+        }
+    }
+
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun ledOnlyRailsStartAlongDisplayEdgeWithoutHorizontalHook() {
+        val geometry = KeyboardBarGeometry(RuntimeEnvironment.getApplication()).apply {
+            radii = 100 to 100
+            ledLayout = rocks.pkb.plektra.inputmethod.ui.ModifierLedLayouts.TITAN_2_ELITE
+        }
+        for (segment in geometry.ledLayout.segments) {
+            val measure = android.graphics.PathMeasure(geometry.ledRailPath(1076f, 123f, segment), false)
+            val tangent = FloatArray(2)
+            org.junit.Assert.assertTrue(measure.getPosTan(0.1f, null, tangent))
+            org.junit.Assert.assertTrue("LED rail starts vertically: ${tangent.toList()}",
+                kotlin.math.abs(tangent[0]) < 0.1f && tangent[1] > 0.9f)
+        }
+    }
+
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     fun narrowOuterSlotKeepsAdjacentVariationKeyAndEveryRailCapInsideItsSlot() {
         val context = RuntimeEnvironment.getApplication()
         val geometry = KeyboardBarGeometry(context).apply {

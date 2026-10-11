@@ -27,6 +27,12 @@ import rocks.pkb.plektra.inputmethod.ui.LedStatusView
 internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
     val geometry = KeyboardBarGeometry(context)
     var ledOnlyReservedHeightPx: Int? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+            invalidate()
+        }
     private val screenAwakeController = ImeTouchScreenAwakeController(context)
     private var ledTouchActive = false
     var regularCornerColors: Pair<Int, Int> = Color.BLACK to Color.BLACK
@@ -139,6 +145,7 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
     private var originalRowOutline: ViewOutlineProvider? = null
     private var originalRowClip = false
     private var originalRowMinHeight = 0
+    private var originalRowPaddingBottom = 0
 
     private fun updateNestedStatusRow() {
         indicatorView?.layoutParams?.height = ViewGroup.LayoutParams.WRAP_CONTENT
@@ -153,6 +160,7 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
             row.outlineProvider = originalRowOutline
             row.clipToOutline = originalRowClip
             row.minimumHeight = originalRowMinHeight
+            row.setPadding(row.paddingLeft, row.paddingTop, row.paddingRight, originalRowPaddingBottom)
         }
         nestedRow = null
         val radii = bottomCornerRadiiPx ?: return
@@ -178,6 +186,12 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
         originalRowOutline = row.outlineProvider
         originalRowClip = row.clipToOutline
         originalRowMinHeight = row.minimumHeight
+        originalRowPaddingBottom = row.paddingBottom
+        if (contourIntegratedIndicators) {
+            val calibration = geometry.calibration
+            val edgeInset = kotlin.math.ceil((calibration.offsetPx - calibration.shiftYPx).coerceAtLeast(0f)).toInt()
+            row.setPadding(row.paddingLeft, row.paddingTop, row.paddingRight, minOf(row.paddingBottom, edgeInset))
+        }
         // Reserve a dedicated band so both LED rows remain visibly separate.
         val inset = if (contourIntegratedIndicators) 0 else
             (LedStatusView.LED_ZONE_HEIGHT_DP * resources.displayMetrics.density).toInt()
@@ -226,12 +240,17 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
             // Fill the space up to the row's original top instead of translating
             // a short row downward and exposing an empty band above it.
             fun extendContent(view: View) {
-                val oldTop = if (view === row) view.top else 0
+                val oldTop = view.top
                 val oldLeft = view.left
                 val oldWidth = view.width
                 val oldHeight = view.height
+                if (contourIntegratedIndicators && view is ViewGroup) {
+                    val calibration = geometry.calibration
+                    val inset = kotlin.math.ceil((calibration.offsetPx - calibration.shiftYPx).coerceAtLeast(0f)).toInt()
+                    view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, minOf(view.paddingBottom, inset))
+                }
                 val targetHeight = if (view === row) oldHeight + extraHeight
-                    else (view.parent as View).height
+                    else ((view.parent as View).height - (view.parent as View).paddingBottom - oldTop).coerceAtLeast(0)
                 view.measure(
                     MeasureSpec.makeMeasureSpec(oldWidth, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(targetHeight, MeasureSpec.EXACTLY)
@@ -247,7 +266,7 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
                     }
                 }
             }
-            if (extraHeight > 0) extendContent(row)
+            if (extraHeight > 0 || contourIntegratedIndicators) extendContent(row)
         }
         if (contourIntegratedIndicators) {
             updateLedConstraintTop()

@@ -331,8 +331,8 @@ internal class KeyboardBarGeometry(private val context: Context) {
     private fun buttonInset(left: Boolean): Float {
         val density = context.resources.displayMetrics.density
         val rails = sideRails(left)
-        return density + rails.sumOf { ledStrokeWidth(it).toDouble() }.toFloat() +
-            rails.size * LedStatusView.CONTOUR_LED_GAP_DP * density
+        return density + 1f + rails.sumOf { ledStrokeWidth(it).toDouble() }.toFloat() +
+            (rails.size - 1).coerceAtLeast(0) * LedStatusView.CONTOUR_LED_GAP_DP * density
     }
 
     private fun outerSurface(width: Float, height: Float, left: Boolean): OuterSurface {
@@ -367,7 +367,7 @@ internal class KeyboardBarGeometry(private val context: Context) {
         val rails = sideRails(left)
         val index = rails.indexOfFirst { it.y == segment.y }
         val preceding = rails.take(index).sumOf { (ledStrokeWidth(it) + gap).toDouble() }.toFloat()
-        val offset = surface.borderHalfWidth + gap + stroke / 2f + preceding
+        val offset = surface.borderHalfWidth + 1f + stroke / 2f + preceding
         val points = offsetContour(innerContour(width, height, left), -offset, left)
         val trimmed = trimRail(points, surface.bounds.top + stroke / 2f,
             if (left) surface.bounds.right - stroke / 2f else surface.bounds.left + stroke / 2f, left)
@@ -394,6 +394,7 @@ internal class KeyboardBarGeometry(private val context: Context) {
                 if (followDisplayContour) {
                     val slot = Path().apply { addRect(outerSurface(width, height, left).bounds, Path.Direction.CW) }
                     occupied.op(slot, Path.Op.INTERSECT)
+                    occupied.op(insideContour(width, height, innerContour(width, height, left), left), Path.Op.DIFFERENCE)
                 }
                 op(occupied, Path.Op.UNION)
             }
@@ -506,6 +507,7 @@ internal class KeyboardBarGeometry(private val context: Context) {
         val multiplier = if (hardwareTopRounding) topMultiplier else 1
         val topRadius = (radius * multiplier)
             .coerceAtMost(minOf(availableWidth - bottomRadius, bottom - top - bottomRadius)).coerceAtLeast(0f)
+        if (topRadius == 0f) return null
         fun boundary(y: Float) = T2eCornerGeometry.atY(displayRadius, height,
             y - calibration.shiftYPx, calibration, extraInset).x
         val joinY = (top + topRadius).coerceAtMost(bottom - bottomRadius)
@@ -561,7 +563,12 @@ internal class KeyboardBarGeometry(private val context: Context) {
                 if (left) rect.right else width - rect.left, inset) else null
         val top = transition?.join?.y ?: rect.top
         val physical = physicalContour(width, height, top, left, inset)
-        return if (transition == null) physical else transitionPoints(transition) + physical.drop(1)
+        val contour = (if (transition == null) physical else transitionPoints(transition) + physical.drop(1)).toMutableList()
+        val endX = if (left) rect.right else rect.left
+        contour.lastOrNull()?.let { end ->
+            if (if (left) endX > end.x else endX < end.x) contour += PointF(endX, end.y)
+        }
+        return contour
     }
 
     companion object {

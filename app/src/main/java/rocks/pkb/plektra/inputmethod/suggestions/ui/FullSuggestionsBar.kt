@@ -402,6 +402,19 @@ class FullSuggestionsBar(
         renderMinimalUiButtons()
         applyContainerInsetsForMinimalButtons()
 
+        if (!canShowSuggestions && !reserveEmptyRow) {
+            cancelPendingSuggestionsAccessibilityEnable()
+            suggestionButtons.clear()
+            bar.visibility = View.GONE
+            bar.removeAllViews()
+            lastSlots = emptyList()
+            lastAnnouncedSlots = emptyList()
+            actionCandidate = null
+            actionSlots = emptyList()
+            bindRowGeometry()
+            return
+        }
+
         // A reserved row keeps its surfaces mounted even when results are empty.
         // Only the labels and actions change; the row must never disappear between updates.
         val slots = when {

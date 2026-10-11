@@ -279,3 +279,37 @@ Choose your software key arrangement. The same controls, your preferred geometry
 Ctrl reveals navigation and editing actions. Move, select, copy and paste from the keyboard.
 
 ![More control. Right on the keys.](exports/nightly/landscape/21-ctrl-navigation.png)
+
+## Capture new screenshots
+
+`scripts/capture-showcase.sh` recreates the raw screenshots in `raw/` on an emulator or a physical device. It uses the Nightly debug build, which must be installed on the device first.
+
+1. Install the debug build on the device. Pass the device serial with `--device`. The script does not read `ANDROID_SERIAL`.
+
+   ```sh
+   scripts/build-nightly-debug.sh 26.10 --install --device <serial>
+   ```
+
+2. Run the capture for one device profile. Use `titan-2-elite`, `titan-2` or `pixel-7a`.
+
+   ```sh
+   scripts/capture-showcase.sh --serial <serial> --device titan-2-elite
+   ```
+
+   To capture only some states, add `--only r6-full,r5-slim`. To force one host for every scene, add `--host notes` or `--host showcase`. The default is the host each scene asks for.
+
+**Emulator.** Start the Android Virtual Device and wait until it has finished booting. The serial is usually `emulator-5554`. The display must have no size override, so run `adb shell wm size reset` first if the script reports a mismatch. The Titan 2 Elite profile expects a 1080 by 1200 display.
+
+**Physical device.** Enable USB debugging, connect the device and check that `adb devices` lists its serial. Keep the screen unlocked and awake during the run.
+
+The script changes some device settings while it runs. It turns on the system demo mode (clock 09:10, full battery, no notifications), changes the Plektra keyboard and notes settings for each scene, and sets the input method to Plektra Nightly if needed. It puts all of these back when it exits, including after an error or Ctrl-C. Check the device afterwards if a run is interrupted.
+
+Each run writes to `build/showcase-capture/<device>/<timestamp>/`. The folder holds one PNG per state and a `manifest.json` with the device, serial, app version, time and SHA-256 hash of every file. Captures are never written to `raw/` automatically. Review the PNGs against the existing references, then copy the approved files into `raw/<device>/` by hand.
+
+The scene table is [capture/scenes.json](capture/scenes.json). Each entry lists the device, the keyboard settings, the theme, the typed text and key events, and the crop. States with `"manual": true` are skipped by the script; the `instruction` field says how to capture them by hand. Expect small differences from the references: the Markdown notes editor is a different screen from the older notes host, and the emulator is not detected as a Titan 2 Elite, so its keyboard layout differs.
+
+## Device comparison scale
+
+The opening device comparison uses one physical width scale: Titan 2 88.7 mm, Titan 2 Elite 75 mm and Pixel 7a 72.9 mm. Manufacturer dimensions and source links are recorded in [device-dimensions.json](sources/device-dimensions.json). Transparent photograph margins are excluded when measuring the frame widths; each photograph keeps its aspect ratio.
+
+The upper edge of each keyboard bar is measured in its capture and mapped into its device frame. These edges share one horizontal reference. Device labels share one baseline, with a 16 px gap below the lowest device silhouette.

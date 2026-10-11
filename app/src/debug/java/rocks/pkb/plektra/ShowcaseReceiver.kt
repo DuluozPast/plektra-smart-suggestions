@@ -20,31 +20,30 @@ class ShowcaseReceiver : BroadcastReceiver() {
                 return
             }
             if (intent.getBooleanExtra("restore", false)) {
-                require(backup.exists()) { "No showcase configuration to restore" }
-                val saved = JSONObject(backup.readText())
-                val editor = prefs.edit()
-                saved.keys().forEach { key ->
-                    val item = saved.getJSONObject(key)
-                    when (item.getString("type")) {
-                        "absent" -> editor.remove(key)
-                        "boolean" -> editor.putBoolean(key, item.getBoolean("value"))
-                        "int" -> editor.putInt(key, item.getInt("value"))
-                        "long" -> editor.putLong(key, item.getLong("value"))
-                        "float" -> editor.putFloat(key, item.getDouble("value").toFloat())
-                        "string" -> editor.putString(key, item.getString("value"))
-                        "set" -> editor.putStringSet(key, item.getJSONArray("value").let { array -> (0 until array.length()).map { array.getString(it) }.toSet() })
-                        else -> error("Unsupported backup type")
-                    }
+                val restoredNotes = restoreNotesPreferences(context)
+                require(backup.exists() || restoredNotes) { "No showcase configuration to restore" }
+                if (backup.exists()) {
+                    val saved = JSONObject(backup.readText())
+                    val editor = prefs.edit()
+                    saved.keys().forEach { key -> editor.putEncoded(key, saved.getJSONObject(key)) }
+                    require(editor.commit()) { "Restore failed" }
+                    require(backup.delete()) { "Could not remove restored backup" }
                 }
-                require(editor.commit()) { "Restore failed" }
-                require(backup.delete()) { "Could not remove restored backup" }
                 resultData = "Showcase configuration restored"
+                return
+            }
+            intent.getStringExtra("note")?.let { preset ->
+                applyNotePreset(context, JSONObject(preset))
+                resultData = "Showcase note applied"
                 return
             }
             val values = JSONObject(intent.getStringExtra("settings") ?: "{}")
             val theme = intent.getStringExtra("theme")?.let { name ->
                 keyboardThemePresets().firstOrNull { it.name == name } ?: error("Unknown theme $name")
             }
+            val currentThemes = if (theme != null) SettingsManager.KeyboardThemeTarget.entries.associateWith {
+                SettingsManager.getKeyboardTheme(context, it)
+            } else emptyMap()
             if (theme != null) listOf("keyboard_theme_hardware", "keyboard_theme_software",
                 "keyboard_theme_assignment_mode_hardware", "keyboard_theme_assignment_mode_software").forEach { key ->
                 if (!values.has(key)) values.put(key, JSONObject.NULL)
@@ -98,8 +97,23 @@ class ShowcaseReceiver : BroadcastReceiver() {
             backup.writeText(saved.toString())
             require(editor.commit()) { "Settings could not be saved" }
             theme?.let {
-                SettingsManager.setKeyboardTheme(context, SettingsManager.KeyboardThemeTarget.HARDWARE, theme.toSettingsTheme())
-                SettingsManager.setKeyboardTheme(context, SettingsManager.KeyboardThemeTarget.SOFTWARE, theme.withSoftwareKeyboardDefaults().toSettingsTheme())
+                for (target in SettingsManager.KeyboardThemeTarget.entries) {
+                    val current = currentThemes.getValue(target)
+                    val palette = theme.toSettingsTheme().copy(
+                        keyCornerRadiusRatio = current.keyCornerRadiusRatio,
+                        chromeCornerRadiusRatio = current.chromeCornerRadiusRatio,
+                        keyHeightScale = current.keyHeightScale,
+                        numberRowHeightScale = current.numberRowHeightScale,
+                        keyWidthScale = current.keyWidthScale,
+                        rowGapScale = current.rowGapScale,
+                        distributeHorizontalSpacing = current.distributeHorizontalSpacing,
+                        ortholinear = current.ortholinear,
+                        showLeds = current.showLeds,
+                        suggestionsHeightScale = current.suggestionsHeightScale,
+                        variationsHeightScale = current.variationsHeightScale
+                    )
+                    SettingsManager.setKeyboardTheme(context, target, palette)
+                }
             }
             resultData = "Showcase settings applied"
         } catch (error: Exception) {
@@ -108,7 +122,72 @@ class ShowcaseReceiver : BroadcastReceiver() {
         }
     }
 
+    /**
+     * Replaces the Markdown editor's single notes collection with one synthetic note.
+     * The original notes preferences are saved once and put back by `--ez restore true`.
+     */
+    private fun applyNotePreset(context: Context, preset: JSONObject) {
+        val prefs = context.getSharedPreferences(NOTES_PREFS, Context.MODE_PRIVATE)
+        val backup = java.io.File(context.filesDir, NOTES_BACKUP)
+        if (!backup.exists()) {
+            val saved = JSONObject()
+            prefs.all.forEach { (key, value) -> saved.put(key, encodePref(value)) }
+            backup.writeText(saved.toString())
+        }
+        val body = preset.optString("body")
+        val title = preset.optString("title")
+        val cursor = preset.optInt("cursor", body.length).coerceIn(0, body.length)
+        val note = JSONObject().put("id", NOTE_ID).put("title", title).put("body", body)
+            .put("cursor", cursor).put("headingFocused", false)
+        val editor = prefs.edit()
+            .putString("collection", JSONArray().put(note).toString())
+            .putString("active_note", NOTE_ID)
+            .putString("heading", title)
+            .putString("body", body)
+            .putInt("cursor", cursor)
+            .putInt("view_mode", 0)
+        require(editor.commit()) { "Notes could not be saved" }
+    }
+
+    private fun restoreNotesPreferences(context: Context): Boolean {
+        val backup = java.io.File(context.filesDir, NOTES_BACKUP)
+        if (!backup.exists()) return false
+        val saved = JSONObject(backup.readText())
+        val editor = context.getSharedPreferences(NOTES_PREFS, Context.MODE_PRIVATE).edit()
+        saved.keys().forEach { key -> editor.putEncoded(key, saved.getJSONObject(key)) }
+        require(editor.commit()) { "Notes restore failed" }
+        require(backup.delete()) { "Could not remove notes backup" }
+        return true
+    }
+
+    private fun encodePref(value: Any?): JSONObject = when (value) {
+        null -> JSONObject().put("type", "absent")
+        is Boolean -> JSONObject().put("type", "boolean").put("value", value)
+        is Int -> JSONObject().put("type", "int").put("value", value)
+        is Long -> JSONObject().put("type", "long").put("value", value)
+        is Float -> JSONObject().put("type", "float").put("value", value.toDouble())
+        is String -> JSONObject().put("type", "string").put("value", value)
+        is Set<*> -> JSONObject().put("type", "set").put("value", JSONArray(value.toList()))
+        else -> error("Unsupported original type")
+    }
+
+    private fun android.content.SharedPreferences.Editor.putEncoded(key: String, item: JSONObject): android.content.SharedPreferences.Editor =
+        when (item.getString("type")) {
+            "absent" -> remove(key)
+            "boolean" -> putBoolean(key, item.getBoolean("value"))
+            "int" -> putInt(key, item.getInt("value"))
+            "long" -> putLong(key, item.getLong("value"))
+            "float" -> putFloat(key, item.getDouble("value").toFloat())
+            "string" -> putString(key, item.getString("value"))
+            "set" -> putStringSet(key, item.getJSONArray("value").let { array -> (0 until array.length()).map { array.getString(it) }.toSet() })
+            else -> error("Unsupported backup type")
+        }
+
     companion object {
+        private const val NOTES_PREFS = "notes"
+        private const val NOTES_BACKUP = "showcase-notes-backup.json"
+        private const val NOTE_ID = "showcase-note"
+
         private val allowed = setOf(
             "app_language_tag", "software_keyboard_mode", "software_keyboard_mode_runtime_override",
             "suggestions_enabled", "status_bar_variations_visible", "modifier_indicator_mode",

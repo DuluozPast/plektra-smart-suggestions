@@ -128,18 +128,8 @@ open class NotesActivity : Activity() {
             }
             clipToOutline = true
         }
-        val pencil = iconAction(R.drawable.ic_notes_edit, R.string.notes_markdown) {
-            setViewMode(ViewMode.MARKDOWN, showInput = true)
-        }.apply { id = R.id.notes_markdown_toggle }
-        modeTabs += ViewMode.MARKDOWN to pencil
-        navigation.addView(pencil)
-        navigation.addView(View(this).apply { setBackgroundColor(dividerColor) },
-            LinearLayout.LayoutParams(dp(1), dp(24)).apply {
-                gravity = Gravity.CENTER_VERTICAL
-                leftMargin = dp(4)
-                rightMargin = dp(4)
-            })
         val modes = listOf(
+            Triple(ViewMode.MARKDOWN, R.drawable.ic_notes_edit, R.string.notes_markdown),
             Triple(ViewMode.BOTH, R.drawable.ic_notes_split, R.string.notes_both),
             Triple(ViewMode.PREVIEW, R.drawable.ic_notes_preview, R.string.notes_preview),
         )
