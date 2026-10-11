@@ -42,6 +42,8 @@ class FullSuggestionsBarMenuButtonsTest {
         }
         assertTrue(settings.performClick())
         assertEquals(1, clicks)
+        assertFalse("Disabled suggestions must not render empty key surfaces",
+            visibleViews(frame).any { it is android.widget.TextView && it.background != null && it.text.isEmpty() })
         assertFalse(visibleViews(frame).any {
             it.contentDescription == context.getString(R.string.status_bar_button_emoji_description)
         })

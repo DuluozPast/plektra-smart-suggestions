@@ -19,8 +19,19 @@ const {createHash}=require('node:crypto');
    raw=await sharp(path.join(root,'raw/titan-2-elite',name+'.png')).extract({left:0,top:1200-crop.info.height,width:1076,height:crop.info.height}).ensureAlpha().raw().toBuffer(),
    reference=await sharp(path.join(root,'raw/titan-2-elite/r5-config-hidden.png')).extract({left:0,top:1200-crop.info.height,width:1076,height:crop.info.height}).ensureAlpha().raw().toBuffer();
   let foreground=0,hidden=0;
-  for(let i=0;i<raw.length;i+=4){const difference=Math.max(...[0,1,2].map(c=>Math.abs(raw[i+c]-reference[i+c])));if(difference>1){assert.equal(crop.data[i+3],255);[0,1,2].forEach(c=>assert.equal(crop.data[i+c],raw[i+c]));foreground++;}else if(crop.data[i+3]===0)hidden++;}
+  const corners=[raw.length-4,raw.length-1076*4];
+  for(let i=0;i<raw.length;i+=4){const difference=Math.max(...[0,1,2].map(c=>Math.abs(raw[i+c]-reference[i+c]))),background=corners.some(j=>[0,1,2].every(c=>Math.abs(raw[i+c]-raw[j+c])<=1));if(difference>1&&!background){assert.equal(crop.data[i+3],255);[0,1,2].forEach(c=>assert.equal(crop.data[i+c],raw[i+c]));foreground++;}else if(crop.data[i+3]===0)hidden++;}
   assert(hidden>0&&foreground>0);checks.push({capture:name,foreground_pixels_retained:foreground,background_pixels_transparent:hidden});
+ }
+ for(const channel of ['stable','nightly'])for(const format of ['landscape','portrait']){
+  const svg=fs.readFileSync(path.join(root,'exports',channel,format,'01-devices.svg'),'utf8');
+  const devices=[...svg.matchAll(/<g data-device="([^"]+)" data-width-mm="([^"]+)" data-visible-width="([^"]+)" data-bar-y="([^"]+)" data-label-y="([^"]+)">/g)].map(m=>({id:m[1],mm:+m[2],width:+m[3],bar:+m[4],label:+m[5]}));
+  assert.equal(devices.length,3);
+  const [titan,elite,pixel]=devices;
+  assert(titan.width>elite.width);
+  assert(Math.abs(titan.width/elite.width-88.7/75)<1e-8);
+  assert(Math.abs(pixel.width/elite.width-72.9/75)<1e-8);
+  assert(devices.every(d=>Math.abs(d.bar-titan.bar)<1e-8&&Math.abs(d.label-titan.label)<1e-8));
  }
  const mask=await sharp(path.join(root,'frames/titan-2-elite-screen-mask.png')).ensureAlpha().raw().toBuffer();
  for(const [name,colors] of [['r6-full',[[48,48,48]]],['r5-config-leds',[[48,48,48],[100,150,255]]]]){

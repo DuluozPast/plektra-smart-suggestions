@@ -392,7 +392,8 @@ private fun SettingsMainScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.statusBars),
-                tonalElevation = 1.dp
+                color = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onBackground
             ) {
                 Row(
                     modifier = Modifier

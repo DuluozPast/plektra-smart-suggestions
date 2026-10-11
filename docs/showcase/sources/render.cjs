@@ -4,6 +4,7 @@ const sharp=require('sharp');
 const root=path.resolve(__dirname,'..'), repo=path.resolve(root,'../..');
 process.env.PLEKTRA_FRAMES_DIR=path.join(root,'frames');
 const catalog=JSON.parse(fs.readFileSync(path.join(__dirname,'catalog.json')));
+const deviceDimensions=JSON.parse(fs.readFileSync(path.join(__dirname,'device-dimensions.json')));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const uri=p=>'data:image/'+(p.endsWith('.svg')?'svg+xml':'png')+';base64,'+fs.readFileSync(p).toString('base64');
 const text=(s,x,y,size=28,color='#555A60',weight=400,anchor='start')=>`<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}" text-anchor="${anchor}">${esc(s)}</text>`;
@@ -14,8 +15,48 @@ async function dimensions(p){return metas[p]||(metas[p]=await sharp(p).metadata(
 async function fit(p,x,y,w,h){let m=await dimensions(p),scale=Math.min(w/m.width,h/m.height);let rw=m.width*scale,rh=m.height*scale;return image(p,x+(w-rw)/2,y+(h-rh)/2,rw,rh);}
 function raw(item){return path.join(root,'raw',item[0],item[1]+'.png');}
 async function frame(item){const stamp=digest(raw(item),path.join(process.env.PLEKTRA_FRAMES_DIR,item[0]+'-frame.png'),path.join(process.env.PLEKTRA_FRAMES_DIR,item[0]+'-screen-mask.png'),path.join(process.env.PLEKTRA_FRAMES_DIR,item[0]+'-geometry.json'));const out=path.join(root,'composed',item[0]+'-'+item[1]+'-'+stamp+'.png');assets.add(out);if(!fs.existsSync(out))execFileSync(process.execPath,[path.join(__dirname,'compose-screen.cjs'),item[0],raw(item),out]);return out;}
+// Titan 2 Elite bar crops. The IME top is measured per capture (bar, contour and LED strokes), not fixed.
+// Background is removed by one rule: pixels that match the app background, and that are connected to the
+// crop border, become transparent. Matching pixels enclosed by the bar (keys, panel gaps behind keys) stay.
+// App background: pixel-identical Notes grid of r5-config-hidden.png when the capture shares it above the bar,
+// otherwise the flat app colour of the same screenshot plus its corner colours (outside the rounded display).
+const TITAN_REF=path.join(root,'raw/titan-2-elite/r5-config-hidden.png');
+const BAR_SEARCH=420,BAR_MARGIN=6;
+let titanReference;
+async function rgba(p){const {data,info}=await sharp(p).ensureAlpha().raw().toBuffer({resolveWithObject:true});return {data,width:info.width,height:info.height};}
+const sameRGB=(a,i,b,j)=>Math.abs(a[i]-b[j])<=1&&Math.abs(a[i+1]-b[j+1])<=1&&Math.abs(a[i+2]-b[j+2])<=1;
+async function titanBarCrop(src,out){
+ titanReference??=await rgba(TITAN_REF);
+ const img=await rgba(src),ref=titanReference,{width:W,height:H}=img,d=img.data,r=ref.data,winTop=H-BAR_SEARCH;
+ let gridMatches=true;
+ for(let i=winTop*W*4;i<(winTop+200)*W*4&&gridMatches;i+=4)gridMatches=sameRGB(d,i,r,i);
+ let flat=[];
+ if(!gridMatches){
+  const counts=new Map();
+  for(let y=500;y<700;y+=2)for(let x=0;x<W;x+=2){const i=(y*W+x)*4,k=[d[i],d[i+1],d[i+2]].join(',');counts.set(k,(counts.get(k)||0)+1);}
+  const app=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0][0].split(',').map(Number);
+  const corner=x=>{const i=((H-1)*W+x)*4;return [d[i],d[i+1],d[i+2]];};
+  flat=[app,corner(0),corner(W-1)];
+ }
+ const cornerColors=[0,W-1].map(x=>{const i=((H-1)*W+x)*4;return [d[i],d[i+1],d[i+2]];});
+ const isBg=i=>(gridMatches?sameRGB(d,i,r,i):flat.some(c=>Math.abs(d[i]-c[0])<=1&&Math.abs(d[i+1]-c[1])<=1&&Math.abs(d[i+2]-c[2])<=1))||
+   cornerColors.some(c=>Math.abs(d[i]-c[0])<=1&&Math.abs(d[i+1]-c[1])<=1&&Math.abs(d[i+2]-c[2])<=1);
+ let top=-1;
+ for(let y=winTop;y<H&&top<0;y++)for(let x=0;x<W;x++)if(!isBg((y*W+x)*4)){top=y;break;}
+ if(top<0)throw new Error('No IME content found in '+src);
+ const y0=Math.max(0,top-BAR_MARGIN),h=H-y0,seen=new Uint8Array(W*h),stack=[];
+ const seed=(x,y)=>{if(x<0||y<y0||x>=W||y>=H)return;const k=(y-y0)*W+x;if(!seen[k]&&isBg((y*W+x)*4)){seen[k]=1;stack.push(k);}};
+ for(let x=0;x<W;x++){seed(x,y0);seed(x,H-1);}
+ for(let y=y0;y<H;y++){seed(0,y);seed(W-1,y);}
+ while(stack.length){const k=stack.pop(),x=k%W,y=(k-x)/W+y0;seed(x+1,y);seed(x-1,y);seed(x,y+1);seed(x,y-1);}
+ const px=Buffer.alloc(W*h*4);
+ for(let k=0;k<W*h;k++){const si=((k/W|0)+y0)*W*4+(k%W)*4;px[k*4]=d[si];px[k*4+1]=d[si+1];px[k*4+2]=d[si+2];px[k*4+3]=seen[k]?0:255;}
+ await sharp(px,{raw:{width:W,height:h,channels:4}}).png().toFile(out);
+ return out;
+}
 async function crop(item,mode='bar'){
  const stamp=digest(raw(item),__filename,path.join(root,'raw/titan-2-elite/r5-config-hidden.png'));const out=path.join(root,'crops',item[0]+'-'+item[1]+'-'+mode+'-polished-'+stamp+'.png');assets.add(out);if(fs.existsSync(out))return out;
+ if(item[0]==='titan-2-elite'&&(mode==='bar'||mode==='modifier'))return titanBarCrop(raw(item),out);
  const src=raw(item),m=await dimensions(src),pixel=item[0]==='pixel-7a';let top,height;
  if(mode==='snippet-result'){
   top=340;height=item[1].endsWith('address')?130:78;await sharp(src).extract({left:45,top,width:m.width-90,height}).png().toFile(out);return out;
@@ -28,34 +69,49 @@ async function crop(item,mode='bar'){
  else if(mode==='modifier'){height=Math.round(m.height*.10);top=m.height-height;}
  else if(pixel && item[1].startsWith('clipboard')){top=1560;height=288;}
  else if(pixel){top=1372;height=m.height-top;}
- else if(item[0]==='titan-2-elite'&&(/^r[23456]-/).test(item[1])){
-  height=item[1].includes('config-leds')||item[1].includes('slim')?123:item[1].includes('config-suggestions')||item[1].includes('shared')?103:204;top=m.height-height;
- }else{height=Math.round(m.height*(item[1].includes('symbols')?.35:.19));top=m.height-height;}
- let extracted=await sharp(src).extract({left:0,top,width:m.width,height}).png().toBuffer();
- if(item[0]==='titan-2-elite'&&mode==='bar'&&(/config-|slim|transparent-dark/).test(item[1])){
-  const {data,info}=await sharp(extracted).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  const reference=await sharp(path.join(root,'raw/titan-2-elite/r5-config-hidden.png')).extract({left:0,top,width:m.width,height}).ensureAlpha().raw().toBuffer();
-  for(let i=0;i<data.length;i+=4){if(Math.max(...[0,1,2].map(c=>Math.abs(data[i+c]-reference[i+c])))<=1)data[i+3]=0;}
-  extracted=await sharp(data,{raw:{width:info.width,height:info.height,channels:4}}).png().toBuffer();
- }
-
- if(item[0]==='titan-2-elite'&&mode==='bar'&&!(/config-|slim|transparent-dark/).test(item[1])){
-  const {data,info}=await sharp(extracted).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  const bg=[data[((height-1)*info.width)*4],data[((height-1)*info.width)*4+1],data[((height-1)*info.width)*4+2]],radius=Math.min(123,height);
-  // Remove only background outside the lower contour. Every native LED/glyph pixel survives.
-  for(let y=height-radius;y<height;y++)for(let x=0;x<info.width;x++){
-   const cx=x<radius?radius:x>=info.width-radius?info.width-radius:null;
-   if(cx===null||Math.hypot(x-cx,y-(height-radius))<=radius)continue;
-   const i=(y*info.width+x)*4;
-   if([0,1,2].every(c=>Math.abs(data[i+c]-bg[c])<=1))data[i+3]=0;
+ else{height=Math.round(m.height*(item[1].includes('symbols')?.35:.19));top=m.height-height;}
+ await sharp(src).extract({left:0,top,width:m.width,height}).png().toFile(out);return out;
+}
+async function deviceComparison(items,box,portrait){
+ const [x,y,w,h]=box,gap=portrait?28:32,labelSize=portrait?25:26,labelGap=16;
+ const devices=[];
+ for(const item of items){
+  const id=item[0],p=await frame(item),m=await dimensions(p),geometry=JSON.parse(fs.readFileSync(path.join(root,'frames',id+'-geometry.json')));
+  const trimmed=await sharp(path.join(root,'frames',id+'-frame.png')).trim({background:'#00000000'}).toBuffer({resolveWithObject:true});
+  const bounds={x:-trimmed.info.trimOffsetLeft,y:-trimmed.info.trimOffsetTop,width:trimmed.info.width,height:trimmed.info.height};
+  const capture=await rgba(raw(item)),W=capture.width,H=capture.height,d=capture.data,center=(Math.floor(H*.5)*W+Math.floor(W*.5))*4;
+  const bg=[d[center],d[center+1],d[center+2]];
+  let barTop=-1;
+  for(let row=Math.floor(H*.5);row<H;row++){
+   let changed=0;
+   for(let column=0;column<W;column++){const i=(row*W+column)*4;if(bg.some((v,j)=>Math.abs(d[i+j]-v)>12))changed++;}
+   if(changed/W>.65){barTop=row;break;}
   }
-  extracted=await sharp(data,{raw:{width:info.width,height:info.height,channels:4}}).png().toBuffer();
+  if(barTop<0)throw new Error('No keyboard bar edge found for '+id);
+  const screen=geometry.screen.bounds,anchor=screen.y+barTop/(H-1)*screen.height;
+  const mmPerPixel=deviceDimensions[id].width_mm/bounds.width;
+  devices.push({item,p,m,bounds,anchor,mmPerPixel,width:deviceDimensions[id].width_mm,above:(anchor-bounds.y)*mmPerPixel,below:(bounds.y+bounds.height-anchor)*mmPerPixel});
  }
- await sharp(extracted).png().toFile(out);return out;
+ const above=Math.max(...devices.map(d=>d.above)),below=Math.max(...devices.map(d=>d.below));
+ const scale=Math.min((w-gap*(devices.length-1))/devices.reduce((sum,d)=>sum+d.width,0),(h-labelGap-labelSize)/(above+below));
+ const groupWidth=devices.reduce((sum,d)=>sum+d.width*scale,0)+gap*(devices.length-1);
+ const anchorY=y+(h-(above+below)*scale-labelGap-labelSize)/2+above*scale;
+ const labelY=anchorY+below*scale+labelGap+labelSize*.8;
+ let xx=x+(w-groupWidth)/2,out='';
+ for(const device of devices){
+  const {item,p,m,bounds,anchor,mmPerPixel,width}=device,s=scale*mmPerPixel;
+  out+=`<g data-device="${item[0]}" data-width-mm="${width}" data-visible-width="${width*scale}" data-bar-y="${anchorY}" data-label-y="${labelY}">`;
+  out+=image(p,xx-bounds.x*s,anchorY-anchor*s,m.width*s,m.height*s);
+  out+=text(item[2],xx+width*scale/2,labelY,labelSize,'#565B60',400,'middle')+'</g>';
+  xx+=width*scale+gap;
+ }
+ return out;
 }
 async function contents(card,box,portrait){
  let [x,y,w,h]=box, out='';
- if(card.layout==='devices'||card.layout==='pair'){
+ if(card.layout==='devices'){
+   out+=await deviceComparison(card.items,box,portrait);
+ }else if(card.layout==='pair'){
    const n=card.items.length,gap=portrait?28:32,cell=(w-gap*(n-1))/n;
    for(let i=0;i<n;i++){const p=await frame(card.items[i]);out+=await fit(p,x+i*(cell+gap),y,cell,h-55);out+=text(card.items[i][2],x+i*(cell+gap)+cell/2,y+h-12,portrait?25:26,'#565B60',400,'middle');}
  }else if(card.layout==='frame-crop'){
@@ -63,9 +119,11 @@ async function contents(card,box,portrait){
    if(portrait){out+=await fit(p,x+110,y,w-220,h*.64);out+=text(item[2],x,y+h*.71,27);out+=await fit(cp,x,y+h*.73,w,h*.27);}
    else{out+=await fit(p,x,y,w*.44,h);let cm=await dimensions(cp),ih=Math.min(h*.58,w*.51*cm.height/cm.width),iy=y+(h-ih)/2;out+=text(item[2],x+w*.49,iy-28,26);out+=await fit(cp,x+w*.49,iy,w*.51,ih);}
  }else if(card.layout==='bar-configs'){
-   const total=card.items.slice(0,3).reduce((sum,i)=>sum+(i[1].endsWith('full')?204:i[1].endsWith('leds')?123:103),0);
+   // Every row shares one width and scale, the screen bottom as bottom edge, and the same gap below each row.
+   const shots=[];for(const item of card.items)shots.push(item[1].endsWith('hidden')?null:await crop(item));
+   const total=(await Promise.all(shots.filter(Boolean).map(async p=>(await dimensions(p)).height))).reduce((s,v)=>s+v,0);
    const iw=Math.min(w,(h-4*74-30)*1076/total),scale=iw/1076;let yy=y;
-   for(const item of card.items){out+=text(item[2],x,yy+27,27);yy+=44;if(item[1].endsWith('hidden')){out+=text('Look, no bar.',x,yy+29,30,'#565B60');yy+=58;}else{const cp=await crop(item),cm=await dimensions(cp);out+=image(cp,x,yy,iw,cm.height*scale);yy+=cm.height*scale+25;}}
+   for(const [k,item] of card.items.entries()){out+=text(item[2],x,yy+27,27);yy+=44;if(!shots[k]){out+=text('Bar hidden',x,yy+29,30,'#565B60');yy+=58;}else{const cp=shots[k],cm=await dimensions(cp);out+=image(cp,x,yy,iw,cm.height*scale);yy+=cm.height*scale+25;}}
  }else if(card.layout==='snippets'){
    let yy=y+25;for(const item of card.items){out+=text(item[2],x,yy+27,27);yy+=50;const cp=await crop(item,'snippet-result'),cm=await dimensions(cp),iw=w,ih=iw*cm.height/cm.width;out+=image(cp,x,yy,iw,ih);yy+=ih+35;}
  }else if(card.layout==='compare-layouts'){
@@ -95,8 +153,9 @@ async function contents(card,box,portrait){
        card.title.forEach((s,i)=>body+=text(s,portrait?72:76,titleY+i*(portrait?88:78),titleSize,'#242729',700));
        let by=titleY+(card.title.length-1)*(portrait?88:78)+(portrait?63:69);
        card.body.forEach((s,i)=>body+=text(s,portrait?72:76,by+i*43,portrait?29:28,'#535960'));
-       body+=`<rect x="${portrait?72:76}" y="${by+71}" width="64" height="5" fill="${accent}"/>`;
-       const box=portrait?[72,by+108,936,H-(by+108)-175]:[794,148,1048,790];body+=await contents(card,box,portrait);
+       const bodyEnd=by+(card.body.length-1)*43;
+       body+=`<rect x="${portrait?72:76}" y="${bodyEnd+28}" width="64" height="5" fill="${accent}"/>`;
+       const box=portrait?[72,bodyEnd+65,936,H-(bodyEnd+65)-175]:[794,148,1048,790];body+=await contents(card,box,portrait);
        body+=text('Open source software under GPLv3',portrait?72:76,H-(portrait?94:55),portrait?25:25,'#535960');
        const gx=portrait?72:1460,gy=H-(portrait?65:82);
        body+=image(path.join(__dirname,'github.svg'),gx,gy,30,30)+text('pkb-rocks/plektra',gx+44,gy+25,portrait?27:27,'#292B2C',500);

@@ -1,0 +1,832 @@
+{
+  "description": "Scene table for scripts/capture-showcase.sh. One entry per device and state used in sources/catalog.json. Steps run in order: a KEYCODE_* name is sent with `input keyevent`; `longpress:KEYCODE_*` is a long press; `wait:<ms>`; `tap:<x>,<y>`; `back` closes the IME. Notes are prefilled through ShowcaseReceiver (host notes) or intent extras (host showcase). Values in `settings` are written with ShowcaseReceiver and restored afterwards.",
+  "devices": {
+    "titan-2-elite": {
+      "expected_screen": "1080x1200",
+      "crop": {
+        "width": 1076,
+        "height": 1200,
+        "x": 2,
+        "y": 0
+      },
+      "crop_note": "The physical display is 1080x1200. A 1076x1200 override already matches the reference size and is kept without a second trim.",
+      "baseline": {
+        "software_keyboard_mode": "force_hardware",
+        "software_keyboard_mode_runtime_override": null,
+        "static_variation_bar_preset": "symbols",
+        "suggestions_enabled": true,
+        "experimental_suggestions_enabled": true,
+        "status_bar_variations_visible": true,
+        "slim_mode_override": "full_status_bar",
+        "keyboard_bar_arrangement": "SUGGESTIONS_FIRST",
+        "modifier_indicator_mode": "bottom_strip"
+      }
+    },
+    "titan-2": {
+      "expected_screen": null,
+      "crop": null,
+      "crop_note": "Reference is 1436x1440; the screen geometry of a Titan 2 is unknown. The full screencap is kept, so crop to the reference geometry after review.",
+      "baseline": {
+        "software_keyboard_mode": "force_hardware",
+        "software_keyboard_mode_runtime_override": null,
+        "static_variation_bar_preset": "symbols",
+        "suggestions_enabled": true,
+        "experimental_suggestions_enabled": true,
+        "status_bar_variations_visible": true,
+        "slim_mode_override": "full_status_bar",
+        "keyboard_bar_arrangement": "SUGGESTIONS_FIRST",
+        "modifier_indicator_mode": "bottom_strip"
+      }
+    },
+    "pixel-7a": {
+      "expected_screen": "1080x2400",
+      "crop": null,
+      "crop_note": "Full 1080x2400 screencap, as the raw files.",
+      "baseline": {}
+    }
+  },
+  "scenes": [
+    {
+      "id": "titan-2-elite/r6-full",
+      "device": "titan-2-elite",
+      "state": "r6-full",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Suggestions row matches. The variation/symbol row differs from the Titan 2 Elite key layout (emulator is not detected as Titan 2 Elite)."
+    },
+    {
+      "id": "titan-2-elite/r6-config-full",
+      "device": "titan-2-elite",
+      "state": "r6-config-full",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "hardware-verified",
+      "comment": "Full bar on the grid background. Same keyboard settings as r6-full."
+    },
+    {
+      "id": "titan-2-elite/r5-config-suggestions",
+      "device": "titan-2-elite",
+      "state": "r5-config-suggestions",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "suggestions_enabled": true,
+        "status_bar_variations_visible": false,
+        "modifier_indicator_mode": "off"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "hardware-verified",
+      "comment": "Suggestions on, variation keys row and LEDs off. Bar mapping is inferred from the settings model."
+    },
+    {
+      "id": "titan-2-elite/r5-config-leds",
+      "device": "titan-2-elite",
+      "state": "r5-config-leds",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "suggestions_enabled": false,
+        "status_bar_variations_visible": false,
+        "modifier_indicator_mode": "bottom"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "One keyboard. Your choice."
+      },
+      "steps": [],
+      "confidence": "hardware-verified",
+      "comment": "Full profile configured with only contour LEDs."
+    },
+    {
+      "id": "titan-2-elite/r5-config-hidden",
+      "device": "titan-2-elite",
+      "state": "r5-config-hidden",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "suggestions_enabled": false,
+        "status_bar_variations_visible": false,
+        "modifier_indicator_mode": "off"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "One keyboard. Your choice."
+      },
+      "steps": [
+        "back"
+      ],
+      "confidence": "hardware-verified",
+      "comment": "No keyboard on screen: the IME is closed with BACK after the host opens."
+    },
+    {
+      "id": "titan-2-elite/r5-slim",
+      "device": "titan-2-elite",
+      "state": "r5-slim",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "slim_mode_override": "slim",
+        "keyboard_bar_slim_suggestions": false,
+        "keyboard_bar_slim_actions": false,
+        "keyboard_bar_slim_bottom": true,
+        "keyboard_bar_slim_android": false,
+        "keyboard_bar_slim_inline": false,
+        "slim_status_bar_slots_left": "[\"none\"]",
+        "slim_status_bar_slots_right": "[\"none\"]"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "One keyboard. Your choice."
+      },
+      "steps": [],
+      "confidence": "hardware-verified",
+      "comment": "Slim profile configured with only contour LEDs; no suggestions, action keys or menu slots."
+    },
+    {
+      "id": "titan-2-elite/r5-shared",
+      "device": "titan-2-elite",
+      "state": "r5-shared",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "keyboard_bar_arrangement": "SHARED"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "hardware-verified",
+      "comment": "Shared arrangement: suggestions and actions in one row."
+    },
+    {
+      "id": "titan-2-elite/r5-variations",
+      "device": "titan-2-elite",
+      "state": "r5-variations",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "static_variation_bar_preset": "off",
+        "status_bar_variations_visible": true,
+        "software_keyboard_mode": "force_hardware",
+        "slim_mode_override": "full_status_bar"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "See you at the caf"
+      },
+      "steps": [
+        "KEYCODE_E"
+      ],
+      "manual": false,
+      "confidence": "hardware-verified",
+      "comment": "Type the final E after the prefilled text to trigger contextual character variations; verified on T2E."
+    },
+    {
+      "id": "titan-2-elite/r2-expanded-address",
+      "device": "titan-2-elite",
+      "state": "r2-expanded-address",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Delivery address:\n42 Example Street, London, SW1A "
+      },
+      "steps": [
+        "KEYCODE_1",
+        "KEYCODE_A",
+        "KEYCODE_A"
+      ],
+      "confidence": "approximate",
+      "comment": "Synthetic address text typed at the end, so the suggestions row shows the last word."
+    },
+    {
+      "id": "titan-2-elite/r2-expanded-date",
+      "device": "titan-2-elite",
+      "state": "r2-expanded-date",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Notes from 2026-10-"
+      },
+      "steps": [
+        "KEYCODE_0",
+        "KEYCODE_8"
+      ],
+      "confidence": "approximate",
+      "comment": "Static saved date 2026-10-08, typed as text."
+    },
+    {
+      "id": "titan-2-elite/r2-expanded-email",
+      "device": "titan-2-elite",
+      "state": "r2-expanded-email",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "You can reach me at hello@example.co"
+      },
+      "steps": [
+        "KEYCODE_M"
+      ],
+      "confidence": "approximate",
+      "comment": "Synthetic example address. Suggestions depend on the dictionary."
+    },
+    {
+      "id": "titan-2-elite/r2-snippet-email",
+      "device": "titan-2-elite",
+      "state": "r2-snippet-email",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {
+        "snippets_enabled": true,
+        "snippets_prefix": ".",
+        "snippets_v1": "{\"address\":\"42 Example Street, London, SW1A 1AA\",\"email\":\"hello@example.com\",\"date\":\"2026-10-08\"}"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "You can reach me at "
+      },
+      "steps": [
+        "KEYCODE_PERIOD",
+        "KEYCODE_E",
+        "KEYCODE_M"
+      ],
+      "confidence": "approximate",
+      "comment": "Snippet prefix '.' with the synthetic email snippet. Snippet suggestion shows before Tab expands it."
+    },
+    {
+      "id": "titan-2-elite/symbols",
+      "device": "titan-2-elite",
+      "state": "symbols",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Meet at the station"
+      },
+      "steps": [],
+      "confidence": "approximate",
+      "comment": "Manual: the SYM page cannot be opened by adb key injection on the emulator.",
+      "manual": true,
+      "instruction": "Open the SYM page on the device by hand (Titan SYM key or long press), then capture. On this build an injected KEYCODE_SYM opens the input method picker instead."
+    },
+    {
+      "id": "titan-2-elite/selected-text-final",
+      "device": "titan-2-elite",
+      "state": "selected-text-final",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Train tickets are booked.\nMeet at the station at nine.",
+        "selectionStart": 0,
+        "selectionEnd": 54
+      },
+      "steps": [],
+      "confidence": "approximate",
+      "comment": "Selection set through the showcase host extras (the Markdown host has no selection extra). The selection covers both lines."
+    },
+    {
+      "id": "titan-2-elite/modifier-final-1",
+      "device": "titan-2-elite",
+      "state": "modifier-final-1",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Keep your hands on the keyboard."
+      },
+      "steps": [
+        "KEYCODE_CTRL_LEFT"
+      ],
+      "confidence": "approximate",
+      "comment": "Ctrl latched once (active indicator)."
+    },
+    {
+      "id": "titan-2-elite/modifier-locked",
+      "device": "titan-2-elite",
+      "state": "modifier-locked",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Meet at the station"
+      },
+      "steps": [
+        "KEYCODE_CTRL_LEFT",
+        "wait:150",
+        "KEYCODE_CTRL_LEFT"
+      ],
+      "confidence": "approximate",
+      "comment": "Ctrl pressed twice to lock. The suggestion row of the reference is not reproduced."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-plektra-light",
+      "device": "titan-2-elite",
+      "state": "r5-theme-plektra-light",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Plektra Light",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Theme applied to hardware and software keyboard by ShowcaseReceiver."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-nord",
+      "device": "titan-2-elite",
+      "state": "r5-theme-nord",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Nord",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-coral",
+      "device": "titan-2-elite",
+      "state": "r5-theme-coral",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Coral",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Built-in theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-cobalt",
+      "device": "titan-2-elite",
+      "state": "r5-theme-cobalt",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Cobalt",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Built-in theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-volcanic-dusk",
+      "device": "titan-2-elite",
+      "state": "r5-theme-volcanic-dusk",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Volcanic Dusk",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-epaper",
+      "device": "titan-2-elite",
+      "state": "r5-theme-epaper",
+      "host": "showcase",
+      "background": "default",
+      "theme": "ePaper",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-high-contrast",
+      "device": "titan-2-elite",
+      "state": "r5-theme-high-contrast",
+      "host": "showcase",
+      "background": "default",
+      "theme": "High Contrast",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme."
+    },
+    {
+      "id": "titan-2-elite/r5-theme-transparent-dark",
+      "device": "titan-2-elite",
+      "state": "r5-theme-transparent-dark",
+      "host": "showcase",
+      "background": "default",
+      "theme": "Transparent Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Derived from Plektra Dark with a transparent background."
+    },
+    {
+      "id": "titan-2/r6-full",
+      "device": "titan-2",
+      "state": "r6-full",
+      "host": "notes",
+      "background": "default",
+      "theme": "Plektra Dark",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "unverified",
+      "comment": "Never tested on a Titan 2. Crop to the reference geometry (1436x1440) after review."
+    },
+    {
+      "id": "pixel-7a/r6-full",
+      "device": "pixel-7a",
+      "state": "r6-full",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "unverified",
+      "comment": "Software keyboard. Theme guessed from the light keys in the reference."
+    },
+    {
+      "id": "pixel-7a/r5-emoji",
+      "device": "pixel-7a",
+      "state": "r5-emoji",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Write in your own language."
+      },
+      "steps": [],
+      "manual": true,
+      "instruction": "Tap the emoji key in the keyboard bar of the software keyboard.",
+      "confidence": "manual",
+      "comment": "Emoji panel needs a touch on the software key."
+    },
+    {
+      "id": "pixel-7a/clipboard-probe",
+      "device": "pixel-7a",
+      "state": "clipboard-probe",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {
+        "clipboard_history_enabled": true
+      },
+      "note": {
+        "title": "Travel details",
+        "body": "Collect the useful details here."
+      },
+      "steps": [],
+      "manual": true,
+      "instruction": "Copy three short texts (Meet at the station at nine. / hello@example.com / Platform 7, departure at 09:...) in the host, then open the clipboard panel from the keyboard bar.",
+      "confidence": "manual",
+      "comment": "Clipboard history needs real copy actions."
+    },
+    {
+      "id": "pixel-7a/key-popup-final",
+      "device": "pixel-7a",
+      "state": "key-popup-final",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "More characters",
+        "body": "Keep numbers and symbols close."
+      },
+      "steps": [],
+      "manual": true,
+      "instruction": "Long-press the E key on the software keyboard (about x=504, y=604 on a 1080x2400 screen) and capture while the popup is open.",
+      "confidence": "manual",
+      "comment": "Touch long press; coordinates are a hint, check on the device."
+    },
+    {
+      "id": "pixel-7a/r2-azerty",
+      "device": "pixel-7a",
+      "state": "r2-azerty",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {
+        "keyboard_layout": "azerty"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "unverified",
+      "comment": "Layout id 'azerty' is assumed; verify in the Keyboard layout list."
+    },
+    {
+      "id": "pixel-7a/r2-qwerty",
+      "device": "pixel-7a",
+      "state": "r2-qwerty",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {
+        "keyboard_layout": "qwerty"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "unverified",
+      "comment": "Layout id 'qwerty' is assumed."
+    },
+    {
+      "id": "pixel-7a/r2-qwertz-umlauts",
+      "device": "pixel-7a",
+      "state": "r2-qwertz-umlauts",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {
+        "keyboard_layout": "qwertz"
+      },
+      "note": {
+        "title": "Weekend plans",
+        "body": "Write in your own language."
+      },
+      "steps": [],
+      "confidence": "approximate",
+      "comment": "QWERTZ with umlauts (layout id confirmed in the code)."
+    },
+    {
+      "id": "pixel-7a/r2-staggered",
+      "device": "pixel-7a",
+      "state": "r2-staggered",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station tomor"
+      },
+      "steps": [],
+      "manual": true,
+      "instruction": "Set the software keyboard theme layout to Staggered (Keyboard theme > Layout), then capture.",
+      "confidence": "manual",
+      "comment": "Stagger is a theme layout option (ortholinear flag in the theme JSON), not a plain setting."
+    },
+    {
+      "id": "pixel-7a/r2-ortholinear",
+      "device": "pixel-7a",
+      "state": "r2-ortholinear",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station tomor"
+      },
+      "steps": [],
+      "manual": true,
+      "instruction": "Set the software keyboard theme layout to Ortholinear (Keyboard theme > Layout), then capture.",
+      "confidence": "manual",
+      "comment": "Ortholinear is a theme layout option (ortholinear flag in the theme JSON)."
+    },
+    {
+      "id": "pixel-7a/r2-nav-locked",
+      "device": "pixel-7a",
+      "state": "r2-nav-locked",
+      "host": "notes",
+      "background": "default",
+      "theme": "Cloud Tap",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Meet at the station at nine. Bring the tickets and a notebook."
+      },
+      "steps": [
+        "KEYCODE_CTRL_LEFT",
+        "wait:150",
+        "KEYCODE_CTRL_LEFT"
+      ],
+      "confidence": "approximate",
+      "comment": "Ctrl locked, navigation layer visible."
+    },
+    {
+      "id": "pixel-7a/r5-theme-volcanic-dusk",
+      "device": "pixel-7a",
+      "state": "r5-theme-volcanic-dusk",
+      "host": "notes",
+      "background": "default",
+      "theme": "Volcanic Dusk",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme on the software keyboard."
+    },
+    {
+      "id": "pixel-7a/r5-theme-high-contrast",
+      "device": "pixel-7a",
+      "state": "r5-theme-high-contrast",
+      "host": "notes",
+      "background": "default",
+      "theme": "High Contrast",
+      "settings": {},
+      "note": {
+        "title": "Weekend plans",
+        "body": "Let's meet at the station "
+      },
+      "steps": [
+        "KEYCODE_T",
+        "KEYCODE_O",
+        "KEYCODE_M",
+        "KEYCODE_O",
+        "KEYCODE_R"
+      ],
+      "confidence": "approximate",
+      "comment": "Preset theme on the software keyboard."
+    }
+  ]
+}

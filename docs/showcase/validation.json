@@ -4,32 +4,32 @@
   "protected_pixels": [
     {
       "capture": "r6-config-full",
-      "foreground_pixels_retained": 173777,
-      "background_pixels_transparent": 45727
+      "foreground_pixels_retained": 165131,
+      "background_pixels_transparent": 38197
     },
     {
       "capture": "r5-config-suggestions",
-      "foreground_pixels_retained": 95577,
-      "background_pixels_transparent": 15251
+      "foreground_pixels_retained": 80347,
+      "background_pixels_transparent": 13265
     },
     {
       "capture": "r5-config-leds",
-      "foreground_pixels_retained": 2866,
-      "background_pixels_transparent": 129482
+      "foreground_pixels_retained": 5137,
+      "background_pixels_transparent": 129363
     },
     {
       "capture": "r5-slim",
-      "foreground_pixels_retained": 2866,
-      "background_pixels_transparent": 129482
+      "foreground_pixels_retained": 5137,
+      "background_pixels_transparent": 129363
     },
     {
       "capture": "r6-full",
-      "native_LED_pixels_inside_photographic_opening": 1558,
+      "native_LED_pixels_inside_photographic_opening": 1345,
       "clipped": 0
     },
     {
       "capture": "r5-config-leds",
-      "native_LED_pixels_inside_photographic_opening": 1801,
+      "native_LED_pixels_inside_photographic_opening": 2215,
       "clipped": 0
     }
   ]

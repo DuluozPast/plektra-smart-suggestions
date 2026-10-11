@@ -44,6 +44,7 @@ class ShowcaseNotesActivity : NotesActivity() {
             }
             clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Notes", text))
         }
+        findViewById<android.view.View>(R.id.notes_markdown_toggle).performClick()
         intent.getStringExtra("title")?.let { heading.setText(it) }
         if (intent.hasExtra("text")) editor.setText(intent.getStringExtra("text"))
         val start = intent.getIntExtra("selectionStart", editor.length()).coerceIn(0, editor.length())

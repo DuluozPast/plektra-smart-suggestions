@@ -18,6 +18,12 @@
             android:exported="true"
             android:label="IME contour test"
             android:theme="@style/Theme.Plektra" />
+        <!-- Debug-only entry point for the Markdown notes editor as a capture host. -->
+        <activity-alias
+            android:name=".ShowcaseNotesEditorAlias"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:targetActivity=".NotesActivity" />
         <activity-alias
             android:name=".TutorialPreviewActivity"
             android:exported="true"
