@@ -2161,6 +2161,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             }
             handled
         }
+        candidatesBarController.onSymTextCommitted = {
+            modifierStateController.consumeShiftOneShot()
+            updateStatusBarText()
+        }
         candidatesBarController.onSoftwareKeyboardBoundaryTextInput = { text, inputConnection ->
             handleBoundaryTextBeforeCommit(text, inputConnection)
         }
@@ -3294,7 +3298,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Passa anche la mappa emoji quando SYM è attivo (solo pagina 1)
         val emojiMapText = symLayoutController.emojiMapText()
         // Passa le mappature SYM per la griglia emoji/caratteri
-        val symMappings = symLayoutController.currentSymMappings()?.toMap()
+        val symMappings = symLayoutController.currentSymMappings(
+            capsLockEnabled || shiftPhysicallyPressed || shiftOneShot
+        )?.toMap()
         // Passa l'inputConnection per rendere i pulsanti clickabili
         val inputConnection = currentInputConnection
         val unchangedRenderedState =
@@ -4763,6 +4769,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             updateStatusBarText()
         }
 
+        // Adapted from Mircea Horea IONICĂ (mionica), pastiera 12ce0a35c1.
+        if (hasEditableField && event?.repeatCount == 0 && keyCode == KeyEvent.KEYCODE_0 &&
+            DeviceSpecific.hasBlackberryKeyboard(DeviceSpecific.resolveInputProfile(event, physicalKeyboardProfileOverride).profileId) &&
+            (event.isAltPressed || altPhysicallyPressed || altLatchActive || altOneShot) &&
+            !event.isCtrlPressed && !ctrlPressed && !ctrlLatchActive && !ctrlOneShot &&
+            SettingsManager.getAltCtrlSpeechShortcutEnabled(this)) {
+            modifierStateController.clearAltState(resetPressedState = true)
+            updateStatusBarText()
+            startSpeechRecognition()
+            return true
+        }
+
         // Minimal Phone dedicated keys (skip while Alt is active so its configured mapping can run)
         // Gate this behavior to Minimal Phone devices only.
         val altActiveForDedicatedKeys = event?.isAltPressed == true || altLatchActive || altOneShot
@@ -4840,6 +4858,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 val inputConnection = currentInputConnection
                 if (!handleBoundaryTextBeforeCommit(symChar, inputConnection)) {
                     inputConnection?.commitText(symChar, 1)
+                    if (inputConnection != null) modifierStateController.consumeShiftOneShot()
                 }
                 updateStatusBarText()
                 return true
@@ -5211,6 +5230,19 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             return true
         }
         
+        // Mircea Horea IONICĂ (mionica), pastiera 09b1f51ac9; no call/audio side effects.
+        if (hasEditableField && keyCode == KeyEvent.KEYCODE_GRAVE &&
+            DeviceSpecific.hasBlackberryKeyboard(DeviceSpecific.resolveInputProfile(event, physicalKeyboardProfileOverride).profileId) &&
+            !symLayoutController.isSymActive() && event != null && !event.isCtrlPressed && !ctrlPressed && !ctrlLatchActive && !ctrlOneShot &&
+            !altActiveNow) {
+            if (event.repeatCount == 0) {
+                ic.commitText(SettingsManager.getPhysicalKeyboardCurrencySymbol(this), 1)
+                modifierStateController.consumeShiftOneShot()
+                updateStatusBarText()
+            }
+            return true
+        }
+
         val routingDecision = inputEventRouter.routeEditableFieldKeyDown(
             keyCode = keyCode,
             event = event,

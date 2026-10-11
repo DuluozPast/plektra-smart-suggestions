@@ -6,7 +6,7 @@
 
 Free software under [GPLv3](LICENSE), with source code you can inspect, modify and share.
 
-[Product page](https://pkb.rocks/plektra/) · [Download Stable](https://pkb.rocks/plektra/download/stable/) · [Download Nightly](https://pkb.rocks/plektra/download/nightly/) · [Installation guide](docs/getting-started.md)
+[Product page](https://pkb.rocks/) · [Download Stable](https://pkb.rocks/plektra/download/stable/) · [Download Nightly](https://pkb.rocks/plektra/download/nightly/) · [Installation guide](docs/getting-started.md)
 
 [![GitHub stars](https://img.shields.io/github/stars/pkb-rocks/plektra?style=flat&label=GitHub%20stars)](https://github.com/pkb-rocks/plektra/stargazers)
 
@@ -183,14 +183,14 @@ The canonical Stable and Nightly APKs use separate published hardware-backed sig
 | --- | --- |
 | Unihertz Titan 2 | Developed and release-tested; device-specific physical keyboard layouts and display geometry |
 | Unihertz Titan 2 Elite | Developed and release-tested; device-specific physical keyboard layouts and display geometry |
-| Google Pixel 7a + Clicks Power Keyboard (“Clicksel”) | Directly tested physical keyboard combination |
+| Google Pixel 7a + Clicks Power Keyboard | Directly tested physical keyboard combination |
 | Samsung Galaxy Z Fold6 | Directly tested software keyboard and folding behaviour; also used with Clicks Power Keyboard |
 
 Community-supported devices include the BlackBerry KEY2, Minimal Phone MP01 and BlackBerry Q25 (Zinwa mod), alongside other Clicks keyboard models. These are a selection of tested devices; further improvements for foldables are planned. See the [device support ranking](docs/devices.md) and [hardware notes](docs/device-support/).
 
 ## GitHub star history
 
-<a href="https://pkb.rocks/plektra/#stars-heading">
+<a href="https://pkb.rocks/#stars-heading">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/pkb-rocks/pkb-rocks.github.io/refs/heads/stats/star-history-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/pkb-rocks/pkb-rocks.github.io/refs/heads/stats/star-history.svg">
@@ -198,7 +198,7 @@ Community-supported devices include the BlackBerry KEY2, Minimal Phone MP01 and 
   </picture>
 </a>
 
-[Release download statistics](https://pkb.rocks/plektra/#statistics-heading) compare APK downloads after 24 and 72 hours. The star chart and download statistics update independently of this README.
+[Release download statistics](https://pkb.rocks/#statistics-heading) compare APK downloads after 24 and 72 hours. The star chart and download statistics update independently of this README.
 
 ## Moving from Pastiera
 
@@ -220,7 +220,7 @@ Distributed forks must use their own name, application ID, update endpoints and 
 
 ## Project links
 
-- [Product page](https://pkb.rocks/plektra/)
+- [Product page](https://pkb.rocks/)
 - [GitHub](https://github.com/pkb-rocks/plektra)
 - [Open Collective](https://opencollective.com/plektra)
 - [Security policy](SECURITY.md)

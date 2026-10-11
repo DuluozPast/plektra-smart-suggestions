@@ -118,6 +118,50 @@ class StatusBarControllerHardwareSymGeometryTest {
         assertEquals(6, closes)
     }
 
+    @Test
+    fun blackberryGridKeepsZeroAndCurrencyVisibleAndClickableEvenWithTitanLayoutEnabled() {
+        val activity = Robolectric.buildActivity(android.app.Activity::class.java).setup().get()
+        SettingsManager.setTitan2LayoutEnabled(activity, true)
+        SettingsManager.setSymAutoClose(activity, false)
+        for (profile in listOf("Q25", "key2")) {
+            SettingsManager.setPhysicalKeyboardProfileOverride(activity, profile)
+            val commits = mutableListOf<String>()
+            val connection = java.lang.reflect.Proxy.newProxyInstance(
+                android.view.inputmethod.InputConnection::class.java.classLoader,
+                arrayOf(android.view.inputmethod.InputConnection::class.java)
+            ) { _, method, args ->
+                if (method.name == "commitText") commits.add(args!![0].toString())
+                when (method.returnType) { java.lang.Boolean.TYPE -> true; java.lang.Integer.TYPE -> 0; else -> null }
+            } as android.view.inputmethod.InputConnection
+            val controller = StatusBarController(activity, clipboardHistoryManager = rocks.pkb.plektra.clipboard.ClipboardHistoryManager(activity))
+            var committed = 0
+            controller.onSymTextCommitted = { committed++ }
+            val mappings = (KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z).associateWith { "text" } +
+                mapOf(KeyEvent.KEYCODE_0 to "zero", KeyEvent.KEYCODE_GRAVE to "currency")
+            SettingsManager.setSoftwareKeyboardMode(activity, SettingsManager.SoftwareKeyboardMode.FORCE_HARDWARE)
+            controller.update(snapshot(1), inputConnection = connection, symMappings = mappings)
+            val chrome = controller.field("statusBarLayout") as ImeChromeLayout
+            activity.setContentView(chrome)
+            val keyboard = controller.field("emojiKeyboardContainer") as ViewGroup
+            keyboard.translationY = 0f
+            layout(chrome)
+            val bottom = keyboard.getChildAt(2) as ViewGroup
+            val keys = (0 until bottom.childCount).map(bottom::getChildAt).mapNotNull { child ->
+                val content = (child as? ViewGroup)?.getChildAt(0) as? ViewGroup
+                val label = (content?.getChildAt(1) as? TextView)?.text?.toString()
+                label?.let { it to child }
+            }
+            assertEquals(listOf("0", "Z", "X", "C", "V", "B", "N", "M", "$"), keys.map { it.first })
+            val close = controller.field("symSurfaceCloseButton") as View
+            assertTrue(globalBounds(chrome, keys.last().second).right <= globalBounds(chrome, close).left)
+            assertTrue(globalBounds(chrome, close).right <= chrome.width)
+            assertTrue(keys.first().second.performClick())
+            assertTrue(keys.last().second.performClick())
+            assertEquals(listOf("zero", "currency"), commits)
+            assertEquals(2, committed)
+        }
+    }
+
     private fun assertCompositeInkInside(key: View) {
         val group = (key as ViewGroup).getChildAt(0) as ViewGroup
         assertTrue((group.getChildAt(1) as TextView).text.isNotBlank())

@@ -58,6 +58,13 @@ class CandidatesBarController(
             candidatesStatusBar.onAddUserWordSubstitutionRequested = value
         }
 
+    var onSymTextCommitted: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onSymTextCommitted = value
+            candidatesStatusBar.onSymTextCommitted = value
+        }
+
     var onSuggestionCommitted: (() -> Unit)? = null
         set(value) {
             field = value

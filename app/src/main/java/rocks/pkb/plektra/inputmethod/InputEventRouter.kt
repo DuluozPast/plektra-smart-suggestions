@@ -467,6 +467,8 @@ class InputEventRouter(
                 altLatchActive = altLatchActive,
                 altMappingsOverride = params.altMappingsOverride,
                 cursorUpdateDelayMs = params.cursorUpdateDelayMs,
+                shiftPressed = params.capsLockEnabled || params.shiftOneShot || event?.isShiftPressed == true || params.shiftPressed,
+                onSymbolCommitted = callbacks.disableShiftOneShot,
                 updateStatusBar = callbacks.updateStatusBar,
                 handleBoundaryText = callbacks.handleBoundaryText,
                 callSuper = callbacks.callSuper
@@ -1176,7 +1178,9 @@ class InputEventRouter(
         cursorUpdateDelayMs: Long,
         updateStatusBar: () -> Unit,
         handleBoundaryText: (String, InputConnection?) -> Boolean = { _, _ -> false },
-        callSuper: () -> Boolean
+        callSuper: () -> Boolean,
+        shiftPressed: Boolean = false,
+        onSymbolCommitted: () -> Unit = {}
     ): Boolean {
         val ic = inputConnection ?: return false
 
@@ -1218,7 +1222,9 @@ class InputEventRouter(
                     ctrlLatchActive = ctrlLatchActive,
                     altLatchActive = altLatchActive,
                     updateStatusBar = updateStatusBar,
-                    handleBoundaryText = handleBoundaryText
+                    handleBoundaryText = handleBoundaryText,
+                    shiftPressed = shiftPressed,
+                    onSymbolCommitted = onSymbolCommitted
                 )
             ) {
                 SymKeyResult.CONSUME -> true

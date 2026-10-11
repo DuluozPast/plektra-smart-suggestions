@@ -9,10 +9,48 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import rocks.pkb.plektra.inputmethod.subtype.AdditionalSubtypeUtils
+import rocks.pkb.plektra.inputmethod.DirectBootKeyboardConfig
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import android.content.SharedPreferences
 
 class PlektraApplication : Application() {
+    private var unlockedInitialized = false
+    private var directBootConfigListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
+
     override fun onCreate() {
         super.onCreate()
+        if (!DirectBootKeyboardConfig.isUserUnlocked(this)) {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (!unlockedInitialized && intent.action == Intent.ACTION_USER_UNLOCKED && DirectBootKeyboardConfig.isUserUnlocked(context)) {
+                        unregisterReceiver(this)
+                        initializeUnlockedApplication()
+                    }
+                }
+            }
+            ContextCompat.registerReceiver(this, receiver, IntentFilter(Intent.ACTION_USER_UNLOCKED), ContextCompat.RECEIVER_NOT_EXPORTED)
+            // Close the race where unlock occurred between the initial check and registration.
+            if (DirectBootKeyboardConfig.isUserUnlocked(this)) {
+                unregisterReceiver(receiver)
+                initializeUnlockedApplication()
+            }
+            return
+        }
+        initializeUnlockedApplication()
+    }
+
+    private fun initializeUnlockedApplication() {
+        if (unlockedInitialized) return
+        unlockedInitialized = true
+        val preferences = SettingsManager.getPreferences(this)
+        val config = DirectBootKeyboardConfig(this)
+        config.refresh(preferences)
+        directBootConfigListener = SharedPreferences.OnSharedPreferenceChangeListener { source, key ->
+            if (key == null || key in DirectBootKeyboardConfig.KEYS) config.refresh(source)
+        }.also { preferences.registerOnSharedPreferenceChangeListener(it) }
         SettingsManager.initializeAltShiftLayoutSwitchDefault(this)
         SettingsManager.enforceTitan2EliteRoundedCornersOnce(this)
         AppPackageChangeMonitor.register(this)

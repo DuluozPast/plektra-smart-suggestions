@@ -198,12 +198,13 @@ object KeyMappingLoader {
                 val keyCode = keyCodeMap[keyName]
                 if (keyCode != null) {
                     val value = mappingsObject.get(keyName)
-                    if (value is JSONObject) {
-                        val uppercase = value.optString("uppercase", "")
-                        if (uppercase.isNotEmpty()) {
-                            symKeyMap[keyCode] = uppercase
-                        }
+                    // Mircea Horea IONICĂ (mionica), pastiera 38be1cfb53.
+                    val uppercase = when (value) {
+                        is String -> value.uppercase()
+                        is JSONObject -> value.optString("uppercase", "")
+                        else -> ""
                     }
+                    if (uppercase.isNotEmpty()) symKeyMap[keyCode] = uppercase
                 }
             }
         } catch (e: Exception) {

@@ -31,8 +31,8 @@
     <string name="swipe_incremental_threshold_title">Чувствительность полоски свайпа</string>
     <string name="swipe_incremental_threshold_description">Расстояние, необходимая чтобы сдвинуть курсор на одну позицию. Уменьшение значения заставляет курсор двигаться быстрее.</string>
     <string name="auto_show_keyboard_title">Автопоказ клавиатуры</string>
-    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl распознавание речи</string>
-    <string name="alt_ctrl_speech_shortcut_description">Включить сочетание Alt+Ctrl для запуска распознавания речи</string>
+    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 распознавание речи</string>
+    <string name="alt_ctrl_speech_shortcut_description">Включить сочетание Alt+Ctrl / BlackBerry Alt+0 для запуска распознавания речи</string>
     <string name="static_variation_bar_mode_title">Статическая панель вариантов</string>
     <string name="static_variation_bar_mode_description">Всегда отображать фиксированный набор служебных клавиш в строке вариантов вместо контекстно-зависимых вариантов.</string>
     <string name="swipe_to_move_cursor">Свайп для перемещения курсора</string>

@@ -113,8 +113,8 @@
     <string name="auto_show_keyboard_description">Show the on-screen keyboard automatically in text fields.</string>
     
     <!-- Alt+Ctrl Speech Recognition Shortcut Section -->
-    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl for speech input</string>
-    <string name="alt_ctrl_speech_shortcut_description">Start speech input with Alt+Ctrl.</string>
+    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 for speech input</string>
+    <string name="alt_ctrl_speech_shortcut_description">Start speech input with Alt+Ctrl / BlackBerry Alt+0.</string>
 
     <!-- Static Variation Bar Mode -->
     <string name="static_variation_bar_mode_title">Static Variation Bar</string>

@@ -105,8 +105,8 @@
     <string name="auto_show_keyboard_description">Εμφανίζει αυτόματα το πληκτρολόγιο οθόνης σε πεδία κειμένου.</string>
 
     <!-- Alt+Ctrl Speech Recognition Shortcut Section -->
-    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl για φωνητική εισαγωγή</string>
-    <string name="alt_ctrl_speech_shortcut_description">Ξεκινά φωνητική εισαγωγή με Alt+Ctrl.</string>
+    <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 για φωνητική εισαγωγή</string>
+    <string name="alt_ctrl_speech_shortcut_description">Ξεκινά φωνητική εισαγωγή με Alt+Ctrl / BlackBerry Alt+0.</string>
 
     <!-- Static Variation Bar Mode -->
     <string name="static_variation_bar_mode_title">Στατική γραμμή παραλλαγών</string>

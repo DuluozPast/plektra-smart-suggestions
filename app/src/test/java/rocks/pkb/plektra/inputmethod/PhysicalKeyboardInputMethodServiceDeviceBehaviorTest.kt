@@ -1086,6 +1086,17 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
         error("Field not found: $fieldName")
     }
 
+    @Test
+    fun blackberryCurrencyKeyCommitsConfiguredCurrencyOnceThroughRealServiceRouting() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setPhysicalKeyboardProfileOverride(context, "Q25")
+        SettingsManager.setPhysicalKeyboardCurrencySymbol(context, "£")
+        setField(service, "physicalKeyboardProfileOverride", "Q25")
+        recorder.committedTexts.clear()
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_GRAVE, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE)))
+        assertEquals(listOf("£"), recorder.committedTexts)
+    }
+
     private class RecordingInputConnection {
         var textBeforeCursor: String = ""
         var sendKeyEventResult: Boolean = true

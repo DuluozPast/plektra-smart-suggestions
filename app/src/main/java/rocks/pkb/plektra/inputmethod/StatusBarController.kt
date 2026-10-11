@@ -112,6 +112,8 @@ class StatusBarController(
             variationBarView?.onAddUserWordSubstitutionRequested = value
         }
 
+    var onSymTextCommitted: (() -> Unit)? = null
+
     var onSuggestionCommitted: (() -> Unit)? = null
 
     var onHideSuggestion: ((String) -> Unit)? = null
@@ -1365,7 +1367,7 @@ class StatusBarController(
         emojiKeyButtons.clear()
         
         // Definizione delle righe della tastiera
-        val keyboardRows = listOf(
+        val defaultKeyboardRows = listOf(
             listOf(android.view.KeyEvent.KEYCODE_Q, android.view.KeyEvent.KEYCODE_W, android.view.KeyEvent.KEYCODE_E, 
                    android.view.KeyEvent.KEYCODE_R, android.view.KeyEvent.KEYCODE_T, android.view.KeyEvent.KEYCODE_Y, 
                    android.view.KeyEvent.KEYCODE_U, android.view.KeyEvent.KEYCODE_I, android.view.KeyEvent.KEYCODE_O, 
@@ -1378,6 +1380,14 @@ class StatusBarController(
                    android.view.KeyEvent.KEYCODE_M)
         )
         
+        // Adapted from Mircea Horea IONICĂ (mionica), pastiera 09b1f51ac9.
+        val isBlackberry = DeviceSpecific.hasBlackberryKeyboard(SettingsManager.getPhysicalKeyboardProfileOverride(context))
+        val keyboardRows = if (isBlackberry) defaultKeyboardRows.dropLast(1) + listOf(listOf(
+            KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C,
+            KeyEvent.KEYCODE_V, KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_M,
+            KeyEvent.KEYCODE_GRAVE
+        )) else defaultKeyboardRows
+
         val keyLabels = mapOf(
             android.view.KeyEvent.KEYCODE_Q to "Q", android.view.KeyEvent.KEYCODE_W to "W", android.view.KeyEvent.KEYCODE_E to "E",
             android.view.KeyEvent.KEYCODE_R to "R", android.view.KeyEvent.KEYCODE_T to "T", android.view.KeyEvent.KEYCODE_Y to "Y",
@@ -1387,7 +1397,7 @@ class StatusBarController(
             android.view.KeyEvent.KEYCODE_H to "H", android.view.KeyEvent.KEYCODE_J to "J", android.view.KeyEvent.KEYCODE_K to "K",
             android.view.KeyEvent.KEYCODE_L to "L", android.view.KeyEvent.KEYCODE_Z to "Z", android.view.KeyEvent.KEYCODE_X to "X",
             android.view.KeyEvent.KEYCODE_C to "C", android.view.KeyEvent.KEYCODE_V to "V", android.view.KeyEvent.KEYCODE_B to "B",
-            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M"
+            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M", KeyEvent.KEYCODE_0 to "0", KeyEvent.KEYCODE_GRAVE to "$"
         )
         
         val keySpacing = TypedValue.applyDimension(
@@ -1425,6 +1435,23 @@ class StatusBarController(
                 }
             }
             
+            if (isBlackberry) {
+                rowLayout.gravity = Gravity.START
+                row.forEachIndexed { index, code ->
+                    addKeyToRow(rowLayout, code, symMappings, fixedKeyWidth, keyHeight, keySpacing, page,
+                        inputConnection, rowIndex == 0 && index == row.lastIndex)
+                }
+                if (rowIndex == 1) {
+                    val picker = createKeyboardSelectionButton(keyHeight, fixedKeyWidth)
+                    picker.setOnLongClickListener { openSymCustomization(page, null, false); true }
+                    rowLayout.addView(picker)
+                } else if (rowIndex == 2) {
+                    rowLayout.addView(createSurfaceCloseSlot(), LinearLayout.LayoutParams(fixedKeyWidth, keyHeight))
+                }
+                container.addView(rowLayout)
+                continue
+            }
+
             if (isTitan2Layout) {
                 // Ortholinear layout for Titan 2
                 when (rowIndex) {
@@ -2588,8 +2615,9 @@ class StatusBarController(
         content: String
     ) {
         val commit = {
-            if (onSoftwareKeyboardBoundaryTextInput?.invoke(content, inputConnection) != true) {
-                inputConnection.commitText(content, 1)
+            if (onSoftwareKeyboardBoundaryTextInput?.invoke(content, inputConnection) == true ||
+                inputConnection.commitText(content, 1)) {
+                onSymTextCommitted?.invoke()
             }
         }
         if (closeSymAfterTouchKeyIfNeeded()) {
@@ -2619,7 +2647,7 @@ class StatusBarController(
             android.view.KeyEvent.KEYCODE_H to "H", android.view.KeyEvent.KEYCODE_J to "J", android.view.KeyEvent.KEYCODE_K to "K",
             android.view.KeyEvent.KEYCODE_L to "L", android.view.KeyEvent.KEYCODE_Z to "Z", android.view.KeyEvent.KEYCODE_X to "X",
             android.view.KeyEvent.KEYCODE_C to "C", android.view.KeyEvent.KEYCODE_V to "V", android.view.KeyEvent.KEYCODE_B to "B",
-            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M"
+            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M", KeyEvent.KEYCODE_0 to "0", KeyEvent.KEYCODE_GRAVE to "$"
         )
         val label = keyLabels[keyCode] ?: ""
         val content = symMappings[keyCode] ?: ""
@@ -2696,7 +2724,7 @@ class StatusBarController(
             android.view.KeyEvent.KEYCODE_H to "H", android.view.KeyEvent.KEYCODE_J to "J", android.view.KeyEvent.KEYCODE_K to "K",
             android.view.KeyEvent.KEYCODE_L to "L", android.view.KeyEvent.KEYCODE_Z to "Z", android.view.KeyEvent.KEYCODE_X to "X",
             android.view.KeyEvent.KEYCODE_C to "C", android.view.KeyEvent.KEYCODE_V to "V", android.view.KeyEvent.KEYCODE_B to "B",
-            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M"
+            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M", KeyEvent.KEYCODE_0 to "0", KeyEvent.KEYCODE_GRAVE to "$"
         )
         
         val keySpacing = TypedValue.applyDimension(
@@ -2873,7 +2901,7 @@ class StatusBarController(
             android.view.KeyEvent.KEYCODE_H to "H", android.view.KeyEvent.KEYCODE_J to "J", android.view.KeyEvent.KEYCODE_K to "K",
             android.view.KeyEvent.KEYCODE_L to "L", android.view.KeyEvent.KEYCODE_Z to "Z", android.view.KeyEvent.KEYCODE_X to "X",
             android.view.KeyEvent.KEYCODE_C to "C", android.view.KeyEvent.KEYCODE_V to "V", android.view.KeyEvent.KEYCODE_B to "B",
-            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M"
+            android.view.KeyEvent.KEYCODE_N to "N", android.view.KeyEvent.KEYCODE_M to "M", KeyEvent.KEYCODE_0 to "0", KeyEvent.KEYCODE_GRAVE to "$"
         )
         val label = keyLabels[keyCode] ?: ""
         val emoji = symMappings[keyCode] ?: ""

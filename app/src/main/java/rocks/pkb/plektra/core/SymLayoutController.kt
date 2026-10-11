@@ -153,11 +153,12 @@ class SymLayoutController(
         return if (currentPageType() == SymPage.EMOJI) alternateCharacterManager.buildEmojiMapText() else ""
     }
 
-    fun currentSymMappings(): Map<Int, String>? {
+    // Adapted from Mircea Horea IONICĂ (mionica), pastiera 38be1cfb53.
+    fun currentSymMappings(shiftPressed: Boolean = false): Map<Int, String>? {
         return when (currentPageType()) {
             SymPage.DEVICE -> alternateCharacterManager.getDeviceSymMappings()
-            SymPage.EMOJI -> alternateCharacterManager.getSymMappings()
-            SymPage.SYMBOLS -> alternateCharacterManager.getSymMappings2()
+            SymPage.EMOJI -> mappingsForPage(SymPage.EMOJI, shiftPressed)
+            SymPage.SYMBOLS -> mappingsForPage(SymPage.SYMBOLS, shiftPressed)
             SymPage.CLIPBOARD -> null // Clipboard doesn't use mappings
             SymPage.EMOJI_PICKER -> null // Emoji picker doesn't use mappings
             else -> null
@@ -263,7 +264,9 @@ class SymLayoutController(
         ctrlLatchActive: Boolean,
         altLatchActive: Boolean,
         updateStatusBar: () -> Unit,
-        handleBoundaryText: (String, InputConnection?) -> Boolean = { _, _ -> false }
+        handleBoundaryText: (String, InputConnection?) -> Boolean = { _, _ -> false },
+        shiftPressed: Boolean = false,
+        onSymbolCommitted: () -> Unit = {}
     ): SymKeyResult {
         val autoCloseEnabled = SettingsManager.getSymAutoClose(context)
         val page = currentPageType()
@@ -286,24 +289,18 @@ class SymLayoutController(
         }
 
         val symChar = when (page) {
-            SymPage.DEVICE -> alternateCharacterManager.getDeviceSymMappings()[keyCode]
-            SymPage.EMOJI -> alternateCharacterManager.getSymMappings()[keyCode]
-            SymPage.SYMBOLS -> alternateCharacterManager.getSymMappings2()[keyCode]
-            SymPage.CLIPBOARD -> null // Clipboard doesn't use key mappings
-            SymPage.EMOJI_PICKER -> null // Emoji picker doesn't use key mappings
+            SymPage.DEVICE, SymPage.EMOJI, SymPage.SYMBOLS -> mappingsForPage(page, shiftPressed)[keyCode]
             else -> null
         }
 
         if (symChar != null && inputConnection != null) {
-            if (
-                !handleBoundaryText(symChar, inputConnection) &&
-                (
-                    symChar.length != 1 ||
-                        !SettingsManager.shouldApplyFrenchPunctuationSpacing(context) ||
-                        !rocks.pkb.plektra.core.Punctuation.commitFrenchSpacedPunctuation(inputConnection, symChar[0])
-                )
-            ) {
+            val committed = handleBoundaryText(symChar, inputConnection) ||
+                (symChar.length == 1 && SettingsManager.shouldApplyFrenchPunctuationSpacing(context) &&
+                    rocks.pkb.plektra.core.Punctuation.commitFrenchSpacedPunctuation(inputConnection, symChar[0])) ||
                 inputConnection.commitText(symChar, 1)
+            if (committed) {
+                onSymbolCommitted()
+                updateStatusBar()
             }
             if (autoCloseEnabled) {
                 closeSymAndUpdate(updateStatusBar)

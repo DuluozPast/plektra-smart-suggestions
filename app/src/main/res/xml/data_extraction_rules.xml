@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <exclude domain="device_sharedpref" path="direct_boot_keyboard_config.xml"/>
         <!-- Include SharedPreferences for cloud backup, including Clicks snapshots and learned
              SOC calibration. Restored device values remain stale until GATT validates identity. -->
         <include domain="sharedpref" path="."/>
@@ -20,6 +21,7 @@
         <include domain="file" path="user_defaults.json"/>
     </cloud-backup>
     <device-transfer>
+        <exclude domain="device_sharedpref" path="direct_boot_keyboard_config.xml"/>
         <exclude domain="sharedpref" path="speech_credentials.xml"/>
     </device-transfer>
 </data-extraction-rules>

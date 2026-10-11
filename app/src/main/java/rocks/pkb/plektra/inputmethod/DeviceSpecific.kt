@@ -652,6 +652,16 @@ object DeviceSpecific {
         return keyboardModelForProfile(physicalProfileOverride) == KeyboardModel.MINIMAL_PHONE
     }
 
+    // Adapted from Mircea Horea IONICĂ (mionica), pastiera 09b1f51ac9 / 3a43af1132.
+    fun hasBlackberryKeyboard(physicalProfileOverride: String? = null): Boolean =
+        keyboardModelForProfile(physicalProfileOverride) in setOf(KeyboardModel.Q25, KeyboardModel.KEY2)
+
+    fun hasUnihertzKeyboard(physicalProfileOverride: String? = null): Boolean =
+        keyboardModelForProfile(physicalProfileOverride) in setOf(
+            KeyboardModel.TITAN_2, KeyboardModel.TITAN_2_ELITE_QWERTY,
+            KeyboardModel.TITAN_ORIGINAL, KeyboardModel.TITAN_POCKET, KeyboardModel.TITAN_SLIM
+        )
+
     fun isPhysicalKeyboardDevice(physicalProfileOverride: String? = null): Boolean {
         return when (keyboardModelForProfile(physicalProfileOverride)) {
             KeyboardModel.Q25,
