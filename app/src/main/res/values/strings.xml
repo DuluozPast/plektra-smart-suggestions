@@ -1919,4 +1919,10 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="speech_provider_router_short">Models with ZDR</string>
     <string name="speech_provider_openai_short">Live and cloud dictation</string>
     <string name="speech_duration_one_minute">1 minute</string>
+    <string name="software_ctrl_shortcut_display_title">Ctrl key display</string>
+    <string name="software_ctrl_shortcut_display_description">Original letters stay visible while Ctrl is active. Display style does not change the shortcuts.</string>
+    <string name="software_ctrl_shortcut_icons_letters">Large icons, white letters at bottom center</string>
+    <string name="software_ctrl_shortcut_icons_corner_letters">Large icons, gray letters at bottom left</string>
+    <string name="software_ctrl_shortcut_corner_icons">Letters with corner icons</string>
+    <string name="software_ctrl_shortcut_letters_only">Letters only</string>
 </resources>

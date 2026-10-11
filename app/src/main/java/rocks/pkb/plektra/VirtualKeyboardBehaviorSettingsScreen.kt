@@ -53,11 +53,16 @@ internal fun VirtualKeyboardBehaviorSettingsScreen(
         mutableStateOf(SettingsManager.getSoftwareKeyboardRightModifierKey(context))
     }
     var showSoftwareKeyboardLayoutStyleMenu by remember { mutableStateOf(false) }
+    var ctrlShortcutDisplay by remember { mutableStateOf(SettingsManager.getSoftwareCtrlShortcutDisplay(context)) }
+    var showCtrlShortcutDisplay by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
         val prefs = SettingsManager.getPreferences(context)
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             when (key) {
+                "software_ctrl_shortcut_display" -> {
+                    ctrlShortcutDisplay = SettingsManager.getSoftwareCtrlShortcutDisplay(context)
+                }
                 "software_keyboard_left_modifier_key" -> {
                     leftModifierKey = SettingsManager.getSoftwareKeyboardLeftModifierKey(context)
                 }
@@ -118,6 +123,44 @@ internal fun VirtualKeyboardBehaviorSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             VirtualKeyboardSectionTitle(stringResource(R.string.on_screen_keyboard_section_layout))
+            fun ctrlDisplayLabel(value: SettingsManager.SoftwareCtrlShortcutDisplay) = context.getString(when (value) {
+                SettingsManager.SoftwareCtrlShortcutDisplay.ICONS_WITH_LETTERS -> R.string.software_ctrl_shortcut_icons_letters
+                SettingsManager.SoftwareCtrlShortcutDisplay.ICONS_WITH_CORNER_LETTERS -> R.string.software_ctrl_shortcut_icons_corner_letters
+                SettingsManager.SoftwareCtrlShortcutDisplay.CORNER_ICONS -> R.string.software_ctrl_shortcut_corner_icons
+                SettingsManager.SoftwareCtrlShortcutDisplay.LETTERS_ONLY -> R.string.software_ctrl_shortcut_letters_only
+            })
+            Box(modifier = Modifier.fillMaxWidth()) {
+                ListItem(
+                    modifier = Modifier
+                        .settingRow("on_screen.ctrl_shortcut_display") { showCtrlShortcutDisplay = true }
+                        .clickable { showCtrlShortcutDisplay = true },
+                    headlineContent = { Text(stringResource(R.string.software_ctrl_shortcut_display_title)) },
+                    supportingContent = { Text(ctrlDisplayLabel(ctrlShortcutDisplay)) },
+                    leadingContent = { Icon(Icons.Filled.Keyboard, null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = { Icon(Icons.Default.ArrowDropDown, null) }
+                )
+                DropdownMenu(
+                    expanded = showCtrlShortcutDisplay,
+                    onDismissRequest = { showCtrlShortcutDisplay = false }
+                ) {
+                    SettingsManager.SoftwareCtrlShortcutDisplay.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(ctrlDisplayLabel(option)) },
+                            onClick = {
+                                ctrlShortcutDisplay = option
+                                SettingsManager.setSoftwareCtrlShortcutDisplay(context, option)
+                                showCtrlShortcutDisplay = false
+                            },
+                            leadingIcon = {
+                                if (ctrlShortcutDisplay == option) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             val softwareKeyboardLayoutStyleLabel = when (softwareKeyboardLayoutStyle) {
                 SettingsManager.SoftwareKeyboardLayoutStyle.COMPACT ->
                     stringResource(R.string.software_keyboard_layout_style_compact)

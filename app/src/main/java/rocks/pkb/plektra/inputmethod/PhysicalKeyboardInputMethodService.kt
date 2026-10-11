@@ -2484,6 +2484,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     mode = effectiveMode
                 )
             } else if (
+                key == "software_ctrl_shortcut_display" ||
                 key == "software_keyboard_layout_style" ||
                 key == "software_keyboard_number_row_enabled" ||
                 key == "software_keyboard_left_modifier_key" ||
@@ -2838,7 +2839,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             action,
             keyCode,
             0,
-            metaState
+            metaState,
+            android.view.KeyCharacterMap.VIRTUAL_KEYBOARD,
+            0,
+            KeyEvent.FLAG_SOFT_KEYBOARD,
+            android.view.InputDevice.SOURCE_KEYBOARD
         )
         return if (action == KeyEvent.ACTION_DOWN) {
             onKeyDown(keyCode, event)

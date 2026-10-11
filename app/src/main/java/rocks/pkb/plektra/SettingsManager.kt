@@ -1572,6 +1572,17 @@ object SettingsManager {
             .apply()
     }
 
+    enum class SoftwareCtrlShortcutDisplay { ICONS_WITH_CORNER_LETTERS, ICONS_WITH_LETTERS, CORNER_ICONS, LETTERS_ONLY }
+
+    fun getSoftwareCtrlShortcutDisplay(context: Context): SoftwareCtrlShortcutDisplay =
+        SoftwareCtrlShortcutDisplay.entries.firstOrNull {
+            it.name == getPreferences(context).getString("software_ctrl_shortcut_display", null)
+        } ?: SoftwareCtrlShortcutDisplay.ICONS_WITH_CORNER_LETTERS
+
+    fun setSoftwareCtrlShortcutDisplay(context: Context, display: SoftwareCtrlShortcutDisplay) {
+        getPreferences(context).edit().putString("software_ctrl_shortcut_display", display.name).apply()
+    }
+
     fun getCtrlTapLatches(context: Context): Boolean {
         return getPreferences(context).getBoolean(
             KEY_CTRL_TAP_LATCHES,

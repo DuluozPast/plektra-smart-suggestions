@@ -1601,4 +1601,10 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="speech_provider_router_short">Modellauswahl mit ZDR</string>
     <string name="speech_provider_openai_short">Live- und Cloud-Diktat</string>
     <string name="speech_duration_one_minute">1 Minute</string>
+    <string name="software_ctrl_shortcut_display_title">Ctrl-Tastenanzeige</string>
+    <string name="software_ctrl_shortcut_display_description">Die ursprünglichen Buchstaben bleiben bei aktiver Ctrl-Ebene sichtbar. Die Darstellung ändert die Tastenkürzel nicht.</string>
+    <string name="software_ctrl_shortcut_icons_letters">Große Symbole, Buchstaben unten mittig in Weiß</string>
+    <string name="software_ctrl_shortcut_icons_corner_letters">Große Symbole, Buchstaben unten links in Grau</string>
+    <string name="software_ctrl_shortcut_corner_icons">Buchstaben mit Symbolen in der Ecke</string>
+    <string name="software_ctrl_shortcut_letters_only">Nur Buchstaben</string>
 </resources>

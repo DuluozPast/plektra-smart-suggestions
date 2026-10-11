@@ -1748,6 +1748,7 @@ class StatusBarController(
         keyboardView.symPreviewTextLabels = snapshot.softwareSymPreviewTextLabels
         keyboardView.ctrlPreviewLabels = snapshot.softwareCtrlPreviewLabels
         keyboardView.ctrlPreviewIconRes = snapshot.softwareCtrlPreviewIconRes
+        keyboardView.ctrlShortcutDisplay = SettingsManager.getSoftwareCtrlShortcutDisplay(context)
         keyboardView.altPreviewLabels = snapshot.softwareAltPreviewLabels
         val symKeySpec = nextSoftwareSymKeySpec(snapshot.symPage)
         keyboardView.symbolsLabel = symKeySpec.label

@@ -30,6 +30,12 @@ class AospKeyboardViewTest {
 
     private class RecordingListener : AospKeyboardView.Listener {
         val texts = mutableListOf<String>()
+        var consumeStrokes = false
+        val strokes = mutableListOf<Pair<Int, String>>()
+        override fun onKeyStroke(keyCode: Int, text: String): Boolean {
+            if (consumeStrokes) strokes += keyCode to text
+            return consumeStrokes
+        }
         var shiftCount = 0
         var symbolCount = 0
         var languageSwitchCount = 0
@@ -68,6 +74,23 @@ class AospKeyboardViewTest {
             modifierUpKeyCodes += keyCode
             return true
         }
+    }
+
+    @Test
+    fun ctrlDisplayModesPreserveOriginalKeyDispatchAndAccessibleReference() {
+        val listener = RecordingListener().apply { consumeStrokes = true }
+        val view = measuredKeyboard().apply {
+            this.listener = listener
+            ctrlPreviewActive = true
+            ctrlPreviewLabels = mapOf(KeyEvent.KEYCODE_P to "Slim mode")
+        }
+        SettingsManager.SoftwareCtrlShortcutDisplay.entries.forEach { mode ->
+            view.ctrlShortcutDisplay = mode
+            assertEquals("p · Slim mode", accessibilitySnapshot(view, "plektra_key_p").label)
+            assertTrue(view.performAccessibilityClickForResourceName("plektra_key_p"))
+            assertEquals(KeyEvent.KEYCODE_P to "p", listener.strokes.last())
+        }
+        assertTrue(listener.texts.isEmpty())
     }
 
     @Test
@@ -191,7 +214,7 @@ class AospKeyboardViewTest {
         view.shifted = false
         view.ctrlPreviewActive = true
         view.ctrlPreviewLabels = mapOf(KeyEvent.KEYCODE_E to "Move up")
-        assertEquals("Move up", accessibilitySnapshot(view, "plektra_key_e").label)
+        assertEquals("e · Move up", accessibilitySnapshot(view, "plektra_key_e").label)
 
         view.ctrlPreviewActive = false
         view.symPageActive = true

@@ -344,6 +344,12 @@ class AospKeyboardView @JvmOverloads constructor(
             field = value
             invalidateKeyboard()
         }
+    var ctrlShortcutDisplay = SettingsManager.SoftwareCtrlShortcutDisplay.ICONS_WITH_CORNER_LETTERS
+        set(value) {
+            if (field == value) return
+            field = value
+            invalidateKeyboard()
+        }
     var ctrlPreviewIconRes: Map<Int, Int> = emptyMap()
         set(value) {
             if (field == value) {
@@ -607,10 +613,22 @@ class AospKeyboardView @JvmOverloads constructor(
             canvas.restoreToCount(save)
             val previewIcon = previewIconFor(key)
             if (previewIcon != null) {
-                drawCenteredIcon(canvas, previewIcon, key.visualRect, center)
+                if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.CORNER_ICONS) {
+                    val size = minOf(dp(16f).toFloat(), key.visualRect.height() * 0.32f)
+                    val rect = RectF(key.visualRect.right - size - dp(4f), key.visualRect.top + dp(4f),
+                        key.visualRect.right - dp(4f), key.visualRect.top + dp(4f) + size)
+                    drawCenteredIcon(canvas, previewIcon, rect, android.graphics.PointF(rect.centerX(), rect.centerY()), sizeFraction = 1f)
+                    drawCenteredBaseLetter(canvas, key, center)
+                } else {
+                    drawCenteredIcon(canvas, previewIcon, key.visualRect,
+                        android.graphics.PointF(center.x, center.y - ctrlLetterOffset(key)))
+                    drawCtrlLetterHint(canvas, key)
+                }
                 return@forEach
             }
             val previewLabel = previewLabelFor(key)
+            val ctrlReference = ctrlLayerActive() && previewLabel != null
+            val ctrlLabelOffset = if (ctrlReference) ctrlLetterOffset(key) else 0f
             val activeSymLabel = symPageLabelFor(key)
             val layerLabel = previewLabel ?: activeSymLabel
             val label = SoftwareKeyboardActionLabels.display(layerLabel ?: displayLabel(key.spec))
@@ -630,23 +648,20 @@ class AospKeyboardView @JvmOverloads constructor(
                 return@forEach
             }
             if (surface == null) {
-                val baseline = center.y - (textPaint.fontMetrics.ascent + textPaint.fontMetrics.descent) / 2f
+                val baseline = center.y - ctrlLabelOffset - (textPaint.fontMetrics.ascent + textPaint.fontMetrics.descent) / 2f
                 canvas.drawText(label, center.x, baseline, textPaint)
             } else {
                 val offset = inkOffsets.getOrPut(listOf(label, textPaint.textSize, textPaint.typeface)) {
                     val ink = android.graphics.Rect().also { textPaint.getTextBounds(label, 0, label.length, it) }
                     android.graphics.PointF(ink.exactCenterX() - textPaint.measureText(label) / 2f, ink.exactCenterY())
                 }
-                canvas.drawText(label, center.x - offset.x, center.y - offset.y, textPaint)
+                canvas.drawText(label, center.x - offset.x, center.y - offset.y - ctrlLabelOffset, textPaint)
             }
+            if (ctrlReference) drawCtrlLetterHint(canvas, key)
             val altHint = displayAltHint(key)
             val longPressHint = displayHint(key)
             if (previewLabel == null && altHint.isNotBlank()) {
-                hintPaint.textSize = sp(10f)
-                hintPaint.color = themeOverride?.textAndIcons?.let { colorWithAlpha(it, 150) }
-                    ?: Color.rgb(156, 164, 172)
-                hintPaint.textAlign = Paint.Align.LEFT
-                canvas.drawText(SoftwareKeyboardActionLabels.display(altHint), key.visualRect.left + dp(9f), key.visualRect.bottom - dp(7f), hintPaint)
+                drawLowerLeftHint(canvas, key, altHint)
             }
             if (previewLabel == null && longPressHint.isNotBlank()) {
                 hintPaint.textSize = sp(10f)
@@ -657,6 +672,46 @@ class AospKeyboardView @JvmOverloads constructor(
                 hintPaint.textAlign = Paint.Align.CENTER
             }
         }
+    }
+
+    private fun ctrlLayerActive() = heldModifierKey?.spec?.type == KeyType.CTRL || ctrlPreviewActive
+
+    private fun ctrlLetterOffset(key: Key): Float =
+        if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.ICONS_WITH_LETTERS)
+            key.visualRect.height() * 0.13f else 0f
+
+    private fun drawCtrlLetterHint(canvas: Canvas, key: Key) {
+        if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.ICONS_WITH_CORNER_LETTERS) {
+            drawLowerLeftHint(canvas, key, displayLabel(key.spec))
+            return
+        }
+        hintPaint.typeface = Typeface.DEFAULT
+        hintPaint.textAlign = Paint.Align.CENTER
+        hintPaint.textSize = sp(11f)
+        hintPaint.color = themeOverride?.textAndIcons ?: Color.rgb(238, 238, 238)
+        canvas.drawText(displayLabel(key.spec), key.visualRect.centerX(), key.visualRect.bottom - dp(5f), hintPaint)
+    }
+
+    private fun drawLowerLeftHint(canvas: Canvas, key: Key, label: String) {
+        hintPaint.textSize = sp(10f)
+        hintPaint.color = themeOverride?.textAndIcons?.let { colorWithAlpha(it, 150) }
+            ?: Color.rgb(156, 164, 172)
+        hintPaint.textAlign = Paint.Align.LEFT
+        canvas.drawText(SoftwareKeyboardActionLabels.display(label),
+            key.visualRect.left + dp(9f), key.visualRect.bottom - dp(7f), hintPaint)
+    }
+
+    private fun drawCenteredBaseLetter(canvas: Canvas, key: Key, center: android.graphics.PointF) {
+        hintPaint.typeface = Typeface.DEFAULT
+        hintPaint.textAlign = Paint.Align.CENTER
+        hintPaint.textSize = sp(24f)
+        hintPaint.color = themeOverride?.textAndIcons ?: Color.rgb(238, 238, 238)
+        val letter = displayLabel(key.spec)
+        while (hintPaint.textSize > sp(8f) && hintPaint.measureText(letter) > key.visualRect.width() - dp(8f)) {
+            hintPaint.textSize -= sp(1f)
+        }
+        val baseline = center.y - (hintPaint.fontMetrics.ascent + hintPaint.fontMetrics.descent) / 2f
+        canvas.drawText(letter, center.x, baseline, hintPaint)
     }
 
     private fun drawFunctionalIcon(canvas: Canvas, key: Key, center: android.graphics.PointF): Boolean {
@@ -678,11 +733,12 @@ class AospKeyboardView @JvmOverloads constructor(
     }
 
     private fun drawCenteredIcon(canvas: Canvas, source: Drawable, rect: RectF,
-                                 center: android.graphics.PointF = android.graphics.PointF(rect.centerX(), rect.centerY())) {
+                                 center: android.graphics.PointF = android.graphics.PointF(rect.centerX(), rect.centerY()),
+                                 sizeFraction: Float = 0.62f) {
         val icon = source.constantState?.newDrawable()?.mutate() ?: source.mutate()
         val color = themeOverride?.textAndIcons ?: Color.rgb(202, 209, 216)
         icon.setTint(color)
-        val maxSize = minOf(sp(26f), minOf(rect.width(), rect.height()) * 0.62f)
+        val maxSize = minOf(sp(26f), minOf(rect.width(), rect.height()) * sizeFraction)
         val intrinsicWidth = icon.intrinsicWidth.takeIf { it > 0 } ?: 24
         val intrinsicHeight = icon.intrinsicHeight.takeIf { it > 0 } ?: 24
         val scale = minOf(maxSize / intrinsicWidth, maxSize / intrinsicHeight)
@@ -1297,6 +1353,9 @@ class AospKeyboardView @JvmOverloads constructor(
     }
 
     private fun accessibilityLabel(key: Key): String {
+        if (ctrlLayerActive()) ctrlPreviewLabels[modifierPreviewKeyCodeFor(key)]?.let {
+            return "${displayLabel(key.spec)} · ${SoftwareKeyboardActionLabels.display(it)}"
+        }
         previewLabelFor(key)?.let { return SoftwareKeyboardActionLabels.display(it) }
         symPageLabelFor(key)?.let { return SoftwareKeyboardActionLabels.display(it) }
         return when (key.spec.type) {
@@ -1373,7 +1432,9 @@ class AospKeyboardView @JvmOverloads constructor(
         val keyCode = modifierPreviewKeyCodeFor(key)
         val heldType = heldModifierKey?.spec?.type
         return when {
-            heldType == KeyType.CTRL || ctrlPreviewActive -> ctrlPreviewLabels[keyCode]
+            heldType == KeyType.CTRL || ctrlPreviewActive ->
+                if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.LETTERS_ONLY) null
+                else ctrlPreviewLabels[keyCode]
             heldType == KeyType.ALT || altPreviewActive -> altPreviewLabels[keyCode]
             heldType == KeyType.SYMBOLS && !symPageActive ->
                 symPreviewTextLabels[key.spec.output] ?: symPreviewLabels[keyCode]
@@ -1387,6 +1448,7 @@ class AospKeyboardView @JvmOverloads constructor(
         if (heldType != KeyType.CTRL && !ctrlPreviewActive) {
             return null
         }
+        if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.LETTERS_ONLY) return null
         return ctrlPreviewIconRes[keyCode]?.let(::drawable)
     }
 

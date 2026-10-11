@@ -1297,7 +1297,10 @@ class InputEventRouter(
         callSuper: () -> Boolean,
         toggleMinimalUi: () -> Unit
     ): Boolean {
-        val isPhysicalCtrlCombo = event?.isCtrlPressed == true || ctrlPhysicallyPressed
+        // Software Ctrl uses the same meta-state, but invokes the displayed Plektra mapping.
+        // Only physical chords should prefer the editor's native shortcuts.
+        val isSoftwareEvent = ((event?.flags ?: 0) and KeyEvent.FLAG_SOFT_KEYBOARD) != 0
+        val isPhysicalCtrlCombo = !isSoftwareEvent && (event?.isCtrlPressed == true || ctrlPhysicallyPressed)
         val useNavModeForHeldCtrl = SettingsManager.getNavModeCtrlHoldEnabled(context)
         val useLayoutAwareCtrlShortcuts = SettingsManager.getLayoutAwareCtrlShortcutsEnabled(context)
         val shortcutKeyCode = if (useLayoutAwareCtrlShortcuts) {
