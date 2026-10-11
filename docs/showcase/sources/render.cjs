@@ -82,7 +82,11 @@ async function deviceComparison(items,box,portrait){
   const capture=await rgba(raw(item)),W=capture.width,H=capture.height,d=capture.data,center=(Math.floor(H*.5)*W+Math.floor(W*.5))*4;
   const bg=[d[center],d[center+1],d[center+2]];
   let barTop=-1;
-  for(let row=Math.floor(H*.5);row<H;row++){
+  if(id==='titan-2-elite'){
+   const bar=await dimensions(await crop(item));
+   barTop=H-bar.height+BAR_MARGIN;
+  }
+  for(let row=Math.floor(H*.5);barTop<0&&row<H;row++){
    let changed=0;
    for(let column=0;column<W;column++){const i=(row*W+column)*4;if(bg.some((v,j)=>Math.abs(d[i+j]-v)>12))changed++;}
    if(changed/W>.65){barTop=row;break;}

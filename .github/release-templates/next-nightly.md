@@ -1,22 +1,16 @@
 # Plektra Nightly · 26.10
 
-Changes since `26.10-nightly.08.211000Z`:
+Changes since `26.10-nightly.09.203552Z`:
 
-- **Notes:** a local Markdown editor with editing, split and preview views. View controls sit in the header. Formatting icons, selection, focus and undo/redo controls are improved. Backups include saved notes.
-- **Slim controls:** configured menu buttons remain visible independently of suggestions and the action row.
-- **Bold suggestions:** enable bold word suggestions under Keyboard bar → Contents. The setting applies to Normal and Slim mode, with physical and software keyboards.
-- **Languages:** German, English and Italian dictionaries remain bundled. Download additional dictionaries from Installed dictionaries. Imported user words remain available without a base dictionary. Installing, importing or removing a language package refreshes the active keyboard.
-- **Backups:** private and modified dictionary packages travel with the backup. Known repository packages are recorded by ID and checksum. Restore reports missing packages so you can download them. Saved input profiles and language selections remain intact.
-- **Cyrillic software keyboard:** follows the active input profile, including Russian, Ukrainian, Serbian, Bulgarian and custom layouts. Additional letters on multi-tap keys are available by long press.
-- **Keyboard controls:** add the Android keyboard picker to the bar and configure the system caption controls. Software navigation keys use readable arrow labels.
-- **Display changes:** keyboard geometry updates across fold and hardware/software transitions. Titan 2 uses its flat modifier strip, while Titan 2 Elite retains its display contour.
-- **Appearance:** Coral and Cobalt themes, plus a smaller open monochrome icon that keeps the lower keys visible inside round launcher masks.
-- **Documentation:** the image showcase includes real Titan 2, Titan 2 Elite and Pixel captures, source assets and rendering scripts.
+- **Voice input:** choose the system recognizer, FUTO Voice Input, OpenAI or OpenRouter in [Voice input settings](https://pkb.rocks/settings/speech.provider). FUTO uses its enabled auxiliary voice keyboard and returns through Android's IME handoff; if it is missing, Plektra offers [FUTO's F-Droid repository](https://app.futo.org/fdroid/repo/). Cloud providers require your own API credentials and send audio to the selected service.
+- **Dictation previews and limits:** [continuous preview](https://pkb.rocks/settings/speech.preview), a [pause threshold](https://pkb.rocks/settings/speech.pause), and a [maximum duration](https://pkb.rocks/settings/speech.duration). Duration choices are 1, 3, 5, 10 or 15 minutes, or unlimited. File-backed recording and streaming bound audio buffering. System recognition may handle pause timing differently depending on its provider.
+- **Previous language:** enable [Alt+Space to cycle backwards](https://pkb.rocks/settings/custom_input_styles.alt_space_previous_language) or [Ctrl with the software language key](https://pkb.rocks/settings/custom_input_styles.ctrl_language_previous). Both directions use the visible input languages. The Alt+Space language option and Quick Launcher's Alt+Space action are mutually exclusive.
+- **BlackBerry keyboards:** the SYM and emoji grid includes the zero and currency keys. Shift, caps lock and one-shot Shift select the corresponding symbol mappings. The [voice shortcut](https://pkb.rocks/settings/text_input.alt_ctrl_speech_shortcut) uses Alt+0 on BlackBerry profiles; hardware options follow the selected device. Adapted from [Mircea Horea IONICĂ's work](https://github.com/mionica/pastiera/tree/main-q25), with attribution in the code and [port notes](https://github.com/pkb-rocks/plektra/blob/main/docs/ports/mionica-blackberry.md). Q25 and Key2 hardware acceptance remains outstanding.
+- **Clipboard privacy:** sensitive clipboard entries have a [separate retention period](https://pkb.rocks/settings/advanced.sensitive_clipboard_retention_time); [ordinary history retention](https://pkb.rocks/settings/advanced.clipboard_retention_time) remains independent. History access is blocked while the device is locked or the screen is off.
+- **Input and display fixes:** software Ctrl actions preserve key references; suggestions are more stable and bound processing of very long words. Titan 2 Elite corner controls follow the LED contour. LED-only mode now stops both rails at the outer corner slots. Capture palettes preserve custom variation-key heights. The product showcase and README now describe the current feature set and device coverage.
 
 ## Installation
 
-The canonical package is `rocks.pkb.plektra.nightly`. Update the existing Plektra Nightly installation to retain its data.
+Update the existing `rocks.pkb.plektra.nightly` installation to keep its data. Choose **Full** for Clicks launcher-button interception, or **No accessibility** to omit that service. Normal keyboard features and TalkBack remain available in both. The variants share a package and replace each other.
 
-For languages other than German, English and Italian, open Installed dictionaries and download the required package. Existing downloaded or privately imported packages remain installed. A fresh offline installation can suggest user words before its base package is downloaded.
-
-Nightly builds are prereleases. See [getting started](https://github.com/pkb-rocks/plektra/blob/main/docs/getting-started.md) and [release channels](https://github.com/pkb-rocks/plektra/blob/main/docs/releasing.md).
+See [getting started](https://github.com/pkb-rocks/plektra/blob/main/docs/getting-started.md), [release channels](https://github.com/pkb-rocks/plektra/blob/main/docs/releasing.md), and [the product page](https://pkb.rocks/).

@@ -56,6 +56,7 @@ class ShowcaseNotesActivity : NotesActivity() {
     private class CaptureBackground : android.graphics.drawable.Drawable() {
         private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
         override fun draw(canvas: android.graphics.Canvas) {
+            paint.color = Color.WHITE
             paint.shader = android.graphics.LinearGradient(0f, 0f, bounds.width().toFloat(), bounds.height().toFloat(),
                 intArrayOf(Color.rgb(209, 226, 237), Color.rgb(220, 210, 189)), null, android.graphics.Shader.TileMode.CLAMP)
             canvas.drawRect(bounds, paint)

@@ -341,7 +341,13 @@ internal class KeyboardBarGeometry(private val context: Context) {
         val corners = ledRadii ?: radii ?: (0 to 0)
         val top = ledRowTop ?: height - maxOf(corners.first, corners.second) * calibration.size + calibration.shiftYPx
         val segments = ledLayout.segments.filter { (it.x < 0.5f) == left }
-        val edge = if (left) segments.maxOf { it.x + it.width } * width else segments.minOf { it.x } * width
+        val edge = if (ledLayout == ModifierLedLayouts.TITAN_2_ELITE) {
+            // Without a button surface, the corner slot owns both rails; Ctrl only splits the right rail.
+            val corner = if (left) segments.minBy { it.x } else segments.maxBy { it.x + it.width }
+            (if (left) corner.x + corner.width else corner.x) * width
+        } else {
+            (if (left) segments.maxOf { it.x + it.width } else segments.minOf { it.x }) * width
+        }
         return OuterSurface(RectF(if (left) 0f else edge, top, if (left) edge else width, height), ledRowRadius)
     }
 

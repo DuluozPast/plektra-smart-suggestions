@@ -14,8 +14,8 @@
     },
     {
       "capture": "r5-config-leds",
-      "foreground_pixels_retained": 5137,
-      "background_pixels_transparent": 129363
+      "foreground_pixels_retained": 3687,
+      "background_pixels_transparent": 130813
     },
     {
       "capture": "r5-slim",
@@ -29,7 +29,7 @@
     },
     {
       "capture": "r5-config-leds",
-      "native_LED_pixels_inside_photographic_opening": 2215,
+      "native_LED_pixels_inside_photographic_opening": 2230,
       "clipped": 0
     }
   ]

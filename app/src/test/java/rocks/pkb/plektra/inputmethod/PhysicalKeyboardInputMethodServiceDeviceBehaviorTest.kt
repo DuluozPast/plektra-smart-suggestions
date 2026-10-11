@@ -803,6 +803,35 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun heldSymBoundaryConsumesTappedShiftBeforeNextLetter() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setAutoCapitalizeFirstLetter(context, false)
+        SettingsManager.setAutoCapitalizeAfterPeriod(context, false)
+        SettingsManager.setExperimentalSuggestionsEnabled(context, true)
+        SettingsManager.setShiftTapLatches(context, false)
+        SettingsManager.setSymPagesConfig(context, SymPagesConfig(deviceEnabled = false, emojiEnabled = false))
+        focusNewField(RecordingInputConnection(), InputType.TYPE_CLASS_TEXT)
+
+        val t0 = 4_800L
+        tapShift(t0)
+        assertTrue(modifierController().shiftOneShot)
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_SYM,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SYM, t0 + 40L, t0 + 40L)))
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_S,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_S, t0 + 60L, t0 + 60L)))
+        assertEquals(listOf(";"), recorder.committedTexts)
+        assertFalse("Boundary handling must consume the same one-shot as a direct SYM commit",
+            modifierController().shiftOneShot)
+        service.onKeyUp(KeyEvent.KEYCODE_S,
+            keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_S, t0 + 60L, t0 + 70L))
+        service.onKeyUp(KeyEvent.KEYCODE_SYM,
+            keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SYM, t0 + 40L, t0 + 80L))
+        service.onKeyDown(KeyEvent.KEYCODE_A,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A, t0 + 100L, t0 + 100L))
+        assertEquals(listOf(";", "a"), recorder.committedTexts)
+    }
+
+    @Test
     fun symPlusQuickLauncherShortcut_opensQuickLauncherFromEditableField() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setQuickLauncherTextFieldShortcuts(context, true)

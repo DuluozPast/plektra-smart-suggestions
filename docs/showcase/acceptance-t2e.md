@@ -30,3 +30,13 @@ Temporary capture preferences were restored and compared with the saved hardware
 Physical SYM switching, physical Ctrl lock/navigation, clipboard selection and long-press popups still need interaction with the actual hardware keys. Virtual ADB key events did not reproduce every physical shortcut reliably. Existing screenshots for those scenes retain their earlier provenance rather than being reported as newly accepted captures.
 
 The other devices in the showcase were not recaptured during this T2E session.
+
+## Isolated LED-only recheck — 18:46 UTC
+
+Build `26.10-nightly.11.184539Z` was installed through the canonical Debug script on the Titan 2 Elite. Four new captures replace Full, Suggestions, LED-only and Hidden. The capture uses an explicit `titan2elite_qwerty` profile because this device reports `Titan2` in Android's model property.
+
+The previous right LED-only rail extended to the interior Ctrl slot (32.8% of the screen width). Without button surfaces, its fallback now ends at the outer right slot (16.0%), matching the left outer slot (16.4%). The physical capture confirms short corner rails on both sides, with no long right-hand extension. Existing button surfaces retain their own contours and the right rail retains its Ctrl/Shift split.
+
+The contrast grid remains opaque on repeated drawing. All four captures were visually inspected before promotion. The transparent crops and the Stable/Nightly configuration cards were also inspected. Device display size, density, profile, modifier mode and saved geometry were restored without differences. This isolated check does not repeat the other hardware-key checks listed above.
+
+The device comparison derives the T2E keyboard-bar anchor from the same measured crop as the showcase, so the grid cannot be mistaken for the bar edge.

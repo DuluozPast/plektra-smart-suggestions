@@ -55,6 +55,29 @@ class LedStatusRenderingTest {
         assertEquals(0, Color.alpha(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)))
     }
 
+    @Test fun ledOnlyContoursStopAtTheOuterPhysicalSlotsOnBothSides() {
+        val bitmap = render(true)
+        var leftEnd = -1
+        var rightStart = bitmap.width
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width / 2) {
+                if (Color.alpha(bitmap.getPixel(x, y)) > 0) leftEnd = maxOf(leftEnd, x)
+            }
+            for (x in bitmap.width / 2 until bitmap.width) {
+                if (Color.alpha(bitmap.getPixel(x, y)) > 0) rightStart = minOf(rightStart, x)
+            }
+        }
+        assertTrue("Left contour must be visible", leftEnd >= 0)
+        assertTrue("Right contour must be visible", rightStart < bitmap.width)
+        val leftExtent = leftEnd + 1
+        val rightExtent = bitmap.width - rightStart
+        assertEquals("Left rail follows its 16.4% outer slot", bitmap.width * 0.164f, leftExtent.toFloat(), 3f)
+        assertEquals("Right rail follows its 16.0% outer slot, not the interior Ctrl slot",
+            bitmap.width * 0.160f, rightExtent.toFloat(), 3f)
+        assertEquals("Only the physical slot width difference may remain",
+            bitmap.width * 0.004f, (leftExtent - rightExtent).toFloat(), 3f)
+    }
+
     @Test fun splitAndContinuousRightRailsEndInAlignment() {
         val inner = render(true, 1)
         val outerTop = render(true, 4)

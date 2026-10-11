@@ -4856,10 +4856,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             )
             if (!symChar.isNullOrEmpty()) {
                 val inputConnection = currentInputConnection
-                if (!handleBoundaryTextBeforeCommit(symChar, inputConnection)) {
-                    inputConnection?.commitText(symChar, 1)
-                    if (inputConnection != null) modifierStateController.consumeShiftOneShot()
-                }
+                val committed = handleBoundaryTextBeforeCommit(symChar, inputConnection) ||
+                    inputConnection?.commitText(symChar, 1) == true
+                if (committed) modifierStateController.consumeShiftOneShot()
                 updateStatusBarText()
                 return true
             }

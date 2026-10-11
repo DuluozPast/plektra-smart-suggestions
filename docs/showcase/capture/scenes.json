@@ -19,7 +19,8 @@
         "status_bar_variations_visible": true,
         "slim_mode_override": "full_status_bar",
         "keyboard_bar_arrangement": "SUGGESTIONS_FIRST",
-        "modifier_indicator_mode": "bottom_strip"
+        "modifier_indicator_mode": "bottom_strip",
+        "physical_keyboard_profile_override": "titan2elite_qwerty"
       }
     },
     "titan-2": {
@@ -73,7 +74,7 @@
       "device": "titan-2-elite",
       "state": "r6-config-full",
       "host": "showcase",
-      "background": "default",
+      "background": "grid",
       "theme": "Plektra Dark",
       "settings": {},
       "note": {
@@ -95,7 +96,7 @@
       "device": "titan-2-elite",
       "state": "r5-config-suggestions",
       "host": "showcase",
-      "background": "default",
+      "background": "grid",
       "theme": "Plektra Dark",
       "settings": {
         "suggestions_enabled": true,
@@ -121,7 +122,7 @@
       "device": "titan-2-elite",
       "state": "r5-config-leds",
       "host": "showcase",
-      "background": "default",
+      "background": "grid",
       "theme": "Plektra Dark",
       "settings": {
         "suggestions_enabled": false,
@@ -141,7 +142,7 @@
       "device": "titan-2-elite",
       "state": "r5-config-hidden",
       "host": "showcase",
-      "background": "default",
+      "background": "grid",
       "theme": "Plektra Dark",
       "settings": {
         "suggestions_enabled": false,

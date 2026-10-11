@@ -147,27 +147,36 @@
     },
     {
       "file": "raw/titan-2-elite/r5-config-hidden.png",
-      "sha256": "d5ec2270ebe9a9d57835471738d11ea3ee7dde1a0de2ce01239d2f4992812458",
+      "sha256": "a34754100149459df9c096575b43548ce3fbbf509c3e3660ea931650d482baf4",
       "device": "titan-2-elite",
-      "cohort": "T2E hardware acceptance 2026-10-11",
+      "cohort": "T2E isolated LED acceptance",
       "captured_on": "2026-10-11",
-      "version": "26.10-nightly.11.164908Z"
+      "version": "26.10-nightly.11.184539Z",
+      "capture_host": "ShowcaseNotesActivity with opaque contrast grid",
+      "capture_run": "20261011T184605Z",
+      "physical_profile": "titan2elite_qwerty"
     },
     {
       "file": "raw/titan-2-elite/r5-config-leds.png",
-      "sha256": "c84e4553a04a1f117684e44317abf92ef0a9b21ce9fdf91679ef47af19b7cb89",
+      "sha256": "cad8bdf5627b91e5fbee2d4a7bbe5e53c947cc5a4edf8cba30215441b111d10a",
       "device": "titan-2-elite",
-      "cohort": "T2E hardware acceptance 2026-10-11",
+      "cohort": "T2E isolated LED acceptance",
       "captured_on": "2026-10-11",
-      "version": "26.10-nightly.11.164908Z"
+      "version": "26.10-nightly.11.184539Z",
+      "capture_host": "ShowcaseNotesActivity with opaque contrast grid",
+      "capture_run": "20261011T184605Z",
+      "physical_profile": "titan2elite_qwerty"
     },
     {
       "file": "raw/titan-2-elite/r5-config-suggestions.png",
-      "sha256": "d87a2179b71bcc3e4de9e0927e9b78b644ff05002e0f3c9abc676e030ac3b481",
+      "sha256": "2cda8e209bbfaa0657d348e238665350eaa435d2fef0c879ceb8e3e26bb12ac1",
       "device": "titan-2-elite",
-      "cohort": "T2E hardware acceptance 2026-10-11",
+      "cohort": "T2E isolated LED acceptance",
       "captured_on": "2026-10-11",
-      "version": "26.10-nightly.11.164908Z"
+      "version": "26.10-nightly.11.184539Z",
+      "capture_host": "ShowcaseNotesActivity with opaque contrast grid",
+      "capture_run": "20261011T184605Z",
+      "physical_profile": "titan2elite_qwerty"
     },
     {
       "file": "raw/titan-2-elite/r5-shared.png",
@@ -243,11 +252,14 @@
     },
     {
       "file": "raw/titan-2-elite/r6-config-full.png",
-      "sha256": "8c56090f994ae0fb5b066c1d5181ff717b8f36f1056c9298b2cddb0b47abb9a3",
+      "sha256": "981731ea2315b61442bb4f7b2e1f3d8164658f6388d164ab1f21914d93160cf6",
       "device": "titan-2-elite",
-      "cohort": "T2E hardware acceptance 2026-10-11",
+      "cohort": "T2E isolated LED acceptance",
       "captured_on": "2026-10-11",
-      "version": "26.10-nightly.11.164908Z"
+      "version": "26.10-nightly.11.184539Z",
+      "capture_host": "ShowcaseNotesActivity with opaque contrast grid",
+      "capture_run": "20261011T184605Z",
+      "physical_profile": "titan2elite_qwerty"
     },
     {
       "file": "raw/titan-2-elite/r6-full.png",
