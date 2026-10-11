@@ -931,7 +931,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="experimental_candidates_view_title">Experimentelle Kandidatenansicht</string>
     <string name="experimental_candidates_view_description">Verwendet einen alternativen Android-Anzeigeweg für die Hardware-Tastatur. Kann Darstellungsprobleme verursachen.</string>
     <string name="clipboard_retention_time_title">Aufbewahrungszeit der Zwischenablage</string>
-    <string name="clipboard_retention_time_description">0 = nie löschen</string>
+    <string name="clipboard_retention_time_description">Normale Inhalte werden nach der gewählten Zeit gelöscht. Angeheftete Einträge bleiben bis zum Löschen.</string>
     <string name="clipboard_retention_time_minutes">%1$d Minuten</string>
     <string name="successor_dialog_title">Plektra update available</string>
     <string name="successor_dialog_message">%1$s is available on GitHub.</string>
@@ -1573,4 +1573,10 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="speech_zdr_docs">ZDR-Dokumentation lesen</string>
     <string name="speech_zdr_filter">Nur Modelle mit aktiven ZDR-Endpunkten sind auswählbar.</string>
     <string name="speech_zdr_unavailable">Kein ZDR-Modell für Spracheingabe verfügbar. Audio wird nicht gesendet.</string>
+    <string name="clipboard_retention_forever">Bis zum Löschen</string>
+    <string name="clipboard_retention_days">%1$d Tage</string>
+    <string name="clipboard_sensitive_retention_title">Aufbewahrung sensibler Inhalte</string>
+    <string name="clipboard_sensitive_retention_description">Passwörter und andere als sensibel markierte Inhalte werden separat gelöscht und können nicht angeheftet werden.</string>
+    <string name="clipboard_sensitive_preview">•••••••• · Sensibler Inhalt – tippen zum Einfügen</string>
+    <string name="clipboard_retention_24_hours">24 Stunden</string>
 </resources>

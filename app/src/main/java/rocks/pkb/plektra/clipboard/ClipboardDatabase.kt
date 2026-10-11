@@ -15,12 +15,14 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Future schema migrations will go here
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE ${ClipboardDao.TABLE} ADD COLUMN SENSITIVE TINYINT NOT NULL DEFAULT 0")
+        }
     }
 
     companion object {
         private const val TAG = "ClipboardDatabase"
-        private const val VERSION = 1
+        private const val VERSION = 2
         private const val NAME = "plektra_clipboard.db"
 
         @Volatile

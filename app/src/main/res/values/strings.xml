@@ -1546,7 +1546,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="experimental_candidates_view_title">Experimental candidates view</string>
     <string name="experimental_candidates_view_description">Uses an alternative Android display mode for the hardware keyboard. May cause display problems.</string>
     <string name="clipboard_retention_time_title">Clipboard Retention Time</string>
-    <string name="clipboard_retention_time_description">0 = never delete clips</string>
+    <string name="clipboard_retention_time_description">Normal contents expire after the selected time. Pinned entries are kept until deleted.</string>
     <string name="clipboard_retention_time_minutes">%1$d minutes</string>
 
     <!-- Trackpad Gesture Settings -->
@@ -1891,4 +1891,10 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="speech_zdr_docs">Read the ZDR documentation</string>
     <string name="speech_zdr_filter">Only models with active ZDR endpoints are selectable.</string>
     <string name="speech_zdr_unavailable">No ZDR speech model is available. Audio will not be sent.</string>
+    <string name="clipboard_retention_forever">Until deleted</string>
+    <string name="clipboard_retention_days">%1$d days</string>
+    <string name="clipboard_sensitive_retention_title">Sensitive clipboard retention</string>
+    <string name="clipboard_sensitive_retention_description">Passwords and other marked sensitive contents expire separately and cannot be pinned.</string>
+    <string name="clipboard_sensitive_preview">•••••••• · Sensitive content — tap to paste</string>
+    <string name="clipboard_retention_24_hours">24 hours</string>
 </resources>

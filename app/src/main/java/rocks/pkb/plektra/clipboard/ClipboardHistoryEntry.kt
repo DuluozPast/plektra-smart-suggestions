@@ -11,7 +11,8 @@ data class ClipboardHistoryEntry(
     val id: Long,
     var timeStamp: Long,
     var isPinned: Boolean,
-    val text: String
+    val text: String,
+    var isSensitive: Boolean = false
 ) : Comparable<ClipboardHistoryEntry> {
 
     /**

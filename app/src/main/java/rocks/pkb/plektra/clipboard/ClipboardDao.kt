@@ -21,12 +21,14 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
 
     // Track when we last cleaned old clips
     private var lastClearOldClips = 0L
+    private var nextExpiry = 0L
+    private var lastRetention: Pair<Long, Long>? = null
 
     // In-memory cache loaded at start
     private val cache = mutableListOf<ClipboardHistoryEntry>().apply {
         db.readableDatabase.query(
             TABLE,
-            arrayOf(COLUMN_ID, COLUMN_TIMESTAMP, COLUMN_PINNED, COLUMN_TEXT),
+            arrayOf(COLUMN_ID, COLUMN_TIMESTAMP, COLUMN_PINNED, COLUMN_TEXT, COLUMN_SENSITIVE),
             null,
             null,
             null,
@@ -38,7 +40,8 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
                     it.getLong(0),
                     it.getLong(1),
                     it.getInt(2) != 0,
-                    it.getString(3)
+                    it.getString(3),
+                    it.getInt(4) != 0
                 ))
             }
         }
@@ -47,51 +50,45 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
 
     /**
      * Add a new clipboard entry or update existing one with same text.
-     * @param retentionMinutes Optional retention time in minutes. If provided, will clear old clips using this value.
+     * @param retentionMinutes Normal retention in minutes; zero keeps entries until deleted.
+     * @param sensitiveRetentionMinutes Sensitive entries expire independently and cannot be pinned.
      */
-    fun addClip(timestamp: Long, pinned: Boolean, text: String, retentionMinutes: Long? = null) {
-        if (retentionMinutes != null) {
-            clearOldClips(now = true, retentionMinutes = retentionMinutes)
-        } else {
-            clearOldClips() // Use default if not provided (for backwards compatibility)
-        }
+    fun addClip(timestamp: Long, pinned: Boolean, text: String, retentionMinutes: Long = 0,
+        sensitive: Boolean = false, sensitiveRetentionMinutes: Long = 30) {
+        clearOldClips(now = true, retentionMinutes = retentionMinutes,
+            sensitiveRetentionMinutes = sensitiveRetentionMinutes)
+        if (sensitive && timestamp <= System.currentTimeMillis() - sensitiveRetentionMinutes.coerceIn(1, 120) * 60_000L) return
 
-        // Check if this exact text already exists
+        nextExpiry = 0L
         val existingIndex = cache.indexOfFirst { it.text == text }
         if (existingIndex >= 0) {
-            // Update timestamp of existing entry
-            updateTimestampAt(existingIndex, timestamp)
+            val entry = cache[existingIndex]
+            entry.timeStamp = timestamp
+            // Copying the same secret without metadata must not downgrade its protection.
+            entry.isSensitive = entry.isSensitive || sensitive
+            if (entry.isSensitive) entry.isPinned = false
+            val cv = ContentValues().apply {
+                put(COLUMN_TIMESTAMP, entry.timeStamp)
+                put(COLUMN_SENSITIVE, entry.isSensitive)
+                put(COLUMN_PINNED, entry.isPinned)
+            }
+            db.writableDatabase.update(TABLE, cv, "$COLUMN_ID = ?", arrayOf(entry.id.toString()))
+            cache.sort()
+            listener?.onClipMoved(existingIndex, cache.indexOf(entry))
             return
         }
 
-        // Insert new entry
-        insertNewEntry(timestamp, pinned, text)
-    }
-
-    private fun insertNewEntry(timestamp: Long, pinned: Boolean, text: String) {
-        val cv = ContentValues(3).apply {
+        val cv = ContentValues().apply {
             put(COLUMN_TIMESTAMP, timestamp)
-            put(COLUMN_PINNED, pinned)
+            put(COLUMN_PINNED, pinned && !sensitive)
             put(COLUMN_TEXT, text)
+            put(COLUMN_SENSITIVE, sensitive)
         }
         val rowId = db.writableDatabase.insert(TABLE, null, cv)
-
-        val entry = ClipboardHistoryEntry(rowId, timestamp, pinned, text)
+        val entry = ClipboardHistoryEntry(rowId, timestamp, pinned && !sensitive, text, sensitive)
         cache.add(entry)
         cache.sort()
         listener?.onClipInserted(cache.indexOf(entry))
-    }
-
-    private fun updateTimestampAt(index: Int, timestamp: Long) {
-        val entry = cache[index]
-        entry.timeStamp = timestamp
-        cache.sort()
-        listener?.onClipMoved(index, cache.indexOf(entry))
-
-        val cv = ContentValues(1).apply {
-            put(COLUMN_TIMESTAMP, timestamp)
-        }
-        db.writableDatabase.update(TABLE, cv, "$COLUMN_ID = ${entry.id}", null)
     }
 
     fun isPinned(index: Int) = cache.getOrNull(index)?.isPinned ?: false
@@ -106,6 +103,8 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
 
     fun togglePinned(id: Long) {
         val entry = cache.firstOrNull { it.id == id } ?: return
+        if (entry.isSensitive) return
+        nextExpiry = 0L
         entry.isPinned = !entry.isPinned
         entry.timeStamp = System.currentTimeMillis()
 
@@ -134,33 +133,37 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
     /**
      * Remove old clipboard entries based on retention time setting.
      * @param now If true, force clear immediately; otherwise respect debounce
-     * @param retentionMinutes Retention time in minutes. If <= 0, no cleanup is performed.
-     *                         Values > 0 will remove entries older than this time (except pinned ones).
+     * @param retentionMinutes Normal retention in minutes; zero keeps normal entries indefinitely.
+     * @param sensitiveRetentionMinutes Sensitive retention, clamped to 1–120 minutes.
      */
-    fun clearOldClips(now: Boolean = false, retentionMinutes: Long = 120) {
-        if (!now && lastClearOldClips > SystemClock.elapsedRealtime() - 5 * 1000) {
-            return // Debounce: only clear every 5 seconds
-        }
-
+    fun clearOldClips(now: Boolean = false, retentionMinutes: Long = 0,
+        sensitiveRetentionMinutes: Long = 30) {
+        if (!now && lastClearOldClips > SystemClock.elapsedRealtime() - 5_000) return
         lastClearOldClips = SystemClock.elapsedRealtime()
-
-        // If retentionMinutes <= 0, disable automatic cleanup (infinite retention)
-        if (retentionMinutes <= 0) return
-
-        val minTime = System.currentTimeMillis() - retentionMinutes * 60 * 1000L
-
-        val indicesToRemove = mutableListOf<Int>()
-        cache.forEachIndexed { idx, clip ->
-            if (clip.timeStamp < minTime && !clip.isPinned) {
-                indicesToRemove.add(idx)
-            }
+        val currentTime = System.currentTimeMillis()
+        val retention = retentionMinutes to sensitiveRetentionMinutes
+        if (lastRetention == retention && currentTime < nextExpiry) return
+        lastRetention = retention
+        val normalCutoff = if (retentionMinutes > 0) currentTime - retentionMinutes * 60_000L else Long.MIN_VALUE
+        val sensitiveCutoff = currentTime - sensitiveRetentionMinutes.coerceIn(1, 120) * 60_000L
+        val expired = cache.indices.filter { index ->
+            val clip = cache[index]
+            if (clip.isSensitive) clip.timeStamp <= sensitiveCutoff
+            else !clip.isPinned && clip.timeStamp <= normalCutoff
         }
-        if (indicesToRemove.isEmpty()) return
-
-        cache.removeAll { it.timeStamp < minTime && !it.isPinned }
-        listener?.onClipsRemoved(indicesToRemove.first(), indicesToRemove.size)
-
-        db.writableDatabase.delete(TABLE, "$COLUMN_TIMESTAMP < $minTime AND $COLUMN_PINNED = 0", null)
+        // Each removal may be separated by a pinned or long-lived normal entry.
+        expired.asReversed().forEach { index ->
+            val entry = cache.removeAt(index)
+            db.writableDatabase.delete(TABLE, "$COLUMN_ID = ?", arrayOf(entry.id.toString()))
+        }
+        nextExpiry = cache.minOfOrNull { clip ->
+            when {
+                clip.isSensitive -> clip.timeStamp + sensitiveRetentionMinutes.coerceIn(1, 120) * 60_000L
+                !clip.isPinned && retentionMinutes > 0 -> clip.timeStamp + retentionMinutes * 60_000L
+                else -> Long.MAX_VALUE
+            }
+        } ?: Long.MAX_VALUE
+        expired.asReversed().forEach { listener?.onClipsRemoved(it, 1) }
     }
 
     fun clearNonPinned() {
@@ -196,13 +199,15 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
         private const val COLUMN_TIMESTAMP = "TIMESTAMP"
         private const val COLUMN_PINNED = "PINNED"
         private const val COLUMN_TEXT = "TEXT"
+        private const val COLUMN_SENSITIVE = "SENSITIVE"
 
         const val CREATE_TABLE = """
             CREATE TABLE $TABLE (
                 $COLUMN_ID INTEGER PRIMARY KEY,
                 $COLUMN_TIMESTAMP INTEGER NOT NULL,
                 $COLUMN_PINNED TINYINT NOT NULL,
-                $COLUMN_TEXT TEXT
+                $COLUMN_TEXT TEXT,
+                $COLUMN_SENSITIVE TINYINT NOT NULL DEFAULT 0
             )
         """
 

@@ -30,6 +30,7 @@ class ClipboardHistoryPopupView(
     private val contentView: LinearLayout
     private val entriesContainer: LinearLayout
     private val clearButton: Button
+    private val historyChangeListener: () -> Unit = { contentView.post { if (popupWindow.isShowing) refreshEntries() } }
     private val accessStateListener: (Boolean) -> Unit = {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             refreshEntries()
@@ -118,6 +119,7 @@ class ClipboardHistoryPopupView(
             elevation = 8f
             setOnDismissListener {
                 clipboardHistoryManager.removeAccessStateListener(accessStateListener)
+                clipboardHistoryManager.removeHistoryChangeListener(historyChangeListener)
             }
         }
 
@@ -191,7 +193,7 @@ class ClipboardHistoryPopupView(
             }
             isClickable = true
             isFocusable = true
-            contentDescription = entry.text
+            contentDescription = if (entry.isSensitive) context.getString(R.string.clipboard_sensitive_preview) else entry.text
             setOnClickListener {
                 onItemClickListener?.invoke(entry)
             }
@@ -199,7 +201,8 @@ class ClipboardHistoryPopupView(
 
         // Text content (truncated)
         val textView = TextView(context).apply {
-            text = entry.text.take(100) + if (entry.text.length > 100) "..." else ""
+            text = if (entry.isSensitive) context.getString(R.string.clipboard_sensitive_preview)
+                else entry.text.take(100) + if (entry.text.length > 100) "..." else ""
             textSize = 14f
             setTextColor(Color.WHITE)
             maxLines = 2
@@ -240,7 +243,7 @@ class ClipboardHistoryPopupView(
         }
 
         container.addView(textView)
-        container.addView(pinButton)
+        if (!entry.isSensitive) container.addView(pinButton)
         if (!entry.isPinned) {
             container.addView(deleteButton)
         }
@@ -250,6 +253,7 @@ class ClipboardHistoryPopupView(
 
     fun show() {
         clipboardHistoryManager.addAccessStateListener(accessStateListener)
+        clipboardHistoryManager.addHistoryChangeListener(historyChangeListener)
         refreshEntries()
         // Show at top of screen or above keyboard
         popupWindow.showAtLocation(
@@ -262,6 +266,7 @@ class ClipboardHistoryPopupView(
 
     fun dismiss() {
         clipboardHistoryManager.removeAccessStateListener(accessStateListener)
+        clipboardHistoryManager.removeHistoryChangeListener(historyChangeListener)
         popupWindow.dismiss()
     }
 

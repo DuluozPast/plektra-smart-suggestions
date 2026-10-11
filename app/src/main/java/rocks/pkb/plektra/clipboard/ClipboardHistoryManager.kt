@@ -27,6 +27,24 @@ class ClipboardHistoryManager internal constructor(
     private var deviceStateReceiverRegistered = false
     private var screenOffReceived = false
     private var lastHistoryAccessible: Boolean? = null
+    private val historyChangeListeners = linkedSetOf<() -> Unit>()
+    private var externalHistoryListener: ClipboardDao.Listener? = null
+    private val daoListener = object : ClipboardDao.Listener {
+        override fun onClipInserted(position: Int) {
+            externalHistoryListener?.onClipInserted(position)
+            notifyHistoryChanged()
+        }
+        override fun onClipsRemoved(position: Int, count: Int) {
+            externalHistoryListener?.onClipsRemoved(position, count)
+            notifyHistoryChanged()
+        }
+        override fun onClipMoved(oldPosition: Int, newPosition: Int) {
+            externalHistoryListener?.onClipMoved(oldPosition, newPosition)
+            notifyHistoryChanged()
+        }
+    }
+    private fun notifyHistoryChanged() = historyChangeListeners.toList().forEach { it() }
+
     private val accessStateListeners = linkedSetOf<(Boolean) -> Unit>()
     private val deviceStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -39,6 +57,7 @@ class ClipboardHistoryManager internal constructor(
         clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboardManager.addPrimaryClipChangedListener(this)
         clipboardDao = ClipboardDao.getInstance(context)
+        clipboardDao?.listener = daoListener
         registerDeviceStateReceiver()
         lastHistoryAccessible = isHistoryAccessible()
 
@@ -57,6 +76,9 @@ class ClipboardHistoryManager internal constructor(
             deviceStateReceiverRegistered = false
         }
         accessStateListeners.clear()
+        historyChangeListeners.clear()
+        externalHistoryListener = null
+        if (clipboardDao?.listener === daoListener) clipboardDao?.listener = null
     }
 
     override fun onPrimaryClipChanged() {
@@ -67,23 +89,25 @@ class ClipboardHistoryManager internal constructor(
     private fun fetchPrimaryClip() {
         if (!isHistoryAccessible()) return
         val clipData = clipboardManager.primaryClip ?: return
+        val sensitive = clipData.description.extras?.getBoolean("android.content.extra.IS_SENSITIVE", false) == true
         if (clipData.itemCount == 0 || clipData.description?.hasMimeType("text/*") == false) {
             return
         }
 
         clipData.getItemAt(0)?.let { clipItem ->
-            val timeStamp = System.currentTimeMillis() // TODO: Get actual clip timestamp if available
+            val timeStamp = clipData.description.timestamp.takeIf { it > 0 } ?: System.currentTimeMillis()
             val content = clipItem.coerceToText(context)
             if (TextUtils.isEmpty(content)) return
             if (!isHistoryAccessible()) return
 
             val retentionMinutes = getClipboardRetentionTime()
-            clipboardDao?.addClip(timeStamp, false, content.toString(), retentionMinutes)
+            clipboardDao?.addClip(timeStamp, false, content.toString(), retentionMinutes, sensitive,
+                SettingsManager.getSensitiveClipboardRetentionTime(context))
         }
     }
 
     fun toggleClipPinned(id: Long) {
-        if (!isHistoryAccessible()) return
+        if (getHistoryEntryContent(id) == null) return
         clipboardDao?.togglePinned(id)
     }
 
@@ -127,21 +151,38 @@ class ClipboardHistoryManager internal constructor(
     }
 
     fun prepareClipboardHistory() {
-        if (!isHistoryAccessible()) return
         // Clear old clips before showing history
         val retentionMinutes = getClipboardRetentionTime()
-        clipboardDao?.clearOldClips(true, retentionMinutes)
+        clipboardDao?.clearOldClips(true, retentionMinutes, SettingsManager.getSensitiveClipboardRetentionTime(context))
     }
 
-    fun getHistorySize() = if (isHistoryAccessible()) clipboardDao?.count() ?: 0 else 0
+    fun getHistorySize(): Int {
+        prepareClipboardHistory()
+        return if (isHistoryAccessible()) clipboardDao?.count() ?: 0 else 0
+    }
 
-    fun getHistoryEntry(position: Int) = if (isHistoryAccessible()) clipboardDao?.getAt(position) else null
+    fun getHistoryEntry(position: Int): ClipboardHistoryEntry? {
+        prepareClipboardHistory()
+        return if (isHistoryAccessible()) clipboardDao?.getAt(position) else null
+    }
 
-    fun getHistoryEntryContent(id: Long) = if (isHistoryAccessible()) clipboardDao?.get(id) else null
+    fun getHistoryEntryContent(id: Long): ClipboardHistoryEntry? {
+        prepareClipboardHistory()
+        return if (isHistoryAccessible()) clipboardDao?.get(id) else null
+    }
+
+    fun pasteEntry(id: Long, inputConnection: android.view.inputmethod.InputConnection?) {
+        val entry = getHistoryEntryContent(id) ?: return
+        pasteText(entry.text, inputConnection)
+    }
 
     fun setHistoryChangeListener(listener: ClipboardDao.Listener?) {
-        clipboardDao?.listener = listener
+        externalHistoryListener = listener
     }
+
+    fun addHistoryChangeListener(listener: () -> Unit) { historyChangeListeners += listener }
+
+    fun removeHistoryChangeListener(listener: () -> Unit) { historyChangeListeners -= listener }
 
     fun isHistoryAccessible(): Boolean = !screenOffReceived && accessPolicy.isHistoryAccessible()
 
@@ -182,7 +223,7 @@ class ClipboardHistoryManager internal constructor(
 
         return ClipboardHistoryPopupView(context, this).apply {
             setOnItemClickListener { entry ->
-                pasteText(entry.text, inputConnection)
+                pasteEntry(entry.id, inputConnection)
                 dismiss()
                 onDismiss()
             }

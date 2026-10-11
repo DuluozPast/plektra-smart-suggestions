@@ -92,6 +92,7 @@ object SettingLinkIds {
     const val ADVANCED_BACKUP = "advanced.backup"
     const val ADVANCED_RESTORE = "advanced.restore"
     const val ADVANCED_SWIPE_INCREMENTAL_THRESHOLD = "advanced.swipe_incremental_threshold"
+    const val ADVANCED_SENSITIVE_CLIPBOARD_RETENTION_TIME = "advanced.sensitive_clipboard_retention_time"
     const val ADVANCED_CLIPBOARD_RETENTION_TIME = "advanced.clipboard_retention_time"
     const val ADVANCED_EXPERIMENTAL_CANDIDATES_VIEW = "advanced.experimental_candidates_view"
     const val ADVANCED_SHOW_TUTORIAL = "advanced.show_tutorial"
@@ -654,6 +655,12 @@ object SettingLinkRegistry {
             SettingLinkIds.ADVANCED_CLIPBOARD_RETENTION_TIME,
             R.string.clipboard_retention_time_title,
             R.string.clipboard_retention_time_description,
+            destination = SettingsDestination.Advanced
+        ),
+        entry(
+            SettingLinkIds.ADVANCED_SENSITIVE_CLIPBOARD_RETENTION_TIME,
+            R.string.clipboard_sensitive_retention_title,
+            R.string.clipboard_sensitive_retention_description,
             destination = SettingsDestination.Advanced
         ),
         entry(

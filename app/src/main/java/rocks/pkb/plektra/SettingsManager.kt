@@ -155,6 +155,7 @@ object SettingsManager {
     private const val KEY_VARIATIONS_UPDATED = "variations_updated" // Trigger for reloading variations in input method service
     private const val KEY_ADDITIONAL_IME_SUBTYPES = "additional_ime_subtypes" // Comma-separated list of language codes for additional IME subtypes
     private const val KEY_CLIPBOARD_HISTORY_ENABLED = "clipboard_history_enabled" // Whether clipboard history is enabled
+    private const val KEY_SENSITIVE_CLIPBOARD_RETENTION_TIME = "sensitive_clipboard_retention_time"
     private const val KEY_CLIPBOARD_RETENTION_TIME = "clipboard_retention_time" // How long to keep clipboard entries (in minutes)
     private const val KEY_TRACKPAD_GESTURES_ENABLED = "trackpad_gestures_enabled" // Whether trackpad gesture suggestions are enabled
     private const val KEY_TRACKPAD_GESTURE_ADD_WORD_ENABLED = "trackpad_gesture_add_word_enabled" // Whether suggestion gestures can trigger add-word
@@ -404,7 +405,7 @@ object SettingsManager {
     private const val DEFAULT_USE_EDIT_TYPE_RANKING = false
     private const val DEFAULT_IME_OVERLAY_DEBUG_LOGGING = false
     private const val DEFAULT_CLIPBOARD_HISTORY_ENABLED = true
-    private const val DEFAULT_CLIPBOARD_RETENTION_TIME = 120L // 2 hours in minutes
+    private const val DEFAULT_CLIPBOARD_RETENTION_TIME = 0L // Keep normal entries until deleted
     private const val DEFAULT_TRACKPAD_GESTURES_ENABLED = false
     private const val DEFAULT_TRACKPAD_GESTURE_ADD_WORD_ENABLED = true
     private const val DEFAULT_TRACKPAD_GESTURE_ADD_WORD_FULL_WIDTH_ENABLED = true
@@ -5325,6 +5326,15 @@ object SettingsManager {
     fun setClipboardRetentionTime(context: Context, minutes: Long) {
         getPreferences(context).edit()
             .putLong(KEY_CLIPBOARD_RETENTION_TIME, minutes)
+            .apply()
+    }
+
+    fun getSensitiveClipboardRetentionTime(context: Context): Long =
+        getPreferences(context).getLong(KEY_SENSITIVE_CLIPBOARD_RETENTION_TIME, 30L).coerceIn(1L, 120L)
+
+    fun setSensitiveClipboardRetentionTime(context: Context, minutes: Long) {
+        getPreferences(context).edit()
+            .putLong(KEY_SENSITIVE_CLIPBOARD_RETENTION_TIME, minutes.coerceIn(1L, 120L))
             .apply()
     }
 

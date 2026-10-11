@@ -44,6 +44,7 @@ class ClipboardHistoryView(
     private var currentInputConnection: InputConnection? = null
     private val entryHeightPx: Int
     private var scrollToTopPending: Boolean = false
+    private val historyChangeListener: () -> Unit = { post { if (isAttachedToWindow) refresh() } }
     private val accessStateListener: (Boolean) -> Unit = {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             refresh()
@@ -198,11 +199,13 @@ class ClipboardHistoryView(
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         clipboardHistoryManager.addAccessStateListener(accessStateListener)
+        clipboardHistoryManager.addHistoryChangeListener(historyChangeListener)
         refresh()
     }
 
     override fun onDetachedFromWindow() {
         clipboardHistoryManager.removeAccessStateListener(accessStateListener)
+        clipboardHistoryManager.removeHistoryChangeListener(historyChangeListener)
         activeContextMenu?.dismiss()
         activeContextMenu = null
         super.onDetachedFromWindow()
@@ -327,10 +330,8 @@ class ClipboardHistoryView(
         val unpinText = context.getString(R.string.clipboard_unpin)
         val deleteText = context.getString(R.string.clipboard_delete)
 
-        if (entry.isPinned) {
-            menu.menu.add(unpinText)
-        } else {
-            menu.menu.add(pinText)
+        if (!entry.isSensitive) {
+            menu.menu.add(if (entry.isPinned) unpinText else pinText)
         }
         menu.menu.add(deleteText)
 
@@ -367,7 +368,7 @@ class ClipboardHistoryView(
     }
 
     private fun onEntryClicked(entry: ClipboardHistoryEntry) {
-        clipboardHistoryManager.pasteText(entry.text, currentInputConnection)
+        clipboardHistoryManager.pasteEntry(entry.id, currentInputConnection)
     }
 
     private fun createRoundedBackground(isPinned: Boolean = false): GradientDrawable {
@@ -469,8 +470,9 @@ class ClipboardHistoryView(
                 holder.itemView.setOnLongClickListener(null)
                 return
             }
-            holder.textView.text = entry.text
-            holder.itemView.contentDescription = entry.text
+            val preview = if (entry.isSensitive) context.getString(R.string.clipboard_sensitive_preview) else entry.text
+            holder.textView.text = preview
+            holder.itemView.contentDescription = preview
             holder.itemView.isClickable = true
             holder.itemView.isLongClickable = true
             holder.itemView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
@@ -497,7 +499,7 @@ class ClipboardHistoryView(
         override fun areContentsTheSame(oldItem: ClipboardHistoryEntry, newItem: ClipboardHistoryEntry): Boolean {
             return oldItem.timeStamp == newItem.timeStamp &&
                 oldItem.isPinned == newItem.isPinned &&
-                oldItem.text == newItem.text
+                oldItem.text == newItem.text && oldItem.isSensitive == newItem.isSensitive
         }
     }
 }

@@ -396,7 +396,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private val clipboardCleanupIntervalMs = 60_000L
     private val clipboardCleanupRunnable = object : Runnable {
         override fun run() {
-            val retention = SettingsManager.getClipboardRetentionTime(this@PhysicalKeyboardInputMethodService)
             clipboardHistoryManager.prepareClipboardHistory()
             val count = clipboardHistoryManager.getHistorySize()
             uiHandler.post {
@@ -1833,6 +1832,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Initialize clipboard history manager first (needed by candidatesBarController)
         clipboardHistoryManager = ClipboardHistoryManager(this)
         clipboardHistoryManager.onCreate()
+        startClipboardCleanupTimer()
 
         candidatesBarController = CandidatesBarController(this, clipboardHistoryManager, assets, PhysicalKeyboardInputMethodService::class.java)
         val snippetExpansionSource = SnippetExpansionSource {
@@ -3756,7 +3756,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (::candidatesBarController.isInitialized) {
             candidatesBarController.resetSuggestionActionMode()
         }
-        stopClipboardCleanupTimer()
+        // Retention cleanup continues while the IME service lives, including on the lock screen.
         if (finishingInput) {
             multiTapController.cancelAll()
             resetModifierStates(preserveNavMode = true)
