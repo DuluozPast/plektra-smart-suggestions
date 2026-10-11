@@ -1908,4 +1908,9 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="speech_preview_three_words">Three word fields</string>
     <string name="speech_preview_continuous">Continuous line</string>
     <string name="speech_preview_description">The continuous line keeps new words at the right edge while earlier words move to the left.</string>
+    <string name="speech_duration_title">Maximum recording time</string>
+    <string name="speech_duration_unlimited">Unlimited</string>
+    <string name="speech_duration_minutes">%1$d minutes</string>
+    <string name="speech_duration_description">Stop during silence still applies independently. External providers and the Android recognition service may have their own limits.</string>
+    <string name="speech_duration_one_minute">1 minute</string>
 </resources>

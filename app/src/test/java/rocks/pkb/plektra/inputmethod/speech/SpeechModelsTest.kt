@@ -85,7 +85,7 @@ class SpeechModelsTest {
     }
 
     @Test fun manualModeDoesNotStopOnPausesAndSilenceDoesNotBecomeSpeech() {
-        val manual = SpeechSilenceDetector()
+        val manual = SpeechSilenceDetector(60_000)
         assertFalse(manual.accept(0.08, 300, 0))
         assertFalse(manual.accept(0.0001, 5000, 0))
         assertNull(manual.silenceRemainingMs)

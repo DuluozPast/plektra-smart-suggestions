@@ -3,6 +3,8 @@ package rocks.pkb.plektra.inputmethod.speech
 import kotlinx.coroutines.*
 
 interface SpeechAudioRecorder {
+    fun setMaxDurationMs(ms: Long) {}
+    fun release() {}
     suspend fun record(silenceMs: Long, onLevel: (Float, Long?) -> Unit): RecordedSpeech
     suspend fun recordStreaming(silenceMs: Long, onLevel: (Float, Long?) -> Unit,
         onPcm: suspend (ByteArray) -> Unit): RecordedSpeech = error("Recorder does not support streaming")
@@ -35,6 +37,7 @@ class SpeechSessionController(
         cancel()
         val live = request.provider == SpeechProvider.OPENAI && request.model.protocol == SpeechProtocol.LIVE_TRANSCRIPTION
         val session = Session(request, if (live) liveRecorderFactory() else recorderFactory())
+        session.recorder.setMaxDurationMs(request.maxDurationMs)
         current = session
         session.job = scope.launch(start = CoroutineStart.LAZY) {
             try {
@@ -52,25 +55,30 @@ class SpeechSessionController(
                                 onState(SpeechState.TRANSCRIBING)
                             }
                         })
-                    ensureActive()
-                    if (current === session) onResult(request, result.audio, result.result)
+                    result.audio.use {
+                        ensureActive()
+                        if (current === session) onResult(request, it, result.result)
+                    }
                     return@launch
                 }
                 val audio = session.recorder.record(request.silenceMs, levels)
-                ensureActive()
-                if (current !== session) return@launch
-                session.state = SpeechState.TRANSCRIBING
-                onState(SpeechState.TRANSCRIBING)
-                val preparedRequest = prepareRequest(request)
-                ensureActive()
-                val result = transcribe(preparedRequest, audio)
-                ensureActive()
-                if (current === session) onResult(preparedRequest, audio, result)
+                audio.use {
+                    ensureActive()
+                    if (current !== session) return@launch
+                    session.state = SpeechState.TRANSCRIBING
+                    onState(SpeechState.TRANSCRIBING)
+                    val preparedRequest = prepareRequest(request)
+                    ensureActive()
+                    val result = transcribe(preparedRequest, audio)
+                    ensureActive()
+                    if (current === session) onResult(preparedRequest, audio, result)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 if (current === session) onError(e)
             } finally {
+                session.recorder.release()
                 if (current === session) {
                     current = null
                     onState(SpeechState.IDLE)

@@ -1,6 +1,9 @@
 package rocks.pkb.plektra.inputmethod.speech
 
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -17,9 +20,25 @@ class SpeechApiClient(
     private val openRouterBase: String = "https://openrouter.ai/api/v1/",
     private val openAiBase: String = "https://api.openai.com/v1/"
 ) {
-    suspend fun transcribe(request: SpeechRequest, audio: RecordedSpeech): SpeechResult {
+    suspend fun transcribe(request: SpeechRequest, audio: RecordedSpeech): SpeechResult = withContext(Dispatchers.IO) {
         require(request.provider.isCloud)
         require(request.model.protocol != SpeechProtocol.LIVE_TRANSCRIPTION) { "Use the live transcription client" }
+        val parts = mutableListOf<String>()
+        var cost: Double? = 0.0
+        var inputTokens: Long? = 0L
+        var outputTokens: Long? = 0L
+        for (chunk in audio.chunks()) {
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            val result = transcribeChunk(request, chunk)
+            if (result.text.isNotBlank()) parts += result.text
+            cost = if (cost != null && result.costUsd != null) cost + result.costUsd else null
+            inputTokens = if (inputTokens != null && result.inputTokens != null) inputTokens + result.inputTokens else null
+            outputTokens = if (outputTokens != null && result.outputTokens != null) outputTokens + result.outputTokens else null
+        }
+        SpeechResult(parts.joinToString(" "), cost, inputTokens, outputTokens)
+    }
+
+    private suspend fun transcribeChunk(request: SpeechRequest, audio: RecordedSpeech): SpeechResult {
         val base = if (request.provider == SpeechProvider.OPENAI) openAiBase else openRouterBase
         val protocol = if (request.provider == SpeechProvider.OPENAI) SpeechProtocol.TRANSCRIPTION else request.model.protocol
         val path = if (protocol == SpeechProtocol.AUDIO_CHAT) "chat/completions" else "audio/transcriptions"

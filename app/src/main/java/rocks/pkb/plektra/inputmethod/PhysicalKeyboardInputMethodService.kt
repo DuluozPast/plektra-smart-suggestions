@@ -763,7 +763,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 val api = SpeechApiClient()
                 cloudSpeechController = SpeechSessionController(
                     scope = speechScope,
-                    recorderFactory = { PcmSpeechRecorder() },
+                    recorderFactory = { PcmSpeechRecorder(cacheDir = cacheDir) },
+                    liveRecorderFactory = { PcmSpeechRecorder(24000, cacheDir) },
                     transcribe = { request, audio -> api.transcribe(request, audio) },
                     liveTranscriber = OpenAiLiveSpeechClient(),
                     onPartial = { request, text ->
@@ -815,7 +816,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                         AutoCapitalizeHelper.shouldAutoCapitalizeAtCursor(this, connection, shouldDisableAutoCapitalize))
             }
             cloudSpeechController?.start(SpeechRequest(provider, model, apiKey,
-                languageTag, speechEditorSession, SpeechSettings.silenceMs(this)))
+                languageTag, speechEditorSession, SpeechSettings.silenceMs(this), SpeechSettings.maxDurationMs(this)))
             return
         }
 

@@ -1590,4 +1590,9 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="speech_preview_three_words">Drei Wortfelder</string>
     <string name="speech_preview_continuous">Durchgehende Zeile</string>
     <string name="speech_preview_description">In der durchgehenden Zeile bleiben neue Wörter am rechten Rand; ältere Wörter rücken nach links.</string>
+    <string name="speech_duration_title">Maximale Aufnahmedauer</string>
+    <string name="speech_duration_unlimited">Unbegrenzt</string>
+    <string name="speech_duration_minutes">%1$d Minuten</string>
+    <string name="speech_duration_description">Stoppen bei Stille bleibt unabhängig davon aktiv. Externe Anbieter und der Android-Sprachdienst können eigene Grenzen haben.</string>
+    <string name="speech_duration_one_minute">1 Minute</string>
 </resources>

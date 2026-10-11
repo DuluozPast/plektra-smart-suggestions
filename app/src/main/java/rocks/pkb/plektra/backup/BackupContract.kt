@@ -270,6 +270,7 @@ internal object BackupPreferenceContract {
             "clicks_number_row_repeat_enabled" to PreferenceValueType.BOOLEAN,
             "clear_alt_on_space" to PreferenceValueType.BOOLEAN,
             "alt_ctrl_speech_shortcut" to PreferenceValueType.BOOLEAN,
+            "speech_max_duration_ms" to PreferenceValueType.LONG,
             "speech_continuous_preview" to PreferenceValueType.BOOLEAN,
             "speech_provider" to PreferenceValueType.STRING,
             "layout_aware_ctrl_shortcuts" to PreferenceValueType.BOOLEAN,

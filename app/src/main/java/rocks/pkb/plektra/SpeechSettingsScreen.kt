@@ -47,6 +47,8 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val client = remember { SpeechApiClient() }
     var provider by remember { mutableStateOf(SpeechSettings.provider(context)) }
     var silenceMs by remember { mutableStateOf(SpeechSettings.silenceMs(context)) }
+    var maxDurationMs by remember { mutableStateOf(SpeechSettings.maxDurationMs(context)) }
+    var durationPicker by remember { mutableStateOf(false) }
     var catalog by remember { mutableStateOf(emptyList<SpeechModel>()) }
     var catalogRefresh by remember { mutableIntStateOf(0) }
     var selectedModel by remember(provider) { mutableStateOf(SpeechSettings.model(context, provider)) }
@@ -72,6 +74,12 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         1500L -> context.getString(R.string.speech_pause_short)
         5000L -> context.getString(R.string.speech_pause_long)
         else -> context.getString(R.string.speech_pause_default)
+    }
+
+    fun durationName(value: Long) = when (value) {
+        0L -> context.getString(R.string.speech_duration_unlimited)
+        60_000L -> context.getString(R.string.speech_duration_one_minute)
+        else -> context.getString(R.string.speech_duration_minutes, value / 60_000)
     }
 
     fun refreshModels() {
@@ -193,6 +201,8 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             if (provider != SpeechProvider.FUTO) {
                 SpeechSettingRow(stringResource(R.string.speech_pause_title), pauseName(silenceMs), Icons.Default.Mic,
                     Modifier.settingRow("speech.pause"), onClick = { silencePicker = true })
+                SpeechSettingRow(stringResource(R.string.speech_duration_title), durationName(maxDurationMs), Icons.Default.Timer,
+                    Modifier.settingRow("speech.duration"), onClick = { durationPicker = true })
             }
             SpeechSettingRow(stringResource(R.string.speech_preview_title),
                 stringResource(if (continuousPreview) R.string.speech_preview_continuous else R.string.speech_preview_three_words),
@@ -247,6 +257,23 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
         }
     }
+    if (durationPicker) AlertDialog(onDismissRequest = { durationPicker = false },
+        title = { Text(stringResource(R.string.speech_duration_title)) },
+        text = { Column(Modifier.selectableGroup()) {
+            SpeechSettings.durationOptionsMs.forEach { value ->
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(
+                    selected = maxDurationMs == value, role = Role.RadioButton) {
+                    maxDurationMs = value
+                    SpeechSettings.setMaxDurationMs(context, value)
+                    durationPicker = false
+                }, verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(maxDurationMs == value, onClick = null)
+                    Text(durationName(value), Modifier.padding(start = 8.dp))
+                }
+            }
+            SpeechNote(stringResource(R.string.speech_duration_description))
+        } }, confirmButton = { TextButton(onClick = { durationPicker = false }) { Text(stringResource(android.R.string.cancel)) } })
+
     if (previewPicker) AlertDialog(onDismissRequest = { previewPicker = false },
         title = { Text(stringResource(R.string.speech_preview_title)) },
         text = { Column {
