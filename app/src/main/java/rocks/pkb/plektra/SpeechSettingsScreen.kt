@@ -43,6 +43,15 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         futoAvailable = ExternalSpeechProvider.isAvailable(context)
         futoEnabled = ExternalSpeechProvider.enabledVoiceInput(context) != null
     }
+    var altCtrlSpeechShortcut by remember { mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) }
+    DisposableEffect(context) {
+        val prefs = SettingsManager.getPreferences(context)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "alt_ctrl_speech_shortcut") altCtrlSpeechShortcut = SettingsManager.getAltCtrlSpeechShortcutEnabled(context)
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     val client = remember { SpeechApiClient() }
     var provider by remember { mutableStateOf(SpeechSettings.provider(context)) }
     var silenceMs by remember { mutableStateOf(SpeechSettings.silenceMs(context)) }
@@ -112,6 +121,18 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
               verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.speech_language_description), style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SpeechCard {
+                ListItem(
+                    modifier = Modifier.settingRow(SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT),
+                    headlineContent = { Text(stringResource(R.string.alt_ctrl_speech_shortcut_title)) },
+                    supportingContent = { Text(stringResource(R.string.alt_ctrl_speech_shortcut_description)) },
+                    leadingContent = { Icon(Icons.Default.Keyboard, null) },
+                    trailingContent = { Switch(checked = altCtrlSpeechShortcut, onCheckedChange = {
+                        altCtrlSpeechShortcut = it
+                        SettingsManager.setAltCtrlSpeechShortcutEnabled(context, it)
+                    }) }
+                )
+            }
             SpeechCard(Modifier.settingRow("speech.provider")) {
                 SpeechSectionTitle(stringResource(R.string.speech_provider_title))
                 BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {

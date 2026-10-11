@@ -136,9 +136,7 @@ fun TextInputSettingsScreen(
         SettingsManager.setExperimentalSmoothCaret(context, granted)
     }
 
-    var altCtrlSpeechShortcut by remember {
-        mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context))
-    }
+
 
     var shiftBackspaceDelete by remember {
         mutableStateOf(SettingsManager.getShiftBackspaceDelete(context))
@@ -540,16 +538,6 @@ fun TextInputSettingsScreen(
                     }
                 )
             }
-            SettingsSwitchRow(
-                title = stringResource(R.string.alt_ctrl_speech_shortcut_title),
-                description = stringResource(R.string.alt_ctrl_speech_shortcut_description),
-                checked = altCtrlSpeechShortcut,
-                linkId = SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT,
-                onCheckedChange = { enabled ->
-                    altCtrlSpeechShortcut = enabled
-                    SettingsManager.setAltCtrlSpeechShortcutEnabled(context, enabled)
-                }
-            )
 
             SettingsSectionHeader(text = stringResource(R.string.text_input_section_delete))
             Surface(

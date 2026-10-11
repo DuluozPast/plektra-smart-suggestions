@@ -499,7 +499,6 @@ private fun SettingsMainScreen(
             SettingsCategoryRow(
                 icon = Icons.Filled.Mic,
                 title = stringResource(R.string.speech_settings_title),
-                description = stringResource(R.string.speech_settings_summary),
                 linkId = "main.speech_recognition",
                 onClick = onSpeechRecognitionClick
             )
