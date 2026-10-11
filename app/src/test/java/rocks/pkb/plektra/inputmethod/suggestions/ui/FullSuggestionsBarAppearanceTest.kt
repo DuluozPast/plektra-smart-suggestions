@@ -105,6 +105,41 @@ class FullSuggestionsBarAppearanceTest {
         assertEquals(View.VISIBLE, view.visibility)
     }
 
+    @Test fun liveSpeechPreviewUpdatesInOrderWithoutInsertionActions() {
+        val bar = FullSuggestionsBar(context)
+        val view = bar.ensureView()
+        bar.setContentEnabled(suggestions = true, menuButtons = false)
+        fun preview(words: List<String>) = bar.update(words, true, null, null, false, null,
+            null, null, null, null, null, null, reserveEmptyRow = true, displayOnly = true)
+        preview(listOf("das", "ist", "Sprache"))
+        val words = descendants(view).filterIsInstance<TextView>().filter { it.text.isNotEmpty() }
+        assertEquals(listOf("das", "ist", "Sprache"), words.map { it.text.toString() })
+        assertTrue(words.all { !it.isClickable && !it.isLongClickable })
+        preview(listOf("ist", "Sprache", "erkannt"))
+        assertEquals(listOf("ist", "Sprache", "erkannt"), words.map { it.text.toString() })
+        bar.update(listOf("Normal"), true, null, null, false, null,
+            null, null, null, null, null, null, reserveEmptyRow = true)
+        assertTrue(words.any { it.text.toString() == "Normal" && it.isClickable })
+    }
+
+    @Test fun continuousSpeechLineShowsMoreThanThreeWordsWithAStableRightEdge() {
+        val bar = FullSuggestionsBar(context)
+        val view = bar.ensureView()
+        bar.setContentEnabled(suggestions = true, menuButtons = false)
+        fun render(text: String) = bar.update(listOf(text), true, null, null, false, null,
+            null, null, null, null, null, null, reserveEmptyRow = true,
+            displayOnly = true, continuousPreview = true)
+        render("eins zwei drei vier fünf sechs")
+        val line = descendants(view).filterIsInstance<TextView>().single { it.text.isNotEmpty() }
+        assertEquals("eins zwei drei vier fünf sechs", line.text.toString())
+        assertEquals(android.text.TextUtils.TruncateAt.START, line.ellipsize)
+        assertTrue(line.gravity and android.view.Gravity.END == android.view.Gravity.END)
+        assertFalse(line.isClickable)
+        render("eins zwei drei vier fünf sechs sieben")
+        assertEquals("eins zwei drei vier fünf sechs sieben", line.text.toString())
+        assertTrue(line.parent != null)
+    }
+
     private fun descendants(view: View): List<View> = listOf(view) +
         if (view is ViewGroup) (0 until view.childCount).flatMap { descendants(view.getChildAt(it)) }
         else emptyList()

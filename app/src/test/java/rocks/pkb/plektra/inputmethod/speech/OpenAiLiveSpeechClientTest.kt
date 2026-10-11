@@ -1,6 +1,7 @@
 package rocks.pkb.plektra.inputmethod.speech
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.json.*
 import okhttp3.*
 import okhttp3.mockwebserver.*
@@ -62,15 +63,66 @@ class OpenAiLiveSpeechClientTest {
         }
     }
 
-    @Test fun invalidSessionNeverStartsMicrophoneAndDoesNotReplayAudio() = runBlocking {
+    @Test fun capturesFirstChunksWhileServerConfigurationIsPending() = runBlocking {
+        MockWebServer().use { server ->
+            val configured = CompletableDeferred<WebSocket>()
+            val received = Channel<String>(Channel.UNLIMITED)
+            server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onMessage(socket: WebSocket, text: String) {
+                    val event = Json.parseToJsonElement(text).jsonObject
+                    when (event.getValue("type").jsonPrimitive.content) {
+                        "session.update" -> configured.complete(socket)
+                        "input_audio_buffer.append" -> received.trySend(event.getValue("audio").jsonPrimitive.content)
+                        "input_audio_buffer.commit" -> socket.send("""{"type":"conversation.item.input_audio_transcription.completed","item_id":"one","transcript":"Anfang"}""")
+                    }
+                }
+            }))
+            val captured = CompletableDeferred<Unit>()
+            val stop = CompletableDeferred<Unit>()
+            val recorder = object : SpeechAudioRecorder {
+                override suspend fun record(silenceMs: Long, onLevel: (Float, Long?) -> Unit): RecordedSpeech = error("Batch recording")
+                override suspend fun recordStreaming(silenceMs: Long, onLevel: (Float, Long?) -> Unit,
+                    onPcm: suspend (ByteArray) -> Unit): RecordedSpeech {
+                    onPcm(byteArrayOf(1, 2))
+                    onPcm(byteArrayOf(3, 4))
+                    captured.complete(Unit)
+                    stop.await()
+                    return RecordedSpeech(byteArrayOf(1, 2, 3, 4), 24000)
+                }
+                override fun finish() { stop.complete(Unit) }
+            }
+            val task = async { OpenAiLiveSpeechClient(url = server.url("/").toString())
+                .transcribe(request(), recorder, { _, _ -> }, {}, {}) }
+            withTimeout(3000) {
+                captured.await()
+                val socket = configured.await()
+                assertTrue(received.tryReceive().isFailure)
+                socket.send("""{"type":"session.updated"}""")
+                assertEquals("AQI=", received.receive())
+                assertEquals("AwQ=", received.receive())
+                recorder.finish()
+                assertEquals("Anfang", task.await().result.text)
+            }
+        }
+    }
+
+    @Test fun invalidSessionStopsLocalCaptureAndDoesNotSendAudio() = runBlocking {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
                 override fun onMessage(socket: WebSocket, text: String) {
                     socket.send("""{"type":"error","error":{"code":"model_not_found","message":"Private provider details"}}""")
                 }
             }))
+            var stopped = false
             val recorder = object : SpeechAudioRecorder {
-                override suspend fun record(silenceMs: Long, onLevel: (Float, Long?) -> Unit): RecordedSpeech = error("Unexpected recording")
+                override suspend fun record(silenceMs: Long, onLevel: (Float, Long?) -> Unit): RecordedSpeech = error("Batch recording")
+                override suspend fun recordStreaming(silenceMs: Long, onLevel: (Float, Long?) -> Unit,
+                    onPcm: suspend (ByteArray) -> Unit): RecordedSpeech {
+                    try {
+                        onPcm(ByteArray(4800))
+                        awaitCancellation()
+                    } finally { stopped = true }
+                }
                 override fun finish() {}
             }
             try {
@@ -81,6 +133,7 @@ class OpenAiLiveSpeechClientTest {
                 assertEquals("model_not_found", error.code)
                 assertFalse(error.message!!.contains("Private"))
             }
+            assertTrue(stopped)
             assertEquals(1, server.requestCount)
         }
     }

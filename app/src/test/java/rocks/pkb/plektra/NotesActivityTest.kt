@@ -19,6 +19,30 @@ import org.robolectric.annotation.Config
 @Config(sdk = [33])
 class NotesActivityTest {
 
+    @Test fun externalAccessibilityDictationUpdatesEditorAndCanBeEditedThroughIme() {
+        val controller = Robolectric.buildActivity(NotesActivity::class.java).setup()
+        val activity = controller.get()
+        val editor = activity.findViewById<EditText>(R.id.notes_body)
+        editor.setText("Vorher")
+        editor.requestFocus()
+        val arguments = android.os.Bundle().apply {
+            putCharSequence(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                "Externes Diktat")
+        }
+        // Overlay dictation apps insert through Android accessibility while Plektra stays active.
+        assertTrue(editor.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT, arguments))
+        assertEquals("Externes Diktat", editor.text.toString())
+        val connection = editor.onCreateInputConnection(EditorInfo())
+        connection.setSelection(editor.length(), editor.length())
+        connection.commitText(" ergänzt", 1)
+        assertEquals("Externes Diktat ergänzt", editor.text.toString())
+        assertTrue(editor.hasFocus())
+        controller.pause().stop().destroy()
+        val reopened = Robolectric.buildActivity(NotesActivity::class.java).setup()
+        assertEquals("Externes Diktat ergänzt", reopened.get().findViewById<EditText>(R.id.notes_body).text.toString())
+        reopened.pause().stop().destroy()
+    }
+
     @Test fun previewCheckboxClickUpdatesAndPersistsMarkdown() {
         val controller = Robolectric.buildActivity(NotesActivity::class.java).setup()
         val activity = controller.get()

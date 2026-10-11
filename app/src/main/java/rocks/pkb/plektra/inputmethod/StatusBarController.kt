@@ -289,6 +289,7 @@ class StatusBarController(
         val variations: List<String> = emptyList(),
         val suggestions: List<String> = emptyList(),
         val addWordCandidate: String? = null,
+        val speechPreviewActive: Boolean = false,
         val lastInsertedChar: Char? = null,
         // Granular smart features flags
         val shouldDisableSuggestions: Boolean = false,
@@ -3007,7 +3008,7 @@ class StatusBarController(
             snapshot.symPage == 0 && !snapshot.clipboardOverlay
         val expansionActive = expansionSuggestions.isNotEmpty()
         val suggestionsAvailable = barPresentation.suggestions && !snapshot.shouldDisableSuggestions &&
-            (SettingsManager.isExperimentalSuggestionsEnabled(context) || isFullSoftwareKeyboardMode) &&
+            (SettingsManager.isExperimentalSuggestionsEnabled(context) || isFullSoftwareKeyboardMode || snapshot.speechPreviewActive) &&
             (snapshot.suggestions.isNotEmpty() || !snapshot.addWordCandidate.isNullOrBlank())
         val hasSuggestionRow = expansionActive || suggestionsAvailable
         fullSuggestionsBar?.onCursorMovedListener = onCursorMovedListener
@@ -3104,7 +3105,7 @@ class StatusBarController(
             menuButtons = showSlimMenuButtons || (sharedRow && barPresentation.actions))
         val showFullBar = expansionActive || (sharedRow && barPresentation.actions) || (
             suggestionsEnabledSetting &&
-                (experimentalEnabled || isFullSoftwareKeyboardMode) &&
+                (experimentalEnabled || isFullSoftwareKeyboardMode || snapshot.speechPreviewActive) &&
                 (isFullSoftwareKeyboardMode || !snapshot.shouldDisableSuggestions) &&
                 (snapshot.symPage == 0 || isSoftwareKeyboardOverlayPage) &&
                 !snapshot.clipboardOverlay
@@ -3137,7 +3138,10 @@ class StatusBarController(
                 }
                 else -> null
             },
-            reserveEmptyRow = isFullSoftwareKeyboardMode && suggestionsEnabledSetting
+            reserveEmptyRow = isFullSoftwareKeyboardMode && suggestionsEnabledSetting,
+            displayOnly = snapshot.speechPreviewActive && !expansionActive && sharedVariations.isEmpty(),
+            continuousPreview = snapshot.speechPreviewActive && !expansionActive && sharedVariations.isEmpty() &&
+                rocks.pkb.plektra.inputmethod.speech.SpeechSettings.continuousPreview(context)
         )
         ledStatusView.compactOnly = fullSuggestionsBar?.ensureView()?.visibility != View.VISIBLE && !barPresentation.actions && !hasTransientSurface
         val ledOnly = ledStatusView.compactOnly && showLedStrip

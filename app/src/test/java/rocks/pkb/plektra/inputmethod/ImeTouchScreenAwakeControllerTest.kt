@@ -68,6 +68,21 @@ class ImeTouchScreenAwakeControllerTest {
     }
 
     @Test
+    fun `recording stays awake beyond touch timeout and releases on stop`() {
+        val controller = ImeTouchScreenAwakeController(context)
+        controller.setRecordingActive(true)
+        val wakeLock = ShadowPowerManager.getLatestWakeLock()
+        shadowOf(Looper.getMainLooper()).idleFor(60, TimeUnit.SECONDS)
+        controller.onTouchAction(MotionEvent.ACTION_DOWN)
+        assertTrue(wakeLock.isHeld)
+        controller.setRecordingActive(false)
+        assertFalse(wakeLock.isHeld)
+        controller.setRecordingActive(true)
+        controller.release()
+        assertFalse(wakeLock.isHeld)
+    }
+
+    @Test
     fun `release clears pending wake pulse`() {
         val controller = ImeTouchScreenAwakeController(context)
 

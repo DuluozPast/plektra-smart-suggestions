@@ -31,7 +31,8 @@ class SpeechRecognitionManager(
     private val onRecognitionStateChanged: ((Boolean) -> Unit)? = null,
     private val shouldDisableAutoCapitalize: () -> Boolean = { false },
     private val onAudioLevelChanged: ((Float) -> Unit)? = null,
-    private val onProcessing: (() -> Unit)? = null
+    private val onProcessing: (() -> Unit)? = null,
+    private val onRecognizedText: ((String) -> Unit)? = null
 ) {
     companion object {
         private const val TAG = "SpeechRecognitionMgr"
@@ -257,6 +258,7 @@ class SpeechRecognitionManager(
                             Log.d(TAG, "Speech recognition partial results: '$partialText'")
                             // Insert/update partial text in real-time
                             updatePartialSpeechText(partialText)
+                            onRecognizedText?.invoke(normalizePunctuationWords(partialText))
                         } else {
                             Log.d(TAG, "Speech recognition partial results: none")
                         }

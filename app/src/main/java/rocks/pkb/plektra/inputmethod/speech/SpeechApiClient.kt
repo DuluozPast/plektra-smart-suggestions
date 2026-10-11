@@ -18,6 +18,7 @@ class SpeechApiClient(
     private val openAiBase: String = "https://api.openai.com/v1/"
 ) {
     suspend fun transcribe(request: SpeechRequest, audio: RecordedSpeech): SpeechResult {
+        require(request.provider.isCloud)
         require(request.model.protocol != SpeechProtocol.LIVE_TRANSCRIPTION) { "Use the live transcription client" }
         val base = if (request.provider == SpeechProvider.OPENAI) openAiBase else openRouterBase
         val protocol = if (request.provider == SpeechProvider.OPENAI) SpeechProtocol.TRANSCRIPTION else request.model.protocol
@@ -39,7 +40,7 @@ class SpeechApiClient(
     }
 
     suspend fun validateKey(provider: SpeechProvider, key: String) {
-        require(provider != SpeechProvider.SYSTEM && key.isNotBlank())
+        require(provider.isCloud && key.isNotBlank())
         val url = if (provider == SpeechProvider.OPENROUTER) openRouterBase + "key" else openAiBase + "models"
         execute(Request.Builder().url(url).header("Authorization", "Bearer $key").build())
     }

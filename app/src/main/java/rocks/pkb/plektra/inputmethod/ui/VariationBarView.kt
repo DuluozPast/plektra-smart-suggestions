@@ -35,7 +35,6 @@ import rocks.pkb.plektra.inputmethod.StatusBarController
 import rocks.pkb.plektra.inputmethod.TextSelectionHelper
 import rocks.pkb.plektra.inputmethod.NotificationHelper
 import rocks.pkb.plektra.inputmethod.VariationButtonHandler
-import rocks.pkb.plektra.inputmethod.SpeechRecognitionActivity
 import rocks.pkb.plektra.data.variation.VariationRepository
 import android.graphics.Paint
 import android.text.TextUtils
@@ -653,7 +652,7 @@ class VariationBarView(
         // Each button factory will extract only the callbacks it needs.
         val statusBarCallbacks = StatusBarCallbacks(
             onClipboardRequested = onClipboardRequested,
-            onSpeechRecognitionRequested = onSpeechRecognitionRequested ?: { startSpeechRecognition() },
+            onSpeechRecognitionRequested = onSpeechRecognitionRequested,
             onEmojiPickerRequested = onEmojiPickerRequested,
             onLanguageSwitchRequested = onLanguageSwitchRequested,
             onHamburgerMenuRequested = onHamburgerMenuRequested,
@@ -1080,20 +1079,6 @@ class VariationBarView(
         val clampedX = x.coerceIn(0f, overlayView.width.toFloat())
         indicator.translationX = clampedX - (indicatorWidth / 2f)
         indicator.translationY = 0f
-    }
-
-    private fun startSpeechRecognition() {
-        try {
-            val intent = Intent(context, SpeechRecognitionActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_NO_HISTORY or
-                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-            }
-            context.startActivity(intent)
-            Log.d(TAG, "Speech recognition started")
-        } catch (e: Exception) {
-            Log.e(TAG, "Unable to launch speech recognition", e)
-        }
     }
 
     private fun openSettings() {

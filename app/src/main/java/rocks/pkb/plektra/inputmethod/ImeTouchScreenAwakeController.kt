@@ -24,7 +24,18 @@ internal class ImeTouchScreenAwakeController(
             setReferenceCounted(false)
         }
 
+    private var recordingActive = false
+
+    fun setRecordingActive(active: Boolean) {
+        if (recordingActive == active) return
+        recordingActive = active
+        if (wakeLock.isHeld) wakeLock.release()
+        // Released on completion, cancellation, editor changes and service teardown.
+        if (active) wakeLock.acquire()
+    }
+
     fun onTouchAction(action: Int) {
+        if (recordingActive) return
         if (action != MotionEvent.ACTION_DOWN) return
 
         if (wakeLock.isHeld) {
@@ -34,6 +45,7 @@ internal class ImeTouchScreenAwakeController(
     }
 
     fun release() {
+        recordingActive = false
         if (wakeLock.isHeld) {
             wakeLock.release()
         }

@@ -78,6 +78,8 @@ class FullSuggestionsBar(
         renderingRegistry.register(ModifierButtonFactory.id, ModifierButtonFactory())
     }
     private val suggestionButtons: MutableList<TextView> = mutableListOf()
+    private var previewOnly = false
+    private var continuousSpeechPreview = false
     private val mainHandler = Handler(Looper.getMainLooper())
     private var reenableSuggestionsAccessibilityRunnable: Runnable? = null
     private var liveAnnouncementsEnabled: Boolean = false
@@ -359,9 +361,16 @@ class FullSuggestionsBar(
         onDeleteUserSuggestion: ((String) -> Unit)?,
         canDeleteUserSuggestion: ((String) -> Boolean)?,
         onSuggestionSelectedOverride: ((Int, String) -> Unit)? = null,
-        reserveEmptyRow: Boolean = false
+        reserveEmptyRow: Boolean = false,
+        displayOnly: Boolean = false,
+        continuousPreview: Boolean = false
     ) {
         currentInputConnection = inputConnection
+        if (previewOnly != displayOnly || continuousSpeechPreview != (displayOnly && continuousPreview)) {
+            previewOnly = displayOnly
+            continuousSpeechPreview = displayOnly && continuousPreview
+            lastSlots = emptyList()
+        }
         val bar = container ?: return
         val frame = frameContainer ?: return
         
@@ -397,6 +406,8 @@ class FullSuggestionsBar(
         // Only the labels and actions change; the row must never disappear between updates.
         val slots = when {
             !canShowSuggestions -> listOf(null, null, null)
+            continuousSpeechPreview -> listOf(suggestions.firstOrNull())
+            previewOnly -> List(3) { suggestions.getOrNull(it) }
             else -> buildSlots(suggestions, addWordCandidate)
         }
         applySuggestionsAccessibilityThrottle(slots)
@@ -636,7 +647,9 @@ class FullSuggestionsBar(
             slots[0]?.equals(addWordCandidate, ignoreCase = true) == true &&
             slots[1] == null &&
             slots[2] == null
-        val slotOrder = if (addOnly) {
+        val slotOrder = if (continuousSpeechPreview) {
+            listOf(slots.firstOrNull())
+        } else if (addOnly) {
             listOf(slots[0])
         } else {
             listOf(slots[0], slots[1], slots[2]) // left, center, right
@@ -676,7 +689,7 @@ class FullSuggestionsBar(
                 contentDescription = null
                 alpha = 1f
                 text = (suggestion ?: "")
-                gravity = Gravity.CENTER
+                gravity = if (continuousSpeechPreview) Gravity.CENTER_VERTICAL or Gravity.END else Gravity.CENTER
                 textSize = maxTextSp.toFloat()
                 TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
                     this,
@@ -685,24 +698,28 @@ class FullSuggestionsBar(
                     1,
                     TypedValue.COMPLEX_UNIT_SP
                 )
+                if (continuousSpeechPreview) {
+                    TextViewCompat.setAutoSizeTextTypeWithDefaults(this, TextViewCompat.AUTO_SIZE_TEXT_TYPE_NONE)
+                    textSize = maxTextSp.toFloat()
+                }
                 includeFontPadding = false
                 minHeight = 0
                 setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
                 setTypeface(null, if (SettingsManager.getSuggestionsBold(context))
                     android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
                 maxLines = 1
-                ellipsize = TextUtils.TruncateAt.END
+                ellipsize = if (continuousSpeechPreview) TextUtils.TruncateAt.START else TextUtils.TruncateAt.END
                 setPadding(padH, padV, padH, padV)
                 styleSuggestionSurface(this)
                 layoutParams = weightLayoutParams
-                isClickable = suggestion != null
-                isFocusable = suggestion != null
+                isClickable = suggestion != null && !previewOnly
+                isFocusable = suggestion != null && !previewOnly
                 importantForAccessibility = if (suggestion.isNullOrBlank()) {
                     View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 } else {
                     View.IMPORTANT_FOR_ACCESSIBILITY_YES
                 }
-                if (suggestion != null) {
+                if (suggestion != null && !previewOnly) {
                     if (onSuggestionSelectedOverride != null) {
                         setOnClickListener { view ->
                             resetActionMode()

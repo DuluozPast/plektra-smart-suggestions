@@ -38,6 +38,12 @@ import java.util.Locale
 fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    var futoAvailable by remember { mutableStateOf(ExternalSpeechProvider.isAvailable(context)) }
+    var futoEnabled by remember { mutableStateOf(ExternalSpeechProvider.enabledVoiceInput(context) != null) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        futoAvailable = ExternalSpeechProvider.isAvailable(context)
+        futoEnabled = ExternalSpeechProvider.enabledVoiceInput(context) != null
+    }
     val client = remember { SpeechApiClient() }
     var provider by remember { mutableStateOf(SpeechSettings.provider(context)) }
     var silenceMs by remember { mutableStateOf(SpeechSettings.silenceMs(context)) }
@@ -48,6 +54,8 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var catalogError by remember { mutableStateOf<String?>(null) }
     var modelPicker by remember { mutableStateOf(false) }
     var silencePicker by remember { mutableStateOf(false) }
+    var previewPicker by remember { mutableStateOf(false) }
+    var continuousPreview by remember { mutableStateOf(SpeechSettings.continuousPreview(context)) }
     var showUsage by remember { mutableStateOf(false) }
     var showHelp by remember { mutableStateOf(false) }
     var showZdr by remember { mutableStateOf(false) }
@@ -55,6 +63,7 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 
     fun providerName(value: SpeechProvider) = when (value) {
         SpeechProvider.SYSTEM -> context.getString(R.string.speech_provider_system)
+        SpeechProvider.FUTO -> "FUTO Voice Input"
         SpeechProvider.OPENROUTER -> "OpenRouter"
         SpeechProvider.OPENAI -> "OpenAI"
     }
@@ -109,7 +118,26 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
             }
             HorizontalDivider(Modifier.padding(top = 12.dp))
-            if (provider != SpeechProvider.SYSTEM) {
+            if (provider == SpeechProvider.FUTO) {
+                SpeechNote(stringResource(if (futoAvailable) R.string.speech_external_installed else R.string.speech_external_missing))
+                if (futoAvailable && !futoEnabled) {
+                    TextButton(onClick = { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS)) },
+                        modifier = Modifier.padding(horizontal = 8.dp)) {
+                        Text(stringResource(R.string.speech_external_enable))
+                    }
+                }
+                SpeechNote(stringResource(R.string.speech_futo_description))
+                TextButton(onClick = {
+                    val settings = ExternalSpeechProvider.settingsIntent(context)
+                    if (settings != null) {
+                        try { context.startActivity(settings) }
+                        catch (_: android.content.ActivityNotFoundException) { uriHandler.openUri(ExternalSpeechProvider.FUTO_DOWNLOAD_URL) }
+                    } else uriHandler.openUri(ExternalSpeechProvider.FUTO_DOWNLOAD_URL)
+                }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                    Text(stringResource(if (futoAvailable) R.string.speech_external_settings else R.string.speech_external_install))
+                }
+            }
+            if (provider.isCloud) {
                 SpeechSettingRow(stringResource(R.string.speech_model_title), selectedModel.name, Icons.Default.Memory,
                     Modifier.settingRow("speech.model"), onClick = {
                         if (provider == SpeechProvider.OPENROUTER) refreshModels()
@@ -162,11 +190,16 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                         }, confirmButton = { TextButton(onClick = { modelPicker = false }) { Text(stringResource(android.R.string.cancel)) } })
                 }
             }
-            SpeechSettingRow(stringResource(R.string.speech_pause_title), pauseName(silenceMs), Icons.Default.Mic,
-                Modifier.settingRow("speech.pause"), onClick = { silencePicker = true })
+            if (provider != SpeechProvider.FUTO) {
+                SpeechSettingRow(stringResource(R.string.speech_pause_title), pauseName(silenceMs), Icons.Default.Mic,
+                    Modifier.settingRow("speech.pause"), onClick = { silencePicker = true })
+            }
+            SpeechSettingRow(stringResource(R.string.speech_preview_title),
+                stringResource(if (continuousPreview) R.string.speech_preview_continuous else R.string.speech_preview_three_words),
+                Icons.Default.Mic, Modifier.settingRow("speech.preview"), onClick = { previewPicker = true })
             if (provider == SpeechProvider.SYSTEM) {
                 SpeechNote(stringResource(R.string.speech_system_pause_description))
-            } else {
+            } else if (provider.isCloud) {
                 SpeechStateLegend(silenceMs)
                 if (silenceMs > 0) SpeechNote(stringResource(R.string.speech_cloud_pause_description))
                 HorizontalDivider(Modifier.padding(top = 12.dp))
@@ -214,6 +247,24 @@ fun SpeechSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
         }
     }
+    if (previewPicker) AlertDialog(onDismissRequest = { previewPicker = false },
+        title = { Text(stringResource(R.string.speech_preview_title)) },
+        text = { Column {
+            listOf(false, true).forEach { continuous ->
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(
+                    selected = continuousPreview == continuous, role = Role.RadioButton) {
+                    continuousPreview = continuous
+                    SpeechSettings.setContinuousPreview(context, continuous)
+                    previewPicker = false
+                }, verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(continuousPreview == continuous, onClick = null)
+                    Text(stringResource(if (continuous) R.string.speech_preview_continuous else R.string.speech_preview_three_words),
+                        Modifier.padding(start = 8.dp))
+                }
+            }
+            SpeechNote(stringResource(R.string.speech_preview_description))
+        } }, confirmButton = { TextButton(onClick = { previewPicker = false }) { Text(stringResource(android.R.string.cancel)) } })
+
     if (silencePicker) AlertDialog(onDismissRequest = { silencePicker = false }, title = { Text(stringResource(R.string.speech_pause_title)) },
         text = { Column { listOf(1500L, 3000L, 5000L, 0L).forEach { value ->
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = silenceMs == value, role = Role.RadioButton) { silenceMs = value; SpeechSettings.setSilenceMs(context, value); silencePicker = false },

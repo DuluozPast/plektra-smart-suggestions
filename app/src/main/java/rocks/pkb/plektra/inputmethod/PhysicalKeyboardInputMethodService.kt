@@ -57,7 +57,6 @@ import rocks.pkb.plektra.data.layout.LayoutMapping
 import rocks.pkb.plektra.data.mappings.KeyMappingLoader
 import rocks.pkb.plektra.data.mappings.AltModifierMappingResolver
 import rocks.pkb.plektra.data.variation.VariationRepository
-import rocks.pkb.plektra.inputmethod.SpeechRecognitionActivity
 import rocks.pkb.plektra.inputmethod.subtype.AdditionalSubtypeUtils
 import rocks.pkb.plektra.inputmethod.aospkeyboard.AospKeyboardView
 import rocks.pkb.plektra.inputmethod.aospkeyboard.SoftwareKeyboardLayoutTemplates
@@ -140,12 +139,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var liveSpeechEditor: SpeechComposingEditor? = null
     private var systemSpeechGeneration = 0L
     private var cloudSpeechController: SpeechSessionController? = null
+    private var speechPreviewWords: List<String> = emptyList()
     private var speechRecognitionManager: SpeechRecognitionManager? = null
+    private val speechScreenAwakeController by lazy { ImeTouchScreenAwakeController(this) }
     private var isSpeechRecognitionActive: Boolean = false
     private var pendingSpeechRecognition: Boolean = false
     
-    // Broadcast receiver for speech recognition (deprecated, kept for backwards compatibility)
-    private var speechResultReceiver: BroadcastReceiver? = null
     // Broadcast receiver for permission request result
     private var permissionResultReceiver: BroadcastReceiver? = null
     // Broadcast receiver for user dictionary updates
@@ -730,6 +729,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             return
         }
         
+        val provider = SpeechSettings.provider(this)
+        if (provider == SpeechProvider.FUTO) {
+            startExternalSpeechRecognition()
+            return
+        }
+
         // Check microphone permission first
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) 
             != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -742,8 +747,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             return
         }
         
-        val provider = SpeechSettings.provider(this)
-        if (provider != SpeechProvider.SYSTEM) {
+        if (provider.isCloud) {
             val apiKey = try { SpeechSettings.readKey(this, provider) } catch (_: Exception) { null }
             if (apiKey.isNullOrBlank()) {
                 Toast.makeText(this, R.string.speech_key_missing, Toast.LENGTH_LONG).show()
@@ -763,7 +767,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     transcribe = { request, audio -> api.transcribe(request, audio) },
                     liveTranscriber = OpenAiLiveSpeechClient(),
                     onPartial = { request, text ->
-                        if (request.editorSession == speechEditorSession) liveSpeechEditor?.partial(text)
+                        if (request.editorSession == speechEditorSession) {
+                            liveSpeechEditor?.partial(text)
+                            updateSpeechPreview(text)
+                        }
                     },
                     prepareRequest = { request ->
                         api.prepareRequest(request).also { prepared ->
@@ -826,31 +833,72 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             onRecognitionStateChanged = { active ->
                 if (generation == systemSpeechGeneration) {
                     isSpeechRecognitionActive = active
+                    if (!active) speechPreviewWords = emptyList()
+                    speechScreenAwakeController.setRecordingActive(active)
                     if (active) {
                         modifierStateController.clearAltState()
                         modifierStateController.clearCtrlState()
                     }
                     candidatesBarController.setMicrophoneButtonActive(active)
                     candidatesBarController.showSpeechRecognitionHint(active)
-                    if (active) updateStatusBarText()
+                    updateStatusBarText()
                 }
             },
             shouldDisableAutoCapitalize = { shouldDisableAutoCapitalize },
             onAudioLevelChanged = { rms ->
                 if (generation == systemSpeechGeneration) candidatesBarController.updateMicrophoneAudioLevel(rms)
             },
+            onRecognizedText = { text ->
+                if (generation == systemSpeechGeneration && editorSession == speechEditorSession) {
+                    updateSpeechPreview(text)
+                }
+            },
             onProcessing = {
-                if (generation == systemSpeechGeneration) candidatesBarController.updateSpeechFeedback(true, null)
+                if (generation == systemSpeechGeneration) {
+                    speechScreenAwakeController.setRecordingActive(false)
+                    candidatesBarController.updateSpeechFeedback(true, null)
+                }
             }
         )
         speechRecognitionManager?.startRecognition()
     }
 
+    private fun startExternalSpeechRecognition() {
+        val voiceInput = ExternalSpeechProvider.enabledVoiceInput(this)
+        if (voiceInput == null) {
+            val installed = ExternalSpeechProvider.isAvailable(this)
+            Toast.makeText(this, if (installed) R.string.speech_external_enable else R.string.speech_external_missing,
+                Toast.LENGTH_LONG).show()
+            startActivity(if (installed) Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            } else Intent(this, rocks.pkb.plektra.SettingsActivity::class.java).apply {
+                data = android.net.Uri.parse("plektra://setting/speech.provider")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+            return
+        }
+        if (currentInputConnection == null) return
+        cancelSpeechRecognition()
+        suggestionController.onContextReset()
+        // Use Android's keyboard hand-off, as in HeliBoard. The voice IME commits
+        // directly to the current editor and returns via switchToPreviousInputMethod.
+        // Do not open FUTO's singleInstance recognition Activity for a result.
+        ExternalSpeechProvider.handOff(this, voiceInput)
+    }
+
+    private fun updateSpeechPreview(text: String) {
+        speechPreviewWords = if (inputContextState.shouldDisableSuggestions) emptyList()
+            else text.takeLast(512).trim().split(Regex("\\s+")).filter { it.isNotBlank() }.takeLast(64)
+        updateStatusBarText()
+    }
+
     private fun updateCloudSpeechState(state: SpeechState) {
         if (state == SpeechState.IDLE) {
+            speechPreviewWords = emptyList()
             liveSpeechEditor?.finish()
             liveSpeechEditor = null
         }
+        speechScreenAwakeController.setRecordingActive(state == SpeechState.RECORDING)
         isSpeechRecognitionActive = state != SpeechState.IDLE
         if (state == SpeechState.RECORDING) {
             modifierStateController.clearAltState()
@@ -860,6 +908,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         candidatesBarController.setMicrophoneButtonActive(isSpeechRecognitionActive)
         candidatesBarController.showSpeechRecognitionHint(isSpeechRecognitionActive)
         candidatesBarController.updateSpeechFeedback(state == SpeechState.TRANSCRIBING, null)
+        updateStatusBarText()
     }
 
     private fun insertCloudSpeech(text: String, languageTag: String) {
@@ -891,6 +940,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         speechRecognitionManager?.destroy()
         speechRecognitionManager = null
         isSpeechRecognitionActive = false
+        speechPreviewWords = emptyList()
+        speechScreenAwakeController.release()
         if (::candidatesBarController.isInitialized) {
             candidatesBarController.setMicrophoneButtonActive(false)
             candidatesBarController.showSpeechRecognitionHint(false)
@@ -2470,57 +2521,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
         Log.d(TRACKPAD_DEBUG_TAG, "onCreate: SharedPreferences listener registered")
         
-        // Register broadcast receiver for speech recognition
-        speechResultReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                Log.d(TAG, "Broadcast receiver called - action: ${intent?.action}")
-                if (intent?.action == SpeechRecognitionActivity.ACTION_SPEECH_RESULT) {
-                    val text = intent.getStringExtra(SpeechRecognitionActivity.EXTRA_TEXT)
-                    Log.d(TAG, "Broadcast received with text: $text")
-                    if (text != null && text.isNotEmpty()) {
-                        Log.d(TAG, "Received speech recognition result: $text")
-                        
-                        // Delay text insertion to give the system time to restore InputConnection
-                        // after the speech recognition activity has closed.
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            // Try multiple times if InputConnection is not immediately available
-                            var attempts = 0
-                            val maxAttempts = 10
-                            
-                            fun tryInsertText() {
-                                val inputConnection = currentInputConnection
-                                if (inputConnection != null) {
-                                    inputConnection.commitText(text, 1)
-                                    Log.d(TAG, "Speech text inserted successfully: $text")
-                                } else {
-                                    attempts++
-                                    if (attempts < maxAttempts) {
-                                        Log.d(TAG, "InputConnection not available, attempt $attempts/$maxAttempts, retrying in 100ms...")
-                                        Handler(Looper.getMainLooper()).postDelayed({ tryInsertText() }, 100)
-                                    } else {
-                                        Log.w(TAG, "InputConnection not available after $maxAttempts attempts, text not inserted: $text")
-                                    }
-                                }
-                            }
-                            
-                            tryInsertText()
-                        }, 300) // Wait 300ms before trying to insert text
-                    }
-                }
-            }
-        }
-        
-        val filter = IntentFilter(SpeechRecognitionActivity.ACTION_SPEECH_RESULT)
-        
-        // On Android 13+ (API 33+) we must specify whether the receiver is exported
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(speechResultReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(speechResultReceiver, filter)
-        }
-        
-        Log.d(TAG, "Broadcast receiver registered for: ${SpeechRecognitionActivity.ACTION_SPEECH_RESULT}")
-        
         // Register broadcast receiver for permission request result
         permissionResultReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -2932,15 +2932,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         clipboardHistoryManager.onDestroy()
         typingSoundPlayer.release()
 
-        // Unregister broadcast receiver (deprecated, but kept for backwards compatibility)
-        speechResultReceiver?.let {
-            try {
-                unregisterReceiver(it)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error while unregistering broadcast receiver", e)
-            }
-        }
-        
         // Unregister permission result receiver
         permissionResultReceiver?.let {
             try {
@@ -2965,7 +2956,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 Log.e(TAG, "Error while unregistering additional subtypes receiver", e)
             }
         }
-        speechResultReceiver = null
         multiTapController.cancelAll()
         updateNavModeStatusIcon(false)
         trackpadDecorMotionView?.setOnGenericMotionListener(null)
@@ -3235,11 +3225,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         
         val modifierSnapshot = modifierStateController.snapshot()
         val state = inputContextState
-        val addWordCandidate = if (state.shouldDisableSuggestions) null else suggestionController.pendingAddWord()
+        val addWordCandidate = if (state.shouldDisableSuggestions || isSpeechRecognitionActive) null else suggestionController.pendingAddWord()
         val suggestionsEnabled = SettingsManager.isExperimentalSuggestionsEnabled(this) && rocks.pkb.plektra.KeyboardBarConfiguration.read(this)
             .presentation(SettingsManager.getSlimModeActive(this)).suggestions
         val suggestionsStart = ImePerfLogger.mark()
-        val baseSuggestions = if (suggestionsEnabled && !state.shouldDisableSuggestions) visibleSuggestionStrings() else emptyList()
+        val baseSuggestions = when {
+            state.shouldDisableSuggestions -> emptyList()
+            isSpeechRecognitionActive -> if (SpeechSettings.continuousPreview(this))
+                speechPreviewWords.takeIf { it.isNotEmpty() }?.let { listOf(it.joinToString(" ")) }.orEmpty()
+                else speechPreviewWords.takeLast(3)
+            suggestionsEnabled -> visibleSuggestionStrings()
+            else -> emptyList()
+        }
         suggestionsMs = ImePerfLogger.elapsedMs(suggestionsStart)
         val softwareSymPreviewProjection = buildSoftwareSymPreviewProjection(modifierSnapshot)
         val snapshot = StatusBarController.StatusSnapshot(
@@ -3259,6 +3256,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             variations = variationSnapshot.variations,
             suggestions = baseSuggestions,
             addWordCandidate = addWordCandidate,
+            speechPreviewActive = isSpeechRecognitionActive,
             lastInsertedChar = variationSnapshot.lastInsertedChar,
             // Granular smart features flags
             shouldDisableSuggestions = state.shouldDisableSuggestions,

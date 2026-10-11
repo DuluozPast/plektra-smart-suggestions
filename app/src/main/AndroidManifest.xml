@@ -26,6 +26,7 @@
 
     <!-- Query per vedere tutte le app installate che possono essere avviate -->
     <queries>
+        <package android:name="org.futo.voiceinput" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -241,15 +242,6 @@
                 android:resource="@xml/clicks_launcher_button_accessibility_service" />
         </service>
 
-        <!-- Attività helper per il riconoscimento vocale -->
-        <activity
-            android:name=".inputmethod.SpeechRecognitionActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask"
-            android:taskAffinity="com.google.android.inputmethod.latin" />
-        
         <!-- Attività helper per richiedere il permesso del microfono -->
         <activity
             android:name=".inputmethod.PermissionRequestActivity"

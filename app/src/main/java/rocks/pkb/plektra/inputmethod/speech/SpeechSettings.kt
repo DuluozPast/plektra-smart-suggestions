@@ -25,6 +25,7 @@ object SpeechSettings {
     }
 
     fun model(context: Context, provider: SpeechProvider): SpeechModel {
+        if (!provider.isCloud) return SpeechModel(provider.name, provider.name)
         val defaults = if (provider == SpeechProvider.OPENAI) SpeechModels.openAiDefaults else SpeechModels.openRouterDefaults
         val id = prefs(context).getString("speech_model_${provider.name}", null) ?: defaults.first().id
         val protocol = SpeechProtocol.entries.firstOrNull {
@@ -38,6 +39,13 @@ object SpeechSettings {
         prefs(context).edit().putString("speech_model_${provider.name}", model.id)
             .putString("speech_model_name_${provider.name}", model.name)
             .putString("speech_protocol_${provider.name}", model.protocol.name).apply()
+    }
+
+    fun continuousPreview(context: Context): Boolean =
+        prefs(context).getBoolean("speech_continuous_preview", false)
+
+    fun setContinuousPreview(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean("speech_continuous_preview", enabled).apply()
     }
 
     fun silenceMs(context: Context): Long = prefs(context).getLong("speech_silence_ms", 3000L).let {
@@ -68,7 +76,7 @@ object SpeechSettings {
     }
 
     fun saveKey(context: Context, provider: SpeechProvider, key: String) {
-        require(provider != SpeechProvider.SYSTEM)
+        require(provider.isCloud)
         val trimmed = key.trim()
         require(trimmed.isNotEmpty() && trimmed.none { it.isWhitespace() })
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, encryptionKey()) }

@@ -1,5 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="speech_external_enable">FUTO Voice Input in den Android-Tastatureinstellungen aktivieren</string>
+    <string name="speech_external_installed">FUTO Voice Input ist installiert.</string>
+    <string name="speech_external_missing">Installiere FUTO Voice Input, um diesen Anbieter zu verwenden.</string>
+    <string name="speech_external_settings">FUTO-Einstellungen öffnen</string>
+    <string name="speech_external_install">FUTO Voice Input herunterladen</string>
+    <string name="speech_futo_description">FUTO ersetzt die Tastatur vorübergehend durch seine lokale Spracheingabe. Es schreibt den erkannten Text direkt ins aktive Feld und kehrt anschließend zu Plektra zurück. Sprachen, Modelle und Aufnahmeoptionen wählst du in FUTO. Plektras Diktiervorschau ist während der externen Tastatur nicht verfügbar.</string>
     <string name="app_name">Plektra</string>
     <string name="input_method_name">Plektra</string>
     <string name="input_method_name_en">English</string>
@@ -1579,4 +1585,9 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="clipboard_sensitive_retention_description">Passwörter und andere als sensibel markierte Inhalte werden separat gelöscht und können nicht angeheftet werden.</string>
     <string name="clipboard_sensitive_preview">•••••••• · Sensibler Inhalt – tippen zum Einfügen</string>
     <string name="clipboard_retention_24_hours">24 Stunden</string>
+
+    <string name="speech_preview_title">Diktieranzeige</string>
+    <string name="speech_preview_three_words">Drei Wortfelder</string>
+    <string name="speech_preview_continuous">Durchgehende Zeile</string>
+    <string name="speech_preview_description">In der durchgehenden Zeile bleiben neue Wörter am rechten Rand; ältere Wörter rücken nach links.</string>
 </resources>

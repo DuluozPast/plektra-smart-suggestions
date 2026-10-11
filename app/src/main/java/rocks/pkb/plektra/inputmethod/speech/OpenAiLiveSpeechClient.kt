@@ -49,6 +49,19 @@ class OpenAiLiveSpeechClient(
             }
         })
         try {
+            // Capture immediately while the socket connects. Keep a bounded, ordered
+            // buffer and send it only after the server accepts the configuration.
+            val chunks = Channel<ByteArray>(512)
+            val capture = async(start = CoroutineStart.UNDISPATCHED) {
+                try {
+                    recorder.recordStreaming(request.silenceMs, onLevel) { pcm ->
+                        check(chunks.trySend(pcm).isSuccess) { "Live audio buffer full" }
+                    }
+                } finally {
+                    chunks.close()
+                    onRecordingFinished()
+                }
+            }
             waitForServer(15000) {
                 while (true) {
                     val event = events.receive()
@@ -83,7 +96,7 @@ class OpenAiLiveSpeechClient(
                 @Suppress("UNREACHABLE_CODE")
                 error("No live transcript")
             }
-            val audio = recorder.recordStreaming(request.silenceMs, onLevel) { pcm ->
+            for (pcm in chunks) {
                 currentCoroutineContext().ensureActive()
                 check(socket.queueSize() <= 1_048_576) { "Live audio connection too slow" }
                 check(socket.send(buildJsonObject {
@@ -91,8 +104,8 @@ class OpenAiLiveSpeechClient(
                     put("audio", Base64.getEncoder().encodeToString(pcm))
                 }.toString())) { "Live audio connection closed" }
             }
+            val audio = capture.await()
             ensureActive()
-            onRecordingFinished()
             check(socket.send(buildJsonObject { put("type", "input_audio_buffer.commit") }.toString())) {
                 "Live audio connection closed"
             }

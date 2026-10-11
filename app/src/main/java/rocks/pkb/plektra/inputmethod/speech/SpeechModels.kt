@@ -5,7 +5,11 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Locale
 
-enum class SpeechProvider { SYSTEM, OPENROUTER, OPENAI }
+enum class SpeechProvider {
+    SYSTEM, FUTO, OPENROUTER, OPENAI;
+
+    val isCloud: Boolean get() = this == OPENROUTER || this == OPENAI
+}
 enum class SpeechProtocol { TRANSCRIPTION, AUDIO_CHAT, LIVE_TRANSCRIPTION }
 enum class SpeechState { IDLE, RECORDING, TRANSCRIBING }
 

@@ -249,6 +249,7 @@ object SettingLinkRegistry {
         entry("speech.provider", R.string.speech_provider_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.model", R.string.speech_model_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.credentials", R.string.speech_api_key_title, destination = SettingsDestination.SpeechRecognition),
+        entry("speech.preview", R.string.speech_preview_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.pause", R.string.speech_pause_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.usage", R.string.speech_usage_title, destination = SettingsDestination.SpeechRecognition),
         entry(
