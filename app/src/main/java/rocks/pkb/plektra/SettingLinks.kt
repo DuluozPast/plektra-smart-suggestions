@@ -252,7 +252,6 @@ object SettingLinkRegistry {
         entry("speech.preview", R.string.speech_preview_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.duration", R.string.speech_duration_title, destination = SettingsDestination.SpeechRecognition),
         entry("speech.pause", R.string.speech_pause_title, destination = SettingsDestination.SpeechRecognition),
-        entry("speech.usage", R.string.speech_usage_title, destination = SettingsDestination.SpeechRecognition),
         entry(
             SettingLinkIds.MAIN_KEYBOARDS_DEVICES,
             R.string.keyboards_devices_title,
