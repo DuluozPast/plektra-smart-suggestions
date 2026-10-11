@@ -15,6 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import rocks.pkb.plektra.inputmethod.AutoCorrector
 import rocks.pkb.plektra.inputmethod.NotificationHelper
 
@@ -180,7 +182,7 @@ class SuggestionController(
 
     private fun updateSuggestionsForWord(word: String) {
         val settings = settingsProvider()
-        if (!settings.suggestionsEnabled) {
+        if (!isEnabled() || !settings.suggestionsEnabled || word.isBlank() || word.length > 48) {
             cancelPendingWordSuggestions()
             pendingAddUserWord = null
             latestSuggestions.set(emptyList())
@@ -199,6 +201,10 @@ class SuggestionController(
         val localeSnapshot = currentLocale
         val layoutSnapshot = keyboardLayoutProvider()
         val primaryRepository = dictionaryRepository
+        // This is a bounded hash lookup, independent of expensive suggestion ranking.
+        // Publish the new label immediately rather than hiding the add button until results arrive.
+        pendingAddUserWord = addWordCandidateFor(wordSnapshot, primaryRepository)
+        suggestionsListener?.invoke(latestSuggestions.get())
         val extraRepositories = activeExtraSuggestionEngines().mapNotNull { extra ->
             if (!extra.repository.isReady) {
                 scheduleRepositoryLoad(extra.repository, refreshAfterLoad = true)
@@ -209,6 +215,8 @@ class SuggestionController(
         }
 
         suggestionJob = suggestionScope.launch {
+            // Coalesce key repeat/backspace bursts before doing CPU-bound dictionary work.
+            delay(40)
             val primary = if (primaryRepository.isReady) {
                 SuggestionEngine(primaryRepository, locale = localeSnapshot, debugLogging = debugLogging).apply {
                     setKeyboardLayout(layoutSnapshot)
@@ -223,7 +231,9 @@ class SuggestionController(
                 emptyList()
             }
 
+            coroutineContext.ensureActive()
             val extraSuggestions = extraRepositories.flatMap { (locale, repository) ->
+                coroutineContext.ensureActive()
                 SuggestionEngine(repository, locale = locale, debugLogging = debugLogging).apply {
                     setKeyboardLayout(layoutSnapshot)
                 }.suggest(
@@ -235,11 +245,12 @@ class SuggestionController(
                 )
             }
 
+            coroutineContext.ensureActive()
             val next = mergeSuggestionResults(primary, extraSuggestions, settings.maxSuggestions, localeSnapshot)
             val pendingCandidate = addWordCandidateFor(wordSnapshot, primaryRepository)
 
             cursorHandler.post {
-                if (generation != suggestionGeneration || tracker.currentWord != wordSnapshot) {
+                if (!isEnabled() || generation != suggestionGeneration || tracker.currentWord != wordSnapshot) {
                     return@post
                 }
                 pendingAddUserWord = pendingCandidate
@@ -251,7 +262,7 @@ class SuggestionController(
 
     private fun addWordCandidateFor(word: String?, repository: DictionaryRepository = dictionaryRepository): String? {
         val candidate = word?.trim() ?: return null
-        if (candidate.isEmpty() || candidate.none { it.isLetterOrDigit() }) return null
+        if (candidate.isEmpty() || candidate.length > 48 || candidate.none { it.isLetterOrDigit() }) return null
         if (!repository.isReady) return null
         return if (repository.isKnownWord(candidate)) null else candidate
     }
@@ -370,6 +381,7 @@ class SuggestionController(
             return
         }
         cursorRunnable = Runnable {
+            if (!isEnabled()) return@Runnable
             if (!dictionaryRepository.isReady) {
                 tracker.reset()
                 previousCompletedWord = null
@@ -396,7 +408,11 @@ class SuggestionController(
     }
 
     fun onContextReset() {
-        if (!isEnabled()) return
+        cursorRunnable?.let { cursorHandler.removeCallbacks(it) }
+        cursorRunnable = null
+        pendingInitialContextConnection = null
+        cancelPendingWordSuggestions()
+        latestSuggestions.set(emptyList())
         tracker.onContextChanged()
         pendingAddUserWord = null
         previousCompletedWord = null

@@ -7,6 +7,19 @@ import java.util.Locale
 
 class SuggestionEngineTest {
 
+    @Test
+    fun overlongInputSkipsDictionaryLookups() {
+        val repository = object : DictionaryRepository by FakeDictionaryRepository() {
+            override val isReady = true
+            override fun lookupByPrefixMerged(prefix: String, maxSize: Int): List<DictionaryEntry> =
+                error("Overlong input must not search dictionary prefixes")
+            override fun symSpellLookup(term: String, maxSuggestions: Int): List<SymSpell.SuggestItem> =
+                error("Overlong input must not calculate edit distances")
+        }
+        assertTrue(SuggestionEngine(repository).suggest("a".repeat(1000)).isEmpty())
+    }
+
+
     private val locale = Locale.ITALIAN
     private val fakeRepo = FakeDictionaryRepository()
     private val engine = SuggestionEngine(fakeRepo, locale = locale)

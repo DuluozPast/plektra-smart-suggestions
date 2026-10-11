@@ -16,6 +16,16 @@ import org.robolectric.annotation.Config
 class InputContextStateTest {
 
     @Test
+    fun numericPasswordVariationIsNotMistakenForUri() {
+        val info = EditorInfo().apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        }
+        val state = InputContextState.fromEditorInfo(info)
+        assertTrue(state.isPasswordField)
+        assertFalse(state.isUriField)
+    }
+
+    @Test
     fun testFromEditorInfoNormalText() {
         val info = EditorInfo().apply {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL

@@ -3119,8 +3119,8 @@ class StatusBarController(
             showFullBar,
             inputConnection,
             onVariationSelectedListener,
-            if (expansionActive || isFullSoftwareKeyboardMode) false else snapshot.shouldDisableSuggestions,
-            if (expansionActive || sharedVariations.isNotEmpty()) null else snapshot.addWordCandidate,
+            if (expansionActive || sharedVariations.isNotEmpty()) false else snapshot.shouldDisableSuggestions,
+            if (expansionActive || sharedVariations.isNotEmpty() || snapshot.shouldDisableSuggestions) null else snapshot.addWordCandidate,
             onAddUserWord,
             onAddUserWordSubstitutionRequested,
             onSuggestionCommitted,
@@ -3136,7 +3136,8 @@ class StatusBarController(
                     click.onClick(fullSuggestionsBar?.ensureView())
                 }
                 else -> null
-            }
+            },
+            reserveEmptyRow = isFullSoftwareKeyboardMode && suggestionsEnabledSetting
         )
         ledStatusView.compactOnly = fullSuggestionsBar?.ensureView()?.visibility != View.VISIBLE && !barPresentation.actions && !hasTransientSurface
         val ledOnly = ledStatusView.compactOnly && showLedStrip

@@ -445,10 +445,9 @@ internal class ImeChromeLayout(context: Context) : LinearLayout(context) {
 
         val measuredWidth = resolveSize(maxWidth + paddingLeft + paddingRight, widthMeasureSpec)
         val desiredHeight = paddingTop + paddingBottom + totalChildHeight
-        val heightLimit = foldHeightLimitPx()?.let { foldLimit ->
-            if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) foldLimit
-            else minOf(foldLimit, MeasureSpec.getSize(heightMeasureSpec))
-        }
+        val windowHeightLimit = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) null
+            else MeasureSpec.getSize(heightMeasureSpec)
+        val heightLimit = listOfNotNull(foldHeightLimitPx(), windowHeightLimit).minOrNull()
         val targetHeight = minOf(desiredHeight, heightLimit ?: desiredHeight)
         val measuredHeight = animatedModeHeight(targetHeight).let { minOf(it, heightLimit ?: it) }
         // Measure keys at their final size; animate the viewport instead of squeezing rows.

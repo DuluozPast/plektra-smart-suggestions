@@ -314,7 +314,7 @@ class SuggestionEngine(
         useKeyboardProximity: Boolean = true,
         useEditTypeRanking: Boolean = true
     ): List<SuggestionResult> {
-        if (currentWord.isBlank()) return emptyList()
+        if (currentWord.isBlank() || currentWord.length > 48) return emptyList()
         if (!repository.isReady) return emptyList()
 
         // Apostrophe branch: split and suggest on the root to avoid over-corrections.

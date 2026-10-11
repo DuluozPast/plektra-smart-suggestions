@@ -6,6 +6,39 @@ import org.junit.Test
 class CurrentWordTrackerTest {
 
     @Test
+    fun overlongWordStaysSuppressedUntilOverflowHasBeenDeleted() {
+        val updates = mutableListOf<String>()
+        val tracker = CurrentWordTracker(updates::add, { updates.add("") }, maxLength = 4)
+        tracker.onCharacterCommitted("abcdefg")
+        assertEquals("", tracker.currentWord)
+        assertEquals(listOf("a", "ab", "abc", "abcd", ""), updates)
+        tracker.onBackspace()
+        tracker.onBackspace()
+        assertEquals("", tracker.currentWord)
+        assertEquals(5, updates.size)
+        tracker.onBackspace()
+        assertEquals("abcd", tracker.currentWord)
+        tracker.onBackspace()
+        assertEquals("abc", tracker.currentWord)
+    }
+
+    @Test
+    fun restoredOverlongWordDoesNotSuggestOrLearnItsSuffix() {
+        val updates = mutableListOf<String>()
+        val tracker = CurrentWordTracker(updates::add, {}, maxLength = 4)
+        tracker.setWord("abcdef")
+        assertEquals("", tracker.currentWord)
+        tracker.onBackspace()
+        assertEquals("", tracker.currentWord)
+        tracker.onBackspace()
+        assertEquals("abcd", tracker.currentWord)
+        tracker.onCharacterCommitted("extra ")
+        tracker.onCharacterCommitted("hi")
+        assertEquals("hi", tracker.currentWord)
+    }
+
+
+    @Test
     fun testOnCharacterCommitted_Basic() {
         var wordChanged = ""
         val tracker = CurrentWordTracker(
@@ -108,8 +141,10 @@ class CurrentWordTrackerTest {
         )
 
         tracker.onCharacterCommitted("1234567")
-        // Implementation nimmt die letzten chars bei setWord, aber bei onCharacterCommitted stoppt es
-        // app/src/main/java/rocks/pkb/plektra/core/suggestions/CurrentWordTracker.kt:89
+        assertEquals("", tracker.currentWord)
+        assertEquals("", wordChanged)
+        tracker.onBackspace()
+        tracker.onBackspace()
         assertEquals("12345", tracker.currentWord)
     }
 

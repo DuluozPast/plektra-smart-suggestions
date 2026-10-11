@@ -56,6 +56,7 @@ class SymSpell(
         val suggestions = mutableListOf<SuggestItem>()
         val suggestionSet = HashSet<String>()
         val consideredDeletes = HashSet<String>()
+        val consideredTerms = HashSet<String>()
 
         val inputPrefix = input.take(prefixLength)
         val queue: ArrayDeque<String> = ArrayDeque()
@@ -88,6 +89,8 @@ class SymSpell(
 
             // candidate is a delete; see if it maps to any terms
             deletes[candidate]?.forEach { suggestionTerm ->
+                // Many delete buckets contain the same word; calculate its distance only once.
+                if (!consideredTerms.add(suggestionTerm)) return@forEach
                 val editDistance = damerauDistanceLimited(input, suggestionTerm, maxEditDistance)
                 if (editDistance >= 0 && editDistance <= maxEditDistance) {
                     addSuggestion(suggestionTerm, editDistance)

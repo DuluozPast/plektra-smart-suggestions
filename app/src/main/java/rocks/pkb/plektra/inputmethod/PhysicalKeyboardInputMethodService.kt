@@ -1367,8 +1367,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun handleSuggestionsUpdated(suggestions: List<SuggestionResult>) {
-        latestSuggestionResults = suggestions
-        DebugCaptureStore.recordSuggestionsUpdated(suggestions)
+        val safeSuggestions = if (inputContextState.shouldDisableSuggestions) emptyList() else suggestions
+        latestSuggestionResults = safeSuggestions
+        DebugCaptureStore.recordSuggestionsUpdated(safeSuggestions)
         scheduleStatusBarTextUpdate()
     }
 
@@ -1817,7 +1818,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             context = this,
             assets = assets,
             settingsProvider = { getSuggestionSettings() },
-            isEnabled = { SettingsManager.isExperimentalSuggestionsEnabled(this) },
+            isEnabled = { SettingsManager.isExperimentalSuggestionsEnabled(this) && !inputContextState.shouldDisableSuggestions },
             debugLogging = suggestionDebugLogging,
             onSuggestionsUpdated = { suggestions -> handleSuggestionsUpdated(suggestions) },
             currentLocale = initialLocale,
@@ -3234,11 +3235,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         
         val modifierSnapshot = modifierStateController.snapshot()
         val state = inputContextState
-        val addWordCandidate = suggestionController.pendingAddWord()
+        val addWordCandidate = if (state.shouldDisableSuggestions) null else suggestionController.pendingAddWord()
         val suggestionsEnabled = SettingsManager.isExperimentalSuggestionsEnabled(this) && rocks.pkb.plektra.KeyboardBarConfiguration.read(this)
             .presentation(SettingsManager.getSlimModeActive(this)).suggestions
         val suggestionsStart = ImePerfLogger.mark()
-        val baseSuggestions = if (suggestionsEnabled) visibleSuggestionStrings() else emptyList()
+        val baseSuggestions = if (suggestionsEnabled && !state.shouldDisableSuggestions) visibleSuggestionStrings() else emptyList()
         suggestionsMs = ImePerfLogger.elapsedMs(suggestionsStart)
         val softwareSymPreviewProjection = buildSoftwareSymPreviewProjection(modifierSnapshot)
         val snapshot = StatusBarController.StatusSnapshot(

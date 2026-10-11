@@ -49,6 +49,19 @@ class SuggestionControllerNextWordTest {
     }
 
     @Test
+    fun learningCandidateUpdatesImmediatelyDuringTypingAndDeletion() {
+        val controller = newController()
+        typeWord(controller, "unknown")
+        assertEquals("unknown", controller.pendingAddWord())
+        controller.onCharacterCommitted("x", null)
+        assertEquals("unknownx", controller.pendingAddWord())
+        controller.refreshFromInputConnection(null)
+        assertEquals("unknown", controller.pendingAddWord())
+        controller.onCharacterCommitted("x".repeat(100), null)
+        assertEquals(null, controller.pendingAddWord())
+    }
+
+    @Test
     fun learnsBigramAndPredictsAfterSpace() {
         val controller = newController()
 

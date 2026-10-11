@@ -231,6 +231,22 @@ class CandidatesBarControllerTest {
         assertTrue(layoutAndCollectVisibleTexts(candidatesView).contains("alt-229"))
     }
 
+    @Test
+    fun softwarePasswordFieldNeverShowsCandidateOrDictionaryAddButton() {
+        SettingsManager.setSoftwareKeyboardMode(context, SettingsManager.SoftwareKeyboardMode.FORCE_VIRTUAL)
+        SettingsManager.setSuggestionsEnabled(context, true)
+        SettingsManager.setExperimentalSuggestionsEnabled(context, true)
+        val controller = CandidatesBarController(context)
+        val view = controller.getInputView()
+        val secretSnapshot = emptyStatusSnapshot().copy(suggestions = listOf("TestCredential"), addWordCandidate = "TestCredential")
+        controller.updateStatusBars(secretSnapshot, "", null, null)
+        assertTrue(layoutAndCollectVisibleTexts(view).contains("TestCredential"))
+        val height = view.measuredHeight
+        controller.updateStatusBars(secretSnapshot.copy(shouldDisableSuggestions = true), "", null, null)
+        assertFalse(layoutAndCollectVisibleTexts(view).contains("TestCredential"))
+        assertEquals(height, view.measuredHeight)
+    }
+
     private fun layoutAndCollectVisibleTexts(view: View): List<String> {
         view.measure(
             View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),

@@ -42,6 +42,52 @@ class ImeChromeTransitionTest {
         activity.pause().stop().destroy()
     }
 
+    @Test fun constrainedWindowReservesTheSuggestionRowBeforeScalingKeys() {
+        val chrome = ImeChromeLayout(RuntimeEnvironment.getApplication()).apply { orientation = LinearLayout.VERTICAL }
+        val row = View(chrome.context)
+        val surface = View(chrome.context)
+        chrome.addView(row, LinearLayout.LayoutParams(-1, 80))
+        chrome.addView(surface, LinearLayout.LayoutParams(-1, 600))
+        chrome.surfaceView = surface
+        chrome.softwareKeyboardModeActive = true
+        chrome.measure(View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.AT_MOST))
+        chrome.layout(0, 0, 600, chrome.measuredHeight)
+        assertEquals(400, chrome.height)
+        assertEquals(0, row.top)
+        assertEquals(80, row.height)
+        assertEquals(320, surface.height)
+        assertEquals(chrome.height, surface.bottom)
+    }
+
+    @Test
+    @Config(qualifiers = "sw700dp-w700dp-h1000dp")
+    fun unfoldedDisplayKeepsSuggestionsAboveTheScaledSurfaceWithinHalfHeight() {
+        val context = RuntimeEnvironment.getApplication()
+        org.robolectric.Shadows.shadowOf(context.packageManager).setSystemFeature(
+            android.content.pm.PackageManager.FEATURE_SENSOR_HINGE_ANGLE, true)
+        val windowManager = org.mockito.Mockito.mock(android.view.WindowManager::class.java)
+        org.mockito.Mockito.`when`(windowManager.maximumWindowMetrics).thenReturn(
+            android.view.WindowMetrics(android.graphics.Rect(0, 0, 1400, 2000), android.view.WindowInsets.Builder().build()))
+        org.robolectric.Shadows.shadowOf(context).setSystemService(android.content.Context.WINDOW_SERVICE, windowManager)
+        val limit = 1000
+        val chrome = ImeChromeLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val row = View(context)
+        val surface = View(context)
+        chrome.addView(row, LinearLayout.LayoutParams(-1, 80))
+        chrome.addView(surface, LinearLayout.LayoutParams(-1, limit * 2))
+        chrome.surfaceView = surface
+        chrome.softwareKeyboardModeActive = true
+        chrome.measure(View.MeasureSpec.makeMeasureSpec(700, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+        chrome.layout(0, 0, 700, chrome.measuredHeight)
+        assertEquals(limit, chrome.height)
+        assertEquals(0, row.top)
+        assertEquals(80, row.height)
+        assertEquals(limit - 80, surface.height)
+        assertEquals(limit, surface.bottom)
+    }
+
     @Test fun compactRowsStayAtTheBottomOfAnExpandedWindow() {
         val context = RuntimeEnvironment.getApplication()
         val chrome = ImeChromeLayout(context).apply { orientation = LinearLayout.VERTICAL }

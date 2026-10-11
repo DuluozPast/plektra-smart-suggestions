@@ -14,21 +14,19 @@ class CurrentWordTracker(
 ) {
 
     private val current = StringBuilder()
+    private var overflowLength = 0
     private val tag = "CurrentWordTracker"
     private val debugLogging = false
     val currentWord: String
-        get() = current.toString()
+        get() = if (overflowLength == 0) current.toString() else ""
 
     fun setWord(word: String, notify: Boolean = true) {
         current.clear()
-        if (word.length <= maxLength) {
-            current.append(word)
-        } else {
-            current.append(word.takeLast(maxLength))
-        }
+        current.append(word.take(maxLength))
+        overflowLength = (word.length - maxLength).coerceAtLeast(0)
         if (debugLogging) Log.d(tag, "setWord currentWord='$current'")
         if (notify) {
-            onWordChanged(current.toString())
+            onWordChanged(currentWord)
         }
     }
 
@@ -47,7 +45,11 @@ class CurrentWordTracker(
                 if (current.length < maxLength) {
                     current.append(normalizedChar)
                     if (debugLogging) Log.d(tag, "currentWord='$current'")
-                    onWordChanged(current.toString())
+                    onWordChanged(currentWord)
+                } else {
+                    overflowLength += 1
+                    // Clear suggestions once; subsequent overflow characters do no dictionary work.
+                    if (overflowLength == 1) onWordChanged("")
                 }
             } else {
                 if (debugLogging) Log.d(tag, "reset on non-letter char='$char'")
@@ -62,11 +64,16 @@ class CurrentWordTracker(
     }
 
     fun onBackspace() {
+        if (overflowLength > 0) {
+            overflowLength -= 1
+            if (overflowLength == 0) onWordChanged(currentWord)
+            return
+        }
         if (current.isNotEmpty()) {
             current.deleteCharAt(current.length - 1)
             if (current.isNotEmpty()) {
                 if (debugLogging) Log.d(tag, "currentWord after backspace='$current'")
-                onWordChanged(current.toString())
+                onWordChanged(currentWord)
             } else {
                 reset()
             }
@@ -96,6 +103,7 @@ class CurrentWordTracker(
         if (current.isNotEmpty()) {
             if (debugLogging) Log.d(tag, "reset currentWord='$current'")
             current.clear()
+            overflowLength = 0
             onWordReset()
         }
     }

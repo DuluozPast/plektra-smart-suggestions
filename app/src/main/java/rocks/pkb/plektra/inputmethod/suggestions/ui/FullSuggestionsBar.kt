@@ -358,7 +358,8 @@ class FullSuggestionsBar(
         onHideSuggestion: ((String) -> Unit)?,
         onDeleteUserSuggestion: ((String) -> Unit)?,
         canDeleteUserSuggestion: ((String) -> Boolean)?,
-        onSuggestionSelectedOverride: ((Int, String) -> Unit)? = null
+        onSuggestionSelectedOverride: ((Int, String) -> Unit)? = null,
+        reserveEmptyRow: Boolean = false
     ) {
         currentInputConnection = inputConnection
         val bar = container ?: return
@@ -370,9 +371,9 @@ class FullSuggestionsBar(
             lastSuggestionsBold = suggestionsBold
             lastSlots = emptyList()
         }
-        val canShowSuggestions = contentEnabled && shouldShow &&
+        val canShowSuggestions = contentEnabled && shouldShow && !shouldDisableSuggestions &&
             (suggestions.isNotEmpty() || !addWordCandidate.isNullOrBlank())
-        if (!canShowSuggestions && !hasMenuButtons) {
+        if (!canShowSuggestions && !hasMenuButtons && !reserveEmptyRow) {
             cancelPendingSuggestionsAccessibilityEnable()
             suggestionButtons.clear()
             frame.visibility = View.GONE
@@ -392,20 +393,12 @@ class FullSuggestionsBar(
         renderMinimalUiButtons()
         applyContainerInsetsForMinimalButtons()
 
-        if (!canShowSuggestions) {
-            cancelPendingSuggestionsAccessibilityEnable()
-            suggestionButtons.clear()
-            bar.visibility = View.GONE
-            bar.removeAllViews()
-            bindRowGeometry()
-            lastSlots = emptyList()
-            lastAnnouncedSlots = emptyList()
-            actionCandidate = null
-            actionSlots = emptyList()
-            return
+        // A reserved row keeps its surfaces mounted even when results are empty.
+        // Only the labels and actions change; the row must never disappear between updates.
+        val slots = when {
+            !canShowSuggestions -> listOf(null, null, null)
+            else -> buildSlots(suggestions, addWordCandidate)
         }
-
-        val slots = buildSlots(suggestions, addWordCandidate)
         applySuggestionsAccessibilityThrottle(slots)
         if (actionCandidate != null && slots != actionSlots) {
             actionCandidate = null
@@ -619,7 +612,6 @@ class FullSuggestionsBar(
         canDeleteUserSuggestion: ((String) -> Boolean)?,
         onSuggestionSelectedOverride: ((Int, String) -> Unit)?
     ) {
-        bar.removeAllViews()
         suggestionButtons.clear()
         bar.visibility = View.VISIBLE
         bar.alpha = 1f
@@ -649,6 +641,9 @@ class FullSuggestionsBar(
         } else {
             listOf(slots[0], slots[1], slots[2]) // left, center, right
         }
+        val canReuseButtons = actionCandidate == null && bar.childCount == slotOrder.size &&
+            (0 until bar.childCount).all { bar.getChildAt(it) is TextView }
+        if (!canReuseButtons) bar.removeAllViews()
         for ((index, suggestion) in slotOrder.withIndex()) {
             val slotIndex = suggestionButtons.size
             val weightLayoutParams = LinearLayout.LayoutParams(
@@ -672,7 +667,13 @@ class FullSuggestionsBar(
                 bar.addView(actionSlot)
                 continue
             }
-            val button = TextView(context).apply {
+            val button = (if (canReuseButtons) bar.getChildAt(index) as TextView else TextView(context)).apply {
+                // Reset actions and decorations when reusing a slot for a different candidate.
+                setOnClickListener(null)
+                setOnLongClickListener(null)
+                isLongClickable = false
+                setCompoundDrawables(null, null, null, null)
+                contentDescription = null
                 alpha = 1f
                 text = (suggestion ?: "")
                 gravity = Gravity.CENTER
@@ -766,7 +767,7 @@ class FullSuggestionsBar(
                     }
                 }
             }
-            bar.addView(button)
+            if (!canReuseButtons) bar.addView(button)
             suggestionButtons.add(button)
         }
         bindRowGeometry()

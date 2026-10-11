@@ -211,13 +211,14 @@ data class InputContextState(
 
             // Check URI first (more specific) before password variations
             val restrictedReason = when {
-                inputVariation == InputType.TYPE_TEXT_VARIATION_URI ->
+                inputClass == InputType.TYPE_CLASS_TEXT && inputVariation == InputType.TYPE_TEXT_VARIATION_URI ->
                     RestrictedReason.URI
 
-                inputVariation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
-                inputVariation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
-                inputVariation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
-                inputVariation == InputType.TYPE_NUMBER_VARIATION_PASSWORD ->
+                (inputClass == InputType.TYPE_CLASS_TEXT && (
+                    inputVariation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                    inputVariation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                    inputVariation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) ||
+                (inputClass == InputType.TYPE_CLASS_NUMBER && inputVariation == InputType.TYPE_NUMBER_VARIATION_PASSWORD) ->
                     RestrictedReason.PASSWORD
 
                 inputVariation == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS ->
