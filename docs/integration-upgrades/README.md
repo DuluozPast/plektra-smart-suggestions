@@ -2,6 +2,8 @@
 
 This contribution branch ports the custom Pastiera Integration improvements onto Plektra nightly `v26.10-nightly.11.184948Z`. It is a review and testing branch, not an official Plektra release. The Android project retains its normal structure, including `app`, `gradle`, the wrapper, resources and tests.
 
+Latest performance update: [background learning persistence, validation and remaining limits](performance-phase2.md), with [phase 2 test results](performance-phase2-test-results.json). Earlier features below are retained.
+
 ## Changes compared with the original Plektra baseline
 
 ### 1. Learned multiword suggestions and next-word continuity
