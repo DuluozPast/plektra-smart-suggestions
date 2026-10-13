@@ -28,6 +28,11 @@ interface DictionaryRepository {
     suspend fun loadIfNeeded()
     suspend fun refreshUserEntries()
     fun addUserEntryQuick(word: String)
+    fun removeAutoLearnedUserEntry(word: String): Boolean
+    fun isAutoLearnedUserEntry(word: String): Boolean
+    fun addAutoLearnedUserEntryQuick(word: String)
+    fun indexStoredUserEntryQuick(word: String)
+    fun removeStoredUserEntryQuick(word: String)
     fun removeUserEntry(word: String)
     fun markUsed(word: String)
     fun effectiveFrequency(entry: DictionaryEntry): Int
@@ -36,7 +41,7 @@ interface DictionaryRepository {
     fun symSpellLookup(term: String, maxSuggestions: Int): List<SymSpell.SuggestItem>
     fun bestEntryForNormalized(normalized: String): DictionaryEntry?
     fun topByNormalized(normalized: String, limit: Int = 5): List<DictionaryEntry>
-    fun topCommonEntries(limit: Int = 16): List<DictionaryEntry>
+    fun topCommonEntries(limit: Int = 16, includeUserEntries: Boolean = true): List<DictionaryEntry>
     fun isKnownWord(word: String): Boolean
     fun ensureLoadScheduled(background: () -> Unit)
 }
@@ -109,9 +114,12 @@ class AndroidDictionaryRepository(
 
     private val prefixCache: MutableMap<String, MutableList<DictionaryEntry>> = mutableMapOf()
     private val normalizedIndex: MutableMap<String, MutableList<DictionaryEntry>> = mutableMapOf()
+    @Volatile
+    private var compactV31Reader: CompactDictionaryV31Reader? = null
     @Volatile private var symSpell: SymSpell? = null
     @Volatile private var symSpellBuilt: Boolean = false
     @Volatile private var topCommonEntriesCache: List<DictionaryEntry>? = null
+    @Volatile private var topCommonEntriesWithoutUserCache: List<DictionaryEntry>? = null
     @Volatile override var isReady: Boolean = false
         internal set
     @Volatile private var loadStarted: Boolean = false
@@ -142,32 +150,92 @@ class AndroidDictionaryRepository(
 
                 // Determine paths for custom and bundled dictionaries
                 val customDir = File(context.filesDir, "dictionaries_serialized/custom").apply { mkdirs() }
-                val customFile = File(customDir, "${baseLocale.language}_base.dict")
-                coroutineContext.ensureActive()
-                val serializedPath = "common/dictionaries_serialized/${baseLocale.language}_base.dict"
-                val loadedSerialized = when {
-                    customFile.exists() -> {
-                        Log.i(tag, "Loading CUSTOM dictionary from ${customFile.absolutePath}")
-                        loadSerializedFromFile(customFile)
-                    }
-                    else -> {
-                        Log.i(tag, "Loading BUNDLED dictionary from assets: $serializedPath")
-                        loadSerializedFromAssets(serializedPath)
-                    }
+
+                val activeDictionaryPrefs =
+                    context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
+
+                val activeFilename = activeDictionaryPrefs.getString(
+                    baseLocale.language,
+                    "${baseLocale.language}_base.dict"
+                ) ?: "${baseLocale.language}_base.dict"
+
+                val compactV31Filename =
+                    activeFilename.removeSuffix(".dict") + "_v31.dict"
+
+                val compactV31File =
+                    File(customDir, compactV31Filename)
+
+                if (compactV31File.exists() && compactV31Reader == null) {
+                    compactV31Reader =
+                        CompactDictionaryV31Reader(compactV31File)
+
+                    Log.i(
+                        tag,
+                        "V3.1 reader ready for locale=${baseLocale.language} " +
+                                "dictionary=$activeFilename " +
+                                "words=${compactV31Reader?.wordCount} " +
+                                "normalized=${compactV31Reader?.normalizedCount} " +
+                                "prefixes=${compactV31Reader?.prefixCount}"
+                    )
                 }
 
-                if (!loadedSerialized) {
-                    Log.i(tag, "No usable base dictionary for ${baseLocale.language}; loading user words only")
-                    prefixCache.clear()
-                    normalizedIndex.clear()
-                    symSpell = null
-                    symSpellBuilt = false
-                    topCommonEntriesCache = null
+                /*
+ * Legacy V1 dictionary is only required when no V3.1
+ * memory-mapped dictionary exists.
+ */
+                if (compactV31Reader == null) {
+                    val customFile =
+                        File(customDir, activeFilename)
+
+                    coroutineContext.ensureActive()
+
+                    val serializedPath =
+                        "common/dictionaries_serialized/${baseLocale.language}_base.dict"
+
+                    val loadedSerialized =
+                        when {
+                            customFile.exists() -> {
+                                Log.i(
+                                    tag,
+                                    "Loading CUSTOM dictionary from ${customFile.absolutePath}"
+                                )
+
+                                loadSerializedFromFile(customFile)
+                            }
+
+                            else -> {
+                                Log.i(
+                                    tag,
+                                    "Loading BUNDLED dictionary from assets: $serializedPath"
+                                )
+
+                                loadSerializedFromAssets(serializedPath)
+                            }
+                        }
+
+                    if (!loadedSerialized) {
+                        Log.i(tag, "No usable base dictionary for ${baseLocale.language}; loading user words only")
+                        prefixCache.clear(); normalizedIndex.clear()
+                        symSpell = null; symSpellBuilt = false
+                        topCommonEntriesCache = null; topCommonEntriesWithoutUserCache = null
+                    }
+
+                    val loadTime =
+                        System.currentTimeMillis() - startTime
+
+                    Log.i(
+                        tag,
+                        "Loaded legacy dictionary (.dict) in ${loadTime}ms - " +
+                                "normalizedIndex=${normalizedIndex.size} " +
+                                "prefixCache=${prefixCache.size}"
+                    )
+                } else {
+                    Log.i(
+                        tag,
+                        "V3.1 active: skipping legacy CBOR dictionary load " +
+                                "for locale=${baseLocale.language}"
+                    )
                 }
-
-                val loadTime = System.currentTimeMillis() - startTime
-                Log.i(tag, "Loaded dictionary (.dict) in ${loadTime}ms - normalizedIndex=${normalizedIndex.size} prefixCache=${prefixCache.size}")
-
                 coroutineContext.ensureActive()
                 // Optional default user entries (editable copy stored in app files dir, fallback to asset)
                 val defaultUserEntries = loadUserDefaults()
@@ -182,9 +250,13 @@ class AndroidDictionaryRepository(
                 }
 
                 coroutineContext.ensureActive()
-                buildSymSpell()
-                
+
+                if (compactV31Reader == null) {
+                    buildSymSpell()
+                }
+
                 isReady = true
+
             } catch (ce: CancellationException) {
                 synchronized(this) { loadStarted = false }
                 throw ce
@@ -194,6 +266,7 @@ class AndroidDictionaryRepository(
                 prefixCache.clear()
                 normalizedIndex.clear()
                 topCommonEntriesCache = null
+                topCommonEntriesWithoutUserCache = null
                 symSpell = null
                 symSpellBuilt = false
                 isReady = false
@@ -227,9 +300,15 @@ class AndroidDictionaryRepository(
         }
         index(userEntries, keepExisting = true)
         // Rebuild SymSpell to drop removed entries
-        coroutineContext.ensureActive()
-        symSpellBuilt = false
-        buildSymSpell()
+        /*
+         * V3.1 reads USER / DEFAULT_USER entries directly from normalizedIndex.
+         * Only legacy dictionaries need their SymSpell rebuilt.
+         */
+        if (compactV31Reader == null) {
+            coroutineContext.ensureActive()
+            symSpellBuilt = false
+            buildSymSpell()
+        }
     }
 
     fun addUserEntry(word: String) {
@@ -242,13 +321,122 @@ class AndroidDictionaryRepository(
      */
     override fun addUserEntryQuick(word: String) {
         userDictionaryStore.addWord(context, word)
+
         // Find latest frequency from snapshot; default to 1
         val freq = userDictionaryStore.getSnapshot()
             .firstOrNull { it.word.equals(word, ignoreCase = true) }
             ?.frequency ?: 1
-        val entry = DictionaryEntry(word, freq, SuggestionSource.USER)
-        index(listOf(entry), keepExisting = true)
-        addToSymSpell(listOf(entry))
+
+        val entry = DictionaryEntry(
+            word,
+            freq,
+            SuggestionSource.USER
+        )
+
+        index(
+            listOf(entry),
+            keepExisting = true
+        )
+
+        /*
+         * V3.1 reads dynamic USER entries directly from normalizedIndex.
+         * Legacy SymSpell only needs updating for dictionaries without V3.1.
+         */
+        if (compactV31Reader == null) {
+            addToSymSpell(listOf(entry))
+        }
+    }
+
+    override fun removeAutoLearnedUserEntry(word: String): Boolean {
+        val removed = userDictionaryStore.removeAutoLearnedWord(
+            context,
+            word
+        )
+
+        if (!removed) return false
+
+        removeStoredUserEntryQuick(word)
+
+        return true
+    }
+
+    override fun removeStoredUserEntryQuick(word: String) {
+        val normalized = normalize(word)
+
+        normalizedIndex[normalized]?.removeAll { entry ->
+            entry.source == SuggestionSource.USER &&
+                    entry.word.equals(word, ignoreCase = true)
+        }
+
+        prefixCache.values.forEach { entries ->
+            entries.removeAll { entry ->
+                entry.source == SuggestionSource.USER &&
+                        entry.word.equals(word, ignoreCase = true)
+            }
+        }
+
+        if (compactV31Reader == null) {
+            symSpell?.removeWord(normalized)
+        }
+
+        topCommonEntriesCache = null
+        topCommonEntriesWithoutUserCache = null
+    }
+
+    override fun addAutoLearnedUserEntryQuick(word: String) {
+        userDictionaryStore.addAutoLearnedWord(context, word)
+
+        val freq = userDictionaryStore.getSnapshot()
+            .firstOrNull { it.word.equals(word, ignoreCase = true) }
+            ?.frequency ?: 1
+
+        val entry = DictionaryEntry(
+            word,
+            freq,
+            SuggestionSource.USER
+        )
+
+        index(
+            listOf(entry),
+            keepExisting = true
+        )
+
+        /*
+         * V3.1 reads dynamic USER entries directly from normalizedIndex.
+         * Legacy SymSpell only needs updating for dictionaries without V3.1.
+         */
+        if (compactV31Reader == null) {
+            addToSymSpell(listOf(entry))
+        }
+    }
+
+    override fun indexStoredUserEntryQuick(word: String) {
+        val freq = userDictionaryStore.getSnapshot()
+            .firstOrNull { it.word.equals(word, ignoreCase = true) }
+            ?.frequency ?: return
+
+        val entry = DictionaryEntry(
+            word,
+            freq,
+            SuggestionSource.USER
+        )
+
+        index(
+            listOf(entry),
+            keepExisting = true
+        )
+
+        /*
+         * V3.1 reads dynamic USER entries directly from normalizedIndex.
+         * Legacy SymSpell only needs updating for dictionaries without V3.1.
+         */
+        if (compactV31Reader == null) {
+            addToSymSpell(listOf(entry))
+        }
+    }
+
+    override fun isAutoLearnedUserEntry(word: String): Boolean {
+        return userDictionaryStore.isAutoLearnedWord(word)
     }
 
     override fun removeUserEntry(word: String) {
@@ -263,6 +451,7 @@ class AndroidDictionaryRepository(
             }
         }
         topCommonEntriesCache = null
+        topCommonEntriesWithoutUserCache = null
     }
 
     override fun markUsed(word: String) {
@@ -271,31 +460,181 @@ class AndroidDictionaryRepository(
 
     override fun isKnownWord(word: String): Boolean {
         if (!isReady) return false
+
         val normalized = normalize(word)
-        return normalizedIndex[normalized]?.isNotEmpty() == true
+
+        if (
+            normalizedIndex[normalized]
+                ?.any { it.source != SuggestionSource.MAIN } == true
+        ) {
+            return true
+        }
+
+        val reader = compactV31Reader
+
+        if (reader != null) {
+            return reader
+                .normalizedEntries(normalized)
+                .isNotEmpty()
+        }
+
+        return normalizedIndex[normalized]
+            ?.isNotEmpty() == true
     }
 
-    override fun topCommonEntries(limit: Int): List<DictionaryEntry> {
-        if (!isReady || limit <= 0) return emptyList()
-        val cached = topCommonEntriesCache
-        if (cached != null) return cached.take(limit)
+    private fun topCommonEntriesV31(limit: Int): List<DictionaryEntry> {
+        val reader = compactV31Reader ?: return emptyList()
 
-        val computed = normalizedIndex.values.asSequence()
-            .mapNotNull { entries -> entries.maxByOrNull { effectiveFrequency(it) } }
+        if (limit <= 0) {
+            return emptyList()
+        }
+
+        /*
+         * V3.1 prefix buckets are already sorted by descending raw frequency.
+         *
+         * Instead of scanning all 150,000 static words, inspect only the
+         * one-letter prefix buckets. Taking a small number of leading entries
+         * from each bucket is sufficient to recover the globally common words
+         * while keeping this path very small.
+         */
+        val candidateLimitPerPrefix = maxOf(limit, 8)
+
+        val candidates = ArrayList<DictionaryEntry>(
+            26 * candidateLimitPerPrefix
+        )
+
+        for (letter in 'a'..'z') {
+            reader.prefixEntries(
+                letter.toString(),
+                candidateLimitPerPrefix
+            ).mapTo(candidates) {
+                it.toDictionaryEntry()
+            }
+        }
+
+        return candidates
+            .asSequence()
             .filter { entry ->
                 entry.word.length > 1 &&
-                    entry.source != SuggestionSource.DEFAULT_USER &&
-                    entry.word.any { it.isLetter() } &&
-                    entry.word.none { !it.isLetter() && it != '\'' }
+                        entry.word.any { it.isLetter() } &&
+                        entry.word.all { it.isLetter() || it == '\'' }
+            }
+            .distinctBy { entry ->
+                entry.word.lowercase(Locale.ROOT)
             }
             .sortedWith(
-                compareByDescending<DictionaryEntry> { it.source == SuggestionSource.USER }
-                    .thenByDescending { effectiveFrequency(it) }
-                    .thenBy { it.word.length }
+                compareByDescending<DictionaryEntry> {
+                    effectiveFrequency(it)
+                }.thenBy {
+                    it.word.length
+                }
             )
-            .take(48)
+            .take(limit)
             .toList()
-        topCommonEntriesCache = computed
+    }
+
+    override fun topCommonEntries(
+        limit: Int,
+        includeUserEntries: Boolean
+    ): List<DictionaryEntry> {
+        if (!isReady || limit <= 0) {
+            return emptyList()
+        }
+
+        val cached =
+            if (includeUserEntries) {
+                topCommonEntriesCache
+            } else {
+                topCommonEntriesWithoutUserCache
+            }
+
+        if (cached != null) {
+            return cached.take(limit)
+        }
+
+        val candidates =
+            mutableListOf<DictionaryEntry>()
+
+        /*
+         * Dynamic USER entries remain in normalizedIndex.
+         */
+        if (includeUserEntries) {
+            normalizedIndex.values
+                .asSequence()
+                .flatten()
+                .filter {
+                    it.source == SuggestionSource.USER
+                }
+                .forEach {
+                    candidates.add(it)
+                }
+        }
+
+        /*
+         * MAIN dictionary.
+         */
+        if (compactV31Reader != null) {
+            candidates.addAll(
+                topCommonEntriesV31(48)
+            )
+        } else {
+            normalizedIndex.values
+                .asSequence()
+                .mapNotNull { entries ->
+                    entries
+                        .filter {
+                            it.source == SuggestionSource.MAIN
+                        }
+                        .maxByOrNull {
+                            effectiveFrequency(it)
+                        }
+                }
+                .forEach {
+                    candidates.add(it)
+                }
+        }
+
+        val computed =
+            candidates
+                .asSequence()
+                .filter {
+                    it.word.length > 1 &&
+                            it.source != SuggestionSource.DEFAULT_USER &&
+                            (
+                                    includeUserEntries ||
+                                            it.source != SuggestionSource.USER
+                                    ) &&
+                            it.word.any { char ->
+                                char.isLetter()
+                            } &&
+                            it.word.none { char ->
+                                !char.isLetter() &&
+                                        char != '\''
+                            }
+                }
+                .distinctBy {
+                    it.word.lowercase(baseLocale)
+                }
+                .sortedWith(
+                    compareByDescending<DictionaryEntry> {
+                        it.source == SuggestionSource.USER
+                    }
+                        .thenByDescending {
+                            effectiveFrequency(it)
+                        }
+                        .thenBy {
+                            it.word.length
+                        }
+                )
+                .take(48)
+                .toList()
+
+        if (includeUserEntries) {
+            topCommonEntriesCache = computed
+        } else {
+            topCommonEntriesWithoutUserCache = computed
+        }
+
         return computed.take(limit)
     }
 
@@ -318,12 +657,111 @@ class AndroidDictionaryRepository(
      */
     override fun getExactWordFrequency(word: String): Int {
         if (!isReady) return 0
+
         val normalized = normalize(word)
-        val bucket = normalizedIndex[normalized] ?: return 0
-        // Find exact match (case-insensitive) and return max frequency
-        return bucket
-            .filter { it.word.equals(word, ignoreCase = true) }
-            .maxOfOrNull { it.frequency } ?: 0
+
+        var maxFrequency = 0
+
+        normalizedIndex[normalized]
+            ?.asSequence()
+            ?.filter { it.source != SuggestionSource.MAIN }
+            ?.filter { it.word.equals(word, ignoreCase = true) }
+            ?.forEach { entry ->
+                if (entry.frequency > maxFrequency) {
+                    maxFrequency = entry.frequency
+                }
+            }
+
+        val reader = compactV31Reader
+
+        if (reader != null) {
+            reader
+                .normalizedEntries(normalized)
+                .filter {
+                    it.word.equals(
+                        word,
+                        ignoreCase = true
+                    )
+                }
+                .forEach { entry ->
+                    if (entry.frequency > maxFrequency) {
+                        maxFrequency = entry.frequency
+                    }
+                }
+        } else {
+            normalizedIndex[normalized]
+                ?.filter {
+                    it.word.equals(
+                        word,
+                        ignoreCase = true
+                    )
+                }
+                ?.forEach { entry ->
+                    if (entry.frequency > maxFrequency) {
+                        maxFrequency = entry.frequency
+                    }
+                }
+        }
+
+        return maxFrequency
+    }
+
+    private fun CompactDictionaryV31Reader.WordEntry.toDictionaryEntry(): DictionaryEntry {
+        return DictionaryEntry(
+            word = word,
+            frequency = frequency,
+            source = SuggestionSource.MAIN
+        )
+    }
+
+    private fun lookupByPrefixMergedV31(
+        prefix: String,
+        maxSize: Int
+    ): List<DictionaryEntry> {
+        val reader = compactV31Reader ?: return emptyList()
+        if (prefix.isBlank() || maxSize <= 0) return emptyList()
+
+        val normalizedPrefix = normalize(prefix)
+        if (normalizedPrefix.isBlank()) return emptyList()
+
+        val maxPrefixLength =
+            normalizedPrefix.length.coerceAtMost(cachePrefixLength)
+
+        val seen = LinkedHashMap<String, DictionaryEntry>()
+
+        for (length in maxPrefixLength downTo 1) {
+            val entries =
+                reader.prefixEntries(normalizedPrefix.take(length))
+
+            for (compactEntry in entries) {
+                val entry = compactEntry.toDictionaryEntry()
+                val key = entry.word.lowercase(baseLocale)
+
+                if (!seen.containsKey(key)) {
+                    seen[key] = entry
+
+                    if (seen.size >= maxSize) {
+                        return seen.values.toList()
+                    }
+                }
+            }
+        }
+
+        return seen.values.toList()
+    }
+
+    private fun topByNormalizedV31(
+        normalized: String,
+        limit: Int
+    ): List<DictionaryEntry> {
+        val reader = compactV31Reader ?: return emptyList()
+        if (limit <= 0) return emptyList()
+
+        return reader
+            .normalizedEntries(normalized)
+            .map { it.toDictionaryEntry() }
+            .sortedByDescending { effectiveFrequency(it) }
+            .take(limit)
     }
 
     fun lookupByPrefix(prefix: String): List<DictionaryEntry> {
@@ -346,35 +784,393 @@ class AndroidDictionaryRepository(
      * transpositions (e.g., "teh" -> "the", "caio" -> "ciao") that would otherwise live
      * under a different prefix.
      */
-    override fun lookupByPrefixMerged(prefix: String, maxSize: Int): List<DictionaryEntry> {
-        if (!isReady || prefix.isBlank()) return emptyList()
-        val normalizedPrefix = normalize(prefix)
-        val maxPrefixLength = normalizedPrefix.length.coerceAtMost(cachePrefixLength)
-        val seen = LinkedHashMap<String, DictionaryEntry>()
+    override fun lookupByPrefixMerged(
+        prefix: String,
+        maxSize: Int
+    ): List<DictionaryEntry> {
+        if (!isReady || prefix.isBlank() || maxSize <= 0) {
+            return emptyList()
+        }
 
+        val normalizedPrefix = normalize(prefix)
+
+        if (normalizedPrefix.isBlank()) {
+            return emptyList()
+        }
+
+        val maxPrefixLength =
+            normalizedPrefix.length.coerceAtMost(cachePrefixLength)
+
+        val seen =
+            LinkedHashMap<String, DictionaryEntry>()
+
+        /*
+         * 1. Dynamic entries first:
+         * USER / DEFAULT_USER.
+         */
         for (length in maxPrefixLength downTo 1) {
-            val bucket = prefixCache[normalizedPrefix.take(length)] ?: continue
+            val bucket =
+                prefixCache[normalizedPrefix.take(length)] ?: continue
+
             for (entry in bucket) {
-                val key = entry.word.lowercase(baseLocale)
+                if (entry.source == SuggestionSource.MAIN) {
+                    continue
+                }
+
+                val key =
+                    entry.word.lowercase(baseLocale)
+
                 if (!seen.containsKey(key)) {
                     seen[key] = entry
-                    if (seen.size >= maxSize) {
-                        return seen.values.toList()
+                }
+            }
+        }
+
+        /*
+         * 2. Static MAIN dictionary from V3.1.
+         */
+        if (compactV31Reader != null) {
+            val compactEntries =
+                lookupByPrefixMergedV31(prefix, maxSize)
+
+            for (entry in compactEntries) {
+                val key =
+                    entry.word.lowercase(baseLocale)
+
+                if (!seen.containsKey(key)) {
+                    seen[key] = entry
+                }
+            }
+        } else {
+            /*
+             * Legacy V1 fallback for dictionaries
+             * which do not yet have a V3.1 file.
+             */
+            for (length in maxPrefixLength downTo 1) {
+                val bucket =
+                    prefixCache[normalizedPrefix.take(length)] ?: continue
+
+                for (entry in bucket) {
+                    val key =
+                        entry.word.lowercase(baseLocale)
+
+                    if (!seen.containsKey(key)) {
+                        seen[key] = entry
                     }
                 }
             }
         }
 
-        return seen.values.toList()
+        return seen.values
+            .sortedByDescending { effectiveFrequency(it) }
+            .take(maxSize)
     }
 
-    override fun symSpellLookup(term: String, maxSuggestions: Int): List<SymSpell.SuggestItem> {
-        val engine = symSpell ?: return emptyList()
-        return engine.lookup(term, maxSuggestions)
+    private fun editDistanceAtMostTwo(
+        left: String,
+        right: String
+    ): Int {
+        if (left == right) return 0
+
+        val lengthDifference =
+            kotlin.math.abs(left.length - right.length)
+
+        if (lengthDifference > 2) return 3
+
+        var previous = IntArray(right.length + 1) { it }
+        var current = IntArray(right.length + 1)
+
+        for (i in 1..left.length) {
+            current[0] = i
+            var rowMinimum = current[0]
+
+            for (j in 1..right.length) {
+                val substitutionCost =
+                    if (left[i - 1] == right[j - 1]) 0 else 1
+
+                current[j] = minOf(
+                    previous[j] + 1,
+                    current[j - 1] + 1,
+                    previous[j - 1] + substitutionCost
+                )
+
+                rowMinimum = minOf(
+                    rowMinimum,
+                    current[j]
+                )
+            }
+
+            if (rowMinimum > 2) {
+                return 3
+            }
+
+            val swap = previous
+            previous = current
+            current = swap
+        }
+
+        return previous[right.length]
     }
 
-    override fun bestEntryForNormalized(normalized: String): DictionaryEntry? {
-        return normalizedIndex[normalized]?.maxByOrNull { effectiveFrequency(it) }
+    private fun symSpellLookupV31(
+        term: String,
+        maxSuggestions: Int
+    ): List<SymSpell.SuggestItem> {
+        val reader = compactV31Reader ?: return emptyList()
+
+        if (term.isBlank() || maxSuggestions <= 0) {
+            return emptyList()
+        }
+
+        val normalizedTerm = normalize(term)
+
+        if (normalizedTerm.isBlank()) {
+            return emptyList()
+        }
+
+        val candidates =
+            LinkedHashMap<String, CompactDictionaryV31Reader.WordEntry>()
+
+        fun addEntries(
+            entries: List<CompactDictionaryV31Reader.WordEntry>
+        ) {
+            for (entry in entries) {
+                val current = candidates[entry.normalized]
+
+                if (
+                    current == null ||
+                    entry.frequency > current.frequency
+                ) {
+                    candidates[entry.normalized] = entry
+                }
+            }
+        }
+
+        val dynamicCandidates =
+            LinkedHashMap<String, DictionaryEntry>()
+
+        fun addDynamicEntry(entry: DictionaryEntry) {
+            if (entry.source == SuggestionSource.MAIN) {
+                return
+            }
+
+            val normalized = normalize(entry.word)
+
+            if (normalized.isBlank()) {
+                return
+            }
+
+            val current = dynamicCandidates[normalized]
+
+            if (
+                current == null ||
+                effectiveFrequency(entry) > effectiveFrequency(current)
+            ) {
+                dynamicCandidates[normalized] = entry
+            }
+        }
+
+        // Exact normalized candidate.
+        addEntries(
+            reader.normalizedEntries(normalizedTerm)
+        )
+
+        /*
+         * V3.1 SymSpell index was generated from the first
+         * cachePrefixLength characters with edit distance <= 2.
+         */
+        val prefix =
+            normalizedTerm.take(cachePrefixLength)
+
+        val deletes = LinkedHashSet<String>()
+        deletes.add(prefix)
+
+        var currentLevel: Set<String> =
+            setOf(prefix)
+
+        repeat(2) {
+            val nextLevel =
+                LinkedHashSet<String>()
+
+            for (value in currentLevel) {
+                for (index in value.indices) {
+                    val deleted =
+                        value.removeRange(index, index + 1)
+
+                    if (deletes.add(deleted)) {
+                        nextLevel.add(deleted)
+                    }
+                }
+            }
+
+            currentLevel = nextLevel
+        }
+
+        for (deleteKey in deletes) {
+            addEntries(
+                reader.symDeleteEntries(deleteKey)
+            )
+        }
+
+        /*
+ * Dynamic USER / DEFAULT_USER entries.
+ *
+ * This set is expected to remain small, so scanning only
+ * non-MAIN entries is cheap and avoids building a second
+ * large SymSpell structure.
+ */
+        normalizedIndex.forEach { (_, entries) ->
+            for (entry in entries) {
+                if (entry.source == SuggestionSource.MAIN) {
+                    continue
+                }
+
+                val entryNormalized = normalize(entry.word)
+
+                val distance =
+                    editDistanceAtMostTwo(
+                        normalizedTerm,
+                        entryNormalized
+                    )
+
+                if (distance <= 2) {
+                    addDynamicEntry(entry)
+                }
+            }
+        }
+
+        val merged =
+            LinkedHashMap<String, SymSpell.SuggestItem>()
+
+        fun addSuggestion(item: SymSpell.SuggestItem) {
+            val current = merged[item.term]
+
+            if (
+                current == null ||
+                item.distance < current.distance ||
+                (
+                        item.distance == current.distance &&
+                                item.frequency > current.frequency
+                        )
+            ) {
+                merged[item.term] = item
+            }
+        }
+
+        /*
+         * Static MAIN candidates from V3.1.
+         */
+        candidates.values.forEach { entry ->
+            val distance =
+                editDistanceAtMostTwo(
+                    normalizedTerm,
+                    entry.normalized
+                )
+
+            if (distance <= 2) {
+                addSuggestion(
+                    SymSpell.SuggestItem(
+                        term = entry.normalized,
+                        distance = distance,
+                        frequency = effectiveFrequency(
+                            entry.toDictionaryEntry()
+                        )
+                    )
+                )
+            }
+        }
+
+        /*
+         * Dynamic USER / DEFAULT_USER candidates.
+         */
+        dynamicCandidates.forEach { (normalized, entry) ->
+            val distance =
+                editDistanceAtMostTwo(
+                    normalizedTerm,
+                    normalized
+                )
+
+            if (distance <= 2) {
+                addSuggestion(
+                    SymSpell.SuggestItem(
+                        term = normalized,
+                        distance = distance,
+                        frequency = effectiveFrequency(entry)
+                    )
+                )
+            }
+        }
+
+        return merged.values
+            .sortedWith(
+                Comparator { a, b ->
+                    val distanceComparison =
+                        a.distance.compareTo(b.distance)
+
+                    if (distanceComparison != 0) {
+                        distanceComparison
+                    } else {
+                        b.frequency.compareTo(a.frequency)
+                    }
+                }
+            )
+            .take(maxSuggestions)
+    }
+
+    override fun symSpellLookup(
+        term: String,
+        maxSuggestions: Int
+    ): List<SymSpell.SuggestItem> {
+        return if (compactV31Reader != null) {
+            symSpellLookupV31(term, maxSuggestions)
+        } else {
+            val engine = symSpell ?: return emptyList()
+            engine.lookup(term, maxSuggestions)
+        }
+    }
+
+    override fun bestEntryForNormalized(
+        normalized: String
+    ): DictionaryEntry? {
+        val reader = compactV31Reader
+
+        /*
+         * Legacy repository: MAIN + USER + DEFAULT_USER
+         * are all still in normalizedIndex.
+         */
+        if (reader == null) {
+            return normalizedIndex[normalized]
+                ?.maxByOrNull {
+                    effectiveFrequency(it)
+                }
+        }
+
+        /*
+         * V3.1 repository:
+         * MAIN comes from the mapped compact dictionary,
+         * dynamic entries remain in normalizedIndex.
+         */
+        val candidates =
+            mutableListOf<DictionaryEntry>()
+
+        reader
+            .normalizedEntries(normalized)
+            .mapTo(candidates) {
+                it.toDictionaryEntry()
+            }
+
+        normalizedIndex[normalized]
+            ?.asSequence()
+            ?.filter {
+                it.source != SuggestionSource.MAIN
+            }
+            ?.forEach {
+                candidates.add(it)
+            }
+
+        return candidates.maxByOrNull {
+            effectiveFrequency(it)
+        }
     }
 
     fun allCandidates(): List<DictionaryEntry> {
@@ -386,12 +1182,53 @@ class AndroidDictionaryRepository(
      * Returns top entries for a normalized term, sorted by frequency.
      * Useful for single-character inputs to surface multiple variants (e.g., accented).
      */
-    override fun topByNormalized(normalized: String, limit: Int): List<DictionaryEntry> {
-        if (!isReady) return emptyList()
-        return normalizedIndex[normalized]
-            ?.sortedByDescending { effectiveFrequency(it) }
-            ?.take(limit)
-            .orEmpty()
+    override fun topByNormalized(
+        normalized: String,
+        limit: Int
+    ): List<DictionaryEntry> {
+        if (!isReady || limit <= 0) {
+            return emptyList()
+        }
+
+        val merged =
+            LinkedHashMap<String, DictionaryEntry>()
+
+        normalizedIndex[normalized]
+            ?.asSequence()
+            ?.filter { it.source != SuggestionSource.MAIN }
+            ?.forEach { entry ->
+                merged[entry.word.lowercase(baseLocale)] = entry
+            }
+
+        compactV31Reader
+            ?.normalizedEntries(normalized)
+            ?.forEach { compactEntry ->
+                val entry = compactEntry.toDictionaryEntry()
+                val key = entry.word.lowercase(baseLocale)
+
+                if (!merged.containsKey(key)) {
+                    merged[key] = entry
+                }
+            }
+
+        /*
+         * If no V3.1 dictionary exists for this repository,
+         * retain the V1 MAIN entries as fallback.
+         */
+        if (compactV31Reader == null) {
+            normalizedIndex[normalized]
+                ?.forEach { entry ->
+                    val key = entry.word.lowercase(baseLocale)
+
+                    if (!merged.containsKey(key)) {
+                        merged[key] = entry
+                    }
+                }
+        }
+
+        return merged.values
+            .sortedByDescending { effectiveFrequency(it) }
+            .take(limit)
     }
 
     /**
@@ -439,36 +1276,50 @@ class AndroidDictionaryRepository(
 
     @OptIn(ExperimentalSerializationApi::class)
     private fun decodeSerializedDictionary(input: InputStream) {
+        // 1. Read serialized file into memory
         val bytes = input.readBytes()
         val sizeKb = bytes.size / 1024
-        
+
         // Auto-detect format: JSON starts with '{' (0x7B), CBOR with other bytes
         val isJson = bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
-        Log.i(tag, "Dictionary format detected: ${if (isJson) "JSON (legacy)" else "CBOR"} - size: ${sizeKb} KB")
-        
-        val startTime = System.currentTimeMillis()
+
+        Log.i(
+            tag,
+            "Dictionary format detected: ${if (isJson) "JSON (legacy)" else "CBOR"} " +
+                    "- size: ${sizeKb} KB"
+        )
+
+        // 2. Deserialize
         val index = if (isJson) {
-            // Legacy JSON format
             val json = Json { ignoreUnknownKeys = true }
             json.decodeFromString<DictionaryIndex>(bytes.decodeToString())
         } else {
-            // CBOR format (faster)
             Cbor.decodeFromByteArray<DictionaryIndex>(bytes)
         }
-        val parseTime = System.currentTimeMillis() - startTime
-        Log.i(tag, "Deserialized dictionary in ${parseTime}ms: normalizedIndex=${index.normalizedIndex.size}, prefixCache=${index.prefixCache.size}")
+
+        Log.i(
+            tag,
+            "Deserialized dictionary: " +
+                    "normalizedIndex=${index.normalizedIndex.size}, " +
+                    "prefixCache=${index.prefixCache.size}"
+        )
 
         normalizedIndex.clear()
         prefixCache.clear()
 
+        // 3. Convert/copy normalized index
         index.normalizedIndex.forEach { (normalized, entries) ->
-            normalizedIndex[normalized] = entries.map { it.toDictionaryEntry() }.toMutableList()
+            normalizedIndex[normalized] =
+                entries.map { it.toDictionaryEntry() }.toMutableList()
         }
 
+        // 4. Convert/copy prefix cache
         index.prefixCache.forEach { (prefix, entries) ->
-            prefixCache[prefix] = entries.map { it.toDictionaryEntry() }.toMutableList()
+            prefixCache[prefix] =
+                entries.map { it.toDictionaryEntry() }.toMutableList()
         }
 
+        // 5. Compatibility aliases
         val aliasTerms = addCompatibilityAliasesFromExistingIndex()
 
         if (index.symDeletes != null && index.symMeta != null) {
@@ -476,18 +1327,32 @@ class AndroidDictionaryRepository(
                 maxEditDistance = index.symMeta.maxEditDistance,
                 prefixLength = index.symMeta.prefixLength
             )
+
+            // 6. Build term -> frequency map
             val termFrequencies = normalizedIndex.mapValues { (_, entries) ->
                 entries.maxOfOrNull { effectiveFrequency(it) } ?: 0
             }
+
+            // 7. Build prefix -> terms temporary map
             val prefixToTerms = mutableMapOf<String, MutableList<String>>()
+
             termFrequencies.keys.forEach { term ->
-                val prefix = term.take(index.symMeta.prefixLength.coerceAtMost(term.length))
-                val list = prefixToTerms.getOrPut(prefix) { mutableListOf() }
+                val prefix =
+                    term.take(index.symMeta.prefixLength.coerceAtMost(term.length))
+
+                val list =
+                    prefixToTerms.getOrPut(prefix) { mutableListOf() }
+
                 list.add(term)
             }
-            val expandedDeletes = mutableMapOf<String, MutableList<String>>()
+
+            // 8. Expand serialized SymSpell deletes
+            val expandedDeletes =
+                mutableMapOf<String, MutableList<String>>()
+
             index.symDeletes.forEach { (deleteKey, terms) ->
                 val targets = LinkedHashSet<String>()
+
                 terms.forEach { t ->
                     if (termFrequencies.containsKey(t)) {
                         targets.add(t)
@@ -495,25 +1360,45 @@ class AndroidDictionaryRepository(
                         prefixToTerms[t]?.let { targets.addAll(it) }
                     }
                 }
+
                 if (targets.isNotEmpty()) {
-                    expandedDeletes[deleteKey] = targets.toMutableList()
+                    expandedDeletes[deleteKey] =
+                        targets.toMutableList()
                 }
             }
-            engine.loadSerialized(termFrequencies, expandedDeletes)
+
+            // 9. Load SymSpell structures
+            engine.loadSerialized(
+                termFrequencies,
+                expandedDeletes
+            )
+
+            // 10. Add normalization aliases to SymSpell
             if (aliasTerms.isNotEmpty()) {
                 aliasTerms.forEach { alias ->
-                    val freq = termFrequencies[alias] ?: return@forEach
+                    val freq =
+                        termFrequencies[alias] ?: return@forEach
+
                     engine.addWord(alias, freq)
                 }
             }
+
             symSpell = engine
             symSpellBuilt = true
-            Log.i(tag, "Loaded precomputed SymSpell deletes: ${expandedDeletes.size} keys")
+
+            Log.i(
+                tag,
+                "Loaded precomputed SymSpell deletes: ${expandedDeletes.size} keys"
+            )
         }
 
-        // Re-sort caches using the runtime effective frequency scaling.
+        // 11. Sort runtime caches
         sortCachesByEffectiveFrequency()
-        Log.i(tag, "Successfully populated indices from serialized format")
+
+        Log.i(
+            tag,
+            "Successfully populated indices from serialized format"
+        )
     }
 
     /**
@@ -622,6 +1507,10 @@ class AndroidDictionaryRepository(
         symSpellBuilt = true
     }
 
+    internal fun buildSymSpellForTests() {
+        buildSymSpell()
+    }
+
     /**
      * Move legacy dictionaries from the root local directory into the custom folder.
      * This isolates user-imported dictionaries from bundled assets.
@@ -676,25 +1565,33 @@ class AndroidDictionaryRepository(
 
         val aliasTerms = linkedSetOf<String>()
         val snapshot = normalizedIndex.entries.toList()
+
         snapshot.forEach { (term, entries) ->
             val alias = normalize(term)
             if (alias.isBlank() || alias == term) return@forEach
 
             val aliasBucket = normalizedIndex.getOrPut(alias) { mutableListOf() }
+
             entries.forEach { entry ->
                 val exists = aliasBucket.any {
-                    it.source == entry.source && it.word.equals(entry.word, ignoreCase = true)
+                    it.source == entry.source &&
+                            it.word.equals(entry.word, ignoreCase = true)
                 }
+
                 if (!exists) {
                     aliasBucket.add(entry)
                 }
             }
+
             aliasTerms.add(alias)
         }
 
         if (aliasTerms.isNotEmpty()) {
             rebuildPrefixCacheFromNormalizedIndex()
-            Log.i(tag, "Added ${aliasTerms.size} normalization alias terms for compatibility")
+            Log.i(
+                tag,
+                "Added ${aliasTerms.size} normalization alias terms for compatibility"
+            )
         }
 
         return aliasTerms
@@ -720,5 +1617,6 @@ class AndroidDictionaryRepository(
             list.sortByDescending { effectiveFrequency(it) }
         }
         topCommonEntriesCache = null
+        topCommonEntriesWithoutUserCache = null
     }
 }

@@ -19,6 +19,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import rocks.pkb.plektra.inputmethod.AutoCorrector
 import rocks.pkb.plektra.inputmethod.NotificationHelper
+import rocks.pkb.plektra.backup.LearningOperationGate
+import rocks.pkb.plektra.statistics.TypingStatisticsStore
+import rocks.pkb.plektra.statistics.TypingStatisticsTracker
 
 class SuggestionController(
     context: Context,
@@ -37,15 +40,49 @@ class SuggestionController(
         Boolean
     ) -> DictionaryRepository)? = null,
     nextWordPredictorOverride: NextWordPredictor? = null,
-    private val activeSuggestionLocalesProvider: (() -> List<Locale>)? = null
+    private val activeSuggestionLocalesProvider: (() -> List<Locale>)? = null,
+    wordUsageRepositoryOverride: WordUsageRepository? = null,
+    phraseUsageRepositoryOverride: PhraseUsageRepository? = null,
+    multiWordStoreOverride: MultiWordStore? = null,
+    correctionUsageRepositoryOverride: CorrectionUsageRepository? = null
 ) {
 
     private val appContext = context.applicationContext
+    private val typingStatisticsStore = TypingStatisticsStore.get(appContext)
+    private val typingStatisticsTracker = TypingStatisticsTracker(typingStatisticsStore::record)
     private val debugLogging: Boolean = debugLogging
     private val userDictionaryStore = UserDictionaryStore()
-    private val dictionaryRepositoryCache = mutableMapOf<String, DictionaryRepository>()
+
+    private val wordUsageStore: WordUsageRepository =
+        wordUsageRepositoryOverride ?: WordUsageStore(appContext)
+
+    private val phraseUsageStore: PhraseUsageRepository =
+        phraseUsageRepositoryOverride ?: PhraseUsageStore(appContext)
+
+    private val correctionUsageStore: CorrectionUsageRepository =
+        correctionUsageRepositoryOverride ?: CorrectionUsageStore(appContext)
+
+    private val dictionaryRepositoryCache =
+        mutableMapOf<String, DictionaryRepository>()
     private var dictionaryRepository: DictionaryRepository = createDictionaryRepository(currentLocale)
-    private var suggestionEngine = SuggestionEngine(dictionaryRepository, locale = currentLocale, debugLogging = debugLogging).apply {
+    private var suggestionEngine = SuggestionEngine(
+        dictionaryRepository,
+        locale = currentLocale,
+        debugLogging = debugLogging,
+        usageCountProvider = { locale, word ->
+            wordUsageStore.getUsage(locale, word)?.count ?: 0
+        },
+        exactUsageCountProvider = { locale, word ->
+            wordUsageStore.getExactUsage(locale, word)?.count ?: 0
+        },
+        correctionUsageCountProvider = { locale, original, correction ->
+            correctionUsageStore.getUsage(
+                locale = locale,
+                original = original,
+                correction = correction
+            )?.count ?: 0
+        }
+    ).apply {
         setKeyboardLayout(keyboardLayoutProvider())
     }
     private var tracker = CurrentWordTracker(
@@ -54,7 +91,6 @@ class SuggestionController(
         },
         onWordReset = {
             cancelPendingWordSuggestions()
-            latestSuggestions.set(emptyList())
             pendingAddUserWord = null
             suggestionsListener?.invoke(emptyList())
         },
@@ -62,6 +98,14 @@ class SuggestionController(
     )
     private var autoReplaceController = createAutoReplaceController()
     private val nextWordPredictor = nextWordPredictorOverride ?: NextWordPredictor(UserNGramStore(appContext))
+    private val multiWordStore =
+        multiWordStoreOverride ?: MultiWordStore(appContext)
+
+    private val multiWordPromotionEngine = MultiWordPromotionEngine(
+        phraseUsageRepository = phraseUsageStore,
+        nextWordPredictor = nextWordPredictor,
+        multiWordStore = multiWordStore
+    )
     private val extraSuggestionEngines = mutableMapOf<String, SuggestionLanguageEngine>()
 
     private data class SuggestionLanguageEngine(
@@ -90,6 +134,18 @@ class SuggestionController(
             ?.lowercase(Locale.ROOT)
             ?: locale.toLanguageTag().lowercase(Locale.ROOT)
     }
+    private fun isExactKnownWordInPrimaryDictionary(word: String): Boolean {
+        if (!dictionaryRepository.isReady) return false
+
+        val normalized =
+            WordNormalization.normalizeForSuggestion(word, currentLocale)
+
+        return dictionaryRepository
+            .topByNormalized(normalized, limit = 16)
+            .any { entry ->
+                entry.word.equals(word, ignoreCase = true)
+            }
+    }
 
     private fun createAutoReplaceController(): AutoReplaceController {
         return AutoReplaceController(
@@ -103,7 +159,9 @@ class SuggestionController(
                     textBeforeCursor = word + boundary,
                     locale = currentLocale.language,
                     context = appContext,
-                    isKnownWord = { candidate -> isKnownWordInActiveDictionaries(candidate) }
+                    isKnownWord = { candidate ->
+                        isExactKnownWordInPrimaryDictionary(candidate)
+                    }
                 )?.takeIf { (original, replacement) ->
                     original == word && replacement != word
                 }?.second
@@ -119,6 +177,7 @@ class SuggestionController(
     fun updateLocale(newLocale: Locale, forceReload: Boolean = false) {
         if (newLocale == currentLocale && !forceReload) return
         val preserveInputContext = forceReload && newLocale == currentLocale
+        val preservedWord = tracker.currentWord
         if (forceReload) dictionaryRepositoryCache.clear()
         
         // Cancel previous load job if still running to prevent conflicts
@@ -131,20 +190,54 @@ class SuggestionController(
         
         currentLocale = newLocale
         dictionaryRepository = createDictionaryRepository(currentLocale)
-        suggestionEngine = SuggestionEngine(dictionaryRepository, locale = currentLocale, debugLogging = debugLogging).apply {
+        suggestionEngine = SuggestionEngine(
+            dictionaryRepository,
+            locale = currentLocale,
+            debugLogging = debugLogging,
+            usageCountProvider = { locale, word ->
+                wordUsageStore.getUsage(locale, word)?.count ?: 0
+            },
+            exactUsageCountProvider = { locale, word ->
+                wordUsageStore.getExactUsage(locale, word)?.count ?: 0
+            },
+            correctionUsageCountProvider = { locale, original, correction ->
+                correctionUsageStore.getUsage(
+                    locale = locale,
+                    original = original,
+                    correction = correction
+                )?.count ?: 0
+            }
+        ).apply {
             setKeyboardLayout(keyboardLayoutProvider())
         }
         autoReplaceController = createAutoReplaceController()
         extraSuggestionEngines.clear()
         
+        // Recreate tracker to use new engine (tracker captures suggestionEngine in closure)
+        tracker = CurrentWordTracker(
+            onWordChanged = { word ->
+                updateSuggestionsForWord(word)
+            },
+            onWordReset = {
+                cancelPendingWordSuggestions()
+                pendingAddUserWord = null
+                suggestionsListener?.invoke(emptyList())
+            },
+            autoSpacePunctuationProvider = { settingsProvider().autoSpacePunctuation }
+        )
+        
+        // Reload dictionary in background and refresh the current word when ready.
+        schedulePrimaryDictionaryLoad(refreshAfterLoad = true)
+
         if (!preserveInputContext) {
             previousCompletedWord = null
+            recentCompletedWords.clear()
             sentenceStartPending = true
             tracker.reset()
-        }
+            latestSuggestions.set(emptyList())
+            suggestionsListener?.invoke(emptyList())
+        } else if (preservedWord.isNotBlank()) tracker.setWord(preservedWord)
         pendingAddUserWord = null
-        latestSuggestions.set(emptyList())
-        suggestionsListener?.invoke(emptyList())
         // Keep the active word and pending cursor context when only dictionary files changed.
         schedulePrimaryDictionaryLoad(refreshAfterLoad = true)
     }
@@ -168,10 +261,22 @@ class SuggestionController(
     private val cursorDebounceMs = 120L
     private var pendingAddUserWord: String? = null
     private var previousCompletedWord: String? = null
+    private var manualEditOriginalWord: String? = null
+    private var manualEditExpectedWord: String? = null
+    private var suppressCursorPredictionUntilMs: Long = 0L
+    private val recentCompletedWords = ArrayDeque<String>()
     private var pendingInitialContextConnection: InputConnection? = null
     @Volatile private var pendingPrimaryRefreshAfterLoad: Boolean = false
     @Volatile private var pendingExtraRefreshAfterLoad: Boolean = false
     @Volatile private var suggestionGeneration: Int = 0
+    private var completedWordsSinceMaintenance: Int = 0
+    private var maintenanceJob: Job? = null
+    private var maintenanceNowMsProvider: () -> Long = { System.currentTimeMillis() }
+    internal var maintenanceRunCountForTests: Int = 0
+        private set
+
+    internal var maintenanceCompletedCountForTests: Int = 0
+        private set
     private var sentenceStartPending: Boolean = true
 
     private fun cancelPendingWordSuggestions() {
@@ -201,6 +306,7 @@ class SuggestionController(
         val localeSnapshot = currentLocale
         val layoutSnapshot = keyboardLayoutProvider()
         val primaryRepository = dictionaryRepository
+        val previousWordSnapshot = previousCompletedWord
         // This is a bounded hash lookup, independent of expensive suggestion ranking.
         // Publish the new label immediately rather than hiding the add button until results arrive.
         pendingAddUserWord = addWordCandidateFor(wordSnapshot, primaryRepository)
@@ -218,7 +324,24 @@ class SuggestionController(
             // Coalesce key repeat/backspace bursts before doing CPU-bound dictionary work.
             delay(40)
             val primary = if (primaryRepository.isReady) {
-                SuggestionEngine(primaryRepository, locale = localeSnapshot, debugLogging = debugLogging).apply {
+                SuggestionEngine(
+                    primaryRepository,
+                    locale = localeSnapshot,
+                    debugLogging = debugLogging,
+                    usageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getUsage(usageLocale, word)?.count ?: 0
+                    },
+                    exactUsageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getExactUsage(usageLocale, word)?.count ?: 0
+                    },
+                    correctionUsageCountProvider = { locale, original, correction ->
+                        correctionUsageStore.getUsage(
+                            locale = locale,
+                            original = original,
+                            correction = correction
+                        )?.count ?: 0
+                    }
+                ).apply {
                     setKeyboardLayout(layoutSnapshot)
                 }.suggest(
                     wordSnapshot,
@@ -233,8 +356,24 @@ class SuggestionController(
 
             coroutineContext.ensureActive()
             val extraSuggestions = extraRepositories.flatMap { (locale, repository) ->
-                coroutineContext.ensureActive()
-                SuggestionEngine(repository, locale = locale, debugLogging = debugLogging).apply {
+                SuggestionEngine(
+                    repository,
+                    locale = locale,
+                    debugLogging = debugLogging,
+                    usageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getUsage(usageLocale, word)?.count ?: 0
+                    },
+                    exactUsageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getExactUsage(usageLocale, word)?.count ?: 0
+                    },
+                    correctionUsageCountProvider = { locale, original, correction ->
+                        correctionUsageStore.getUsage(
+                            locale = locale,
+                            original = original,
+                            correction = correction
+                        )?.count ?: 0
+                    }
+                ).apply {
                     setKeyboardLayout(layoutSnapshot)
                 }.suggest(
                     wordSnapshot,
@@ -245,9 +384,60 @@ class SuggestionController(
                 )
             }
 
-            coroutineContext.ensureActive()
-            val next = mergeSuggestionResults(primary, extraSuggestions, settings.maxSuggestions, localeSnapshot)
-            val pendingCandidate = addWordCandidateFor(wordSnapshot, primaryRepository)
+            // Learned numbers and compounds can complete a prefix before personal-word promotion.
+            val contextualCompletions = if (wordSnapshot.isNotEmpty() && previousWordSnapshot != null) {
+                val prefix = WordNormalization.normalizeApostrophes(wordSnapshot).lowercase(localeSnapshot)
+                nextWordPredictor.predict(localeSnapshot, previousWordSnapshot, limit = 50)
+                    .filter {
+                        (it.candidate.all { char -> char.isDigit() } || '-' in it.candidate) &&
+                            WordNormalization.normalizeApostrophes(it.candidate).lowercase(localeSnapshot).startsWith(prefix)
+                    }
+                    .map { it.copy(kind = SuggestionKind.CURRENT_WORD,
+                        score = it.score + (primary.maxOfOrNull { candidate -> candidate.score } ?: 0.0) + 1.0) }
+            } else emptyList()
+
+            val next = mergeSuggestionResults(
+                primary + contextualCompletions,
+                extraSuggestions,
+                settings.maxSuggestions,
+                localeSnapshot
+            )
+
+            if (debugLogging) {
+                val usageCount =
+                    wordUsageStore.getUsage(localeSnapshot, wordSnapshot)?.count ?: 0
+
+                Log.d(
+                    "PastieraIME",
+                    "SUGGEST_DIAG word='$wordSnapshot' " +
+                            "locale=${localeSnapshot.toLanguageTag()} " +
+                            "usage=$usageCount " +
+                            "primary=${primary.joinToString { "${it.candidate}(${it.score})" }} " +
+                            "extra=${extraSuggestions.joinToString { "${it.candidate}(${it.score})" }} " +
+                            "merged=${next.joinToString { "${it.candidate}(${it.score})" }}"
+                )
+            }
+
+// Do not offer to add an incomplete word when a real dictionary suggestion
+// already completes what the user is typing.
+            val normalizedInput = WordNormalization.normalizeForSuggestion(wordSnapshot, localeSnapshot)
+            val hasDictionaryCompletion = normalizedInput.isNotEmpty() && next.any { suggestion ->
+                if (suggestion.kind != SuggestionKind.CURRENT_WORD) {
+                    false
+                } else {
+                    val normalizedSuggestion =
+                        WordNormalization.normalizeForSuggestion(suggestion.candidate, localeSnapshot)
+
+                    normalizedSuggestion.length > normalizedInput.length &&
+                            normalizedSuggestion.startsWith(normalizedInput)
+                }
+            }
+
+            val pendingCandidate = if (hasDictionaryCompletion) {
+                null
+            } else {
+                addWordCandidateFor(wordSnapshot, primaryRepository)
+            }
 
             cursorHandler.post {
                 if (!isEnabled() || generation != suggestionGeneration || tracker.currentWord != wordSnapshot) {
@@ -262,19 +452,32 @@ class SuggestionController(
 
     private fun addWordCandidateFor(word: String?, repository: DictionaryRepository = dictionaryRepository): String? {
         val candidate = word?.trim() ?: return null
-        if (candidate.isEmpty() || candidate.length > 48 || candidate.none { it.isLetterOrDigit() }) return null
+        if (candidate.isEmpty() || candidate.length > 48 || candidate.none { it.isLetter() }) return null
         if (!repository.isReady) return null
         return if (repository.isKnownWord(candidate)) null else candidate
     }
     var suggestionsListener: ((List<SuggestionResult>) -> Unit)? = onSuggestionsUpdated
 
-    fun onCharacterCommitted(text: CharSequence, inputConnection: InputConnection?) {
-        if (!isEnabled()) return
+    fun onCharacterCommitted(text: CharSequence, inputConnection: InputConnection?, replacesPreviousCharacter: Boolean = false) {
+        val statisticsText = if (replacesPreviousCharacter) "\b$text" else text
+        if (!isEnabled()) {
+            typingStatisticsTracker.onTextCommitted(statisticsText)
+            return
+        }
         if (debugLogging) {
             val caller = Throwable().stackTrace.getOrNull(1)?.let { "${it.className}#${it.methodName}:${it.lineNumber}" }
             Log.d("PlektraIME", "SuggestionController.onCharacterCommitted('$text') caller=$caller")
         }
         ensureDictionaryLoaded()
+
+        val wordBeforeCharacter = extractWordAtCursor(inputConnection)
+        val cursorOffsetBeforeCharacter = cursorOffsetInWord(inputConnection)
+        // Reuse the existing cursor inspection; statistics add no editor reads per key.
+        typingStatisticsTracker.onTextCommitted(
+            statisticsText,
+            wordBeforeCharacter?.take(cursorOffsetBeforeCharacter ?: wordBeforeCharacter.length),
+            cursorOffsetBeforeCharacter?.let { wordBeforeCharacter?.drop(it)?.take(1) }
+        )
 
         // Normalize curly/variant apostrophes to straight for tracking and suggestions.
         val normalizedText = text
@@ -282,6 +485,42 @@ class SuggestionController(
             .replace("'", "'")
             .replace("'", "'")
             .replace("ʼ", "'")
+        if (
+            normalizedText.length == 1 &&
+            normalizedText[0].isLetterOrDigit() &&
+            wordBeforeCharacter != null &&
+            cursorOffsetBeforeCharacter != null &&
+            cursorOffsetBeforeCharacter > 0 &&
+            cursorOffsetBeforeCharacter < wordBeforeCharacter.length
+        ) {
+            val insertedIndex = cursorOffsetBeforeCharacter - 1
+
+            if (
+                manualEditOriginalWord != null &&
+                manualEditExpectedWord != null
+            ) {
+                val expectedBeforeInsertion =
+                    wordBeforeCharacter.removeRange(
+                        insertedIndex,
+                        insertedIndex + 1
+                    )
+
+                if (expectedBeforeInsertion == manualEditExpectedWord) {
+                    manualEditExpectedWord = wordBeforeCharacter
+                } else {
+                    manualEditOriginalWord = null
+                    manualEditExpectedWord = null
+                }
+            } else {
+                manualEditOriginalWord =
+                    wordBeforeCharacter.removeRange(
+                        insertedIndex,
+                        insertedIndex + 1
+                    )
+
+                manualEditExpectedWord = wordBeforeCharacter
+            }
+        }
         
         // Clear last replacement if user types new characters
         autoReplaceController.clearLastReplacement()
@@ -292,12 +531,45 @@ class SuggestionController(
             pendingAddUserWord = null
         }
         
-        tracker.onCharacterCommitted(normalizedText)
+        if (replacesPreviousCharacter) {
+            if (wordBeforeCharacter != null) tracker.setWord(wordBeforeCharacter)
+            else { tracker.onBackspace(); tracker.onCharacterCommitted(normalizedText) }
+        } else tracker.onCharacterCommitted(normalizedText)
     }
 
     fun refreshFromInputConnection(inputConnection: InputConnection?) {
         if (!isEnabled()) return
+
+        val currentWord = extractWordAtCursor(inputConnection)
+        val cursorOffset = cursorOffsetInWord(inputConnection)
+
+        if (manualEditOriginalWord == null) {
+            manualEditOriginalWord = currentWord
+            manualEditExpectedWord = currentWord
+        } else if (
+            manualEditExpectedWord != null &&
+            currentWord != manualEditExpectedWord
+        ) {
+            manualEditOriginalWord = null
+            manualEditExpectedWord = null
+        }
         tracker.onBackspace()
+
+        manualEditExpectedWord =
+            manualEditOriginalWord?.let { original ->
+                val offset = cursorOffset
+
+                if (offset != null && offset > 0 && offset <= original.length) {
+                    original.removeRange(offset - 1, offset)
+                        .takeIf { it.isNotBlank() }
+                } else {
+                    null
+                }
+            }
+
+        if (manualEditExpectedWord == null) {
+            manualEditOriginalWord = null
+        }
     }
 
     fun onBoundaryKey(
@@ -313,13 +585,17 @@ class SuggestionController(
             )
         }
         ensureDictionaryLoaded()
+        val boundaryChar = boundaryCharOverride ?: boundaryCharFor(keyCode, event)
+        val alreadyCompletedSuggestion = rocks.pkb.plektra.core.AutoSpaceTracker
+            .consumeTrimmedSuggestionBoundary(inputConnection, boundaryChar)
+        if (alreadyCompletedSuggestion) tracker.reset()
 
         // Exact text replacements do not depend on dictionary suggestions. In particular,
         // onCharacterCommitted intentionally does not track characters while experimental
         // suggestions are disabled, so the editor is the source of truth at a boundary.
         // Keep this synchronous and independent of repository readiness: waiting for an
         // asynchronous dictionary load would lose the boundary that triggered the replacement.
-        if (inputConnection != null) {
+        if (inputConnection != null && !alreadyCompletedSuggestion) {
             val word = extractWordAtCursor(inputConnection, includeAfterCursor = false)
             if (!word.isNullOrBlank()) {
                 tracker.setWord(word, notify = false)
@@ -327,8 +603,25 @@ class SuggestionController(
             }
         }
 
-        val boundaryChar = boundaryCharOverride ?: boundaryCharFor(keyCode, event)
         val wordBeforeBoundary = tracker.currentWord.takeIf { it.isNotBlank() }
+
+        val originalBeforeManualEdit = manualEditOriginalWord
+
+        if (
+            originalBeforeManualEdit != null &&
+            wordBeforeBoundary != null &&
+            !originalBeforeManualEdit.equals(wordBeforeBoundary, ignoreCase = false) &&
+            dictionaryRepository.isAutoLearnedUserEntry(originalBeforeManualEdit)
+        ) {
+            learnCorrection(
+                original = originalBeforeManualEdit,
+                replacement = wordBeforeBoundary
+            )
+
+            manualEditOriginalWord = null
+            manualEditExpectedWord = null
+        }
+
         val result = autoReplaceController.handleBoundary(
             keyCode,
             event,
@@ -336,6 +629,8 @@ class SuggestionController(
             inputConnection,
             boundaryCharOverride = boundaryChar
         )
+
+        onTypingStatisticsBoundary()
         val completedWord = result.replacement ?: wordBeforeBoundary
         if (result.replaced) {
             pendingAddUserWord = addWordCandidateFor(result.replacement)
@@ -369,42 +664,233 @@ class SuggestionController(
         }
     }
 
+    private fun readCompletedWordsBeforeCursor(
+        inputConnection: InputConnection?,
+        excludeCurrentWord: Boolean = false
+    ): List<String> {
+        if (inputConnection == null) return emptyList()
+
+        val textBeforeCursor = inputConnection
+            .getTextBeforeCursor(CURSOR_WORD_CONTEXT_CHARS, 0)
+            ?.toString()
+            .orEmpty()
+
+        if (textBeforeCursor.isBlank()) return emptyList()
+
+        var completedText = textBeforeCursor
+        if (excludeCurrentWord) {
+            var end = completedText.length
+            while (end > 0 && !rocks.pkb.plektra.core.Punctuation.isWordBoundary(
+                    completedText[end - 1], completedText.getOrNull(end - 2), completedText.getOrNull(end))) end--
+            completedText = completedText.substring(0, end)
+        }
+        // Cursor refresh must not resurrect the previous sentence as learning context.
+        val sentenceBoundary = completedText.indexOfLast { it == '.' || it == '!' || it == '?' || it == '\n' }
+        val trimmed = completedText.substring(sentenceBoundary + 1).trimEnd()
+        if (trimmed.isEmpty()) return emptyList()
+
+        return trimmed
+            .split(Regex("\\s+"))
+            .map { token ->
+                token.trim { ch ->
+                    !ch.isLetterOrDigit() &&
+                            ch != '\'' &&
+                            ch != '’' &&
+                            ch != '-'
+                }
+            }
+            .filter { it.isNotBlank() }
+            .takeLast(PhraseUsageStore.MAX_SEQUENCE_LENGTH - 1)
+    }
+
+    private fun readPreviousWordBeforeCursor(
+        inputConnection: InputConnection?
+    ): String? {
+        if (inputConnection == null) return null
+
+        val textBeforeCursor = inputConnection
+            .getTextBeforeCursor(CURSOR_WORD_CONTEXT_CHARS, 0)
+            ?.toString()
+            .orEmpty()
+
+        if (textBeforeCursor.isBlank()) return null
+
+        val trimmed = textBeforeCursor.trimEnd()
+        if (trimmed.isEmpty()) return null
+
+        val end = trimmed.length
+        var start = end
+
+        while (
+            start > 0 &&
+            (
+                    trimmed[start - 1].isLetterOrDigit() ||
+                            trimmed[start - 1] == '\'' ||
+                            trimmed[start - 1] == '’' ||
+                            trimmed[start - 1] == '-'
+                    )
+        ) {
+            start--
+        }
+
+        if (start == end) return null
+
+        return trimmed.substring(start, end)
+    }
+
     fun onCursorMoved(inputConnection: InputConnection?) {
         if (!isEnabled()) return
+
         ensureDictionaryLoaded()
         cursorRunnable?.let { cursorHandler.removeCallbacks(it) }
+
         if (inputConnection == null) {
             tracker.reset()
             previousCompletedWord = null
+            recentCompletedWords.clear()
             sentenceStartPending = true
             suggestionsListener?.invoke(emptyList())
             return
         }
+
         cursorRunnable = Runnable {
             if (!isEnabled()) return@Runnable
             if (!dictionaryRepository.isReady) {
-                tracker.reset()
-                previousCompletedWord = null
-                suggestionsListener?.invoke(emptyList())
                 return@Runnable
             }
+
             val word = extractWordAtCursor(inputConnection)
-            if (!word.isNullOrBlank()) {
+            val lastChar = lastCharBeforeCursor(inputConnection)
+
+            if (
+                !word.isNullOrBlank() &&
+                !isSoftPredictionBoundary(boundaryChar = lastChar)
+            ) {
+                val contextFromCursor = readCompletedWordsBeforeCursor(inputConnection, excludeCurrentWord = true)
+                previousCompletedWord = contextFromCursor.lastOrNull()
+                recentCompletedWords.clear()
+                contextFromCursor.forEach { recentCompletedWords.addLast(it) }
+                sentenceStartPending = previousCompletedWord == null
                 tracker.setWord(word)
             } else {
                 tracker.reset()
+
+                val contextFromCursor =
+                    readCompletedWordsBeforeCursor(inputConnection)
+
+                val previousFromCursor =
+                    contextFromCursor.lastOrNull()
+
+                if (previousFromCursor != null) {
+                    previousCompletedWord = previousFromCursor
+
+                    recentCompletedWords.clear()
+                    contextFromCursor.forEach { word ->
+                        recentCompletedWords.addLast(word)
+                    }
+
+                    sentenceStartPending = false
+                }
+
                 val previous = previousCompletedWord
-                val lastChar = lastCharBeforeCursor(inputConnection)
-                if (previous != null && isSoftPredictionBoundary(lastChar)) {
-                    publishNextWordPredictions(previous)
+
+                if (
+                    previous != null &&
+                    isSoftPredictionBoundary(boundaryChar = lastChar)
+                ) {
+                    val suppressPrediction =
+                        android.os.SystemClock.uptimeMillis() <
+                                suppressCursorPredictionUntilMs
+
+                    if (!suppressPrediction) {
+                        publishNextWordPredictions(
+                            previousWord = previous
+                        )
+                    }
                 } else {
                     previousCompletedWord = null
+                    recentCompletedWords.clear()
                     sentenceStartPending = true
                     publishSentenceStartPredictionsOrStarter()
                 }
             }
         }
-        cursorHandler.postDelayed(cursorRunnable!!, cursorDebounceMs)
+
+        cursorHandler.postDelayed(
+            cursorRunnable!!,
+            cursorDebounceMs
+        )
+    }
+
+    fun learnCorrection(
+        original: String,
+        replacement: String
+    ) {
+
+        if (!isEnabled() || LearningOperationGate.isLearningSuspended) return
+
+        if (original.isBlank() || replacement.isBlank()) return
+        if (
+            original.any { it.isWhitespace() } ||
+            replacement.any { it.isWhitespace() }
+        ) return
+
+        if (!original.equals(replacement, ignoreCase = true)) {
+            wordUsageStore.delete(currentLocale, original)
+
+            dictionaryRepositoryCache.values
+                .ifEmpty { listOf(dictionaryRepository) }
+                .forEach { repository ->
+                    repository.removeAutoLearnedUserEntry(original)
+                }
+        }
+
+        correctionUsageStore.learn(
+            locale = currentLocale,
+            original = original,
+            correction = replacement
+        )
+    }
+
+    fun onSuggestionCommitted(suggestion: String) {
+        typingStatisticsTracker.onSuggestionCommitted(suggestion)
+        if (!isEnabled() || LearningOperationGate.isLearningSuspended) return
+
+
+        val committedWords = suggestion
+            .trim()
+            .split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+
+        if (committedWords.isEmpty()) return
+        cancelPendingWordSuggestions()
+        tracker.reset()
+        pendingAddUserWord = null
+
+        committedWords.forEach { word ->
+            previousCompletedWord?.let { previous ->
+                nextWordPredictor.learn(
+                    currentLocale,
+                    previous,
+                    word
+                )
+            }
+
+            learnPhraseUsage(word)
+
+            previousCompletedWord = word
+            sentenceStartPending = false
+        }
+        previousCompletedWord?.let { publishNextWordPredictions(it) }
+    }
+
+    fun onTypingStatisticsBoundary() { typingStatisticsTracker.finishWord() }
+
+    fun onTypingStatisticsBackspace() { typingStatisticsTracker.onBackspace() }
+
+    fun finishTypingStatistics() {
+        typingStatisticsTracker.finishWord()
+        typingStatisticsStore.flush()
     }
 
     fun onContextReset() {
@@ -416,6 +902,7 @@ class SuggestionController(
         tracker.onContextChanged()
         pendingAddUserWord = null
         previousCompletedWord = null
+        recentCompletedWords.clear()
         sentenceStartPending = true
         suggestionsListener?.invoke(emptyList())
     }
@@ -504,26 +991,94 @@ class SuggestionController(
         suggestionsListener?.invoke(next)
     }
 
-    private fun forgetNextWordSuggestion(candidate: String, hardDeleteEverywhere: Boolean) {
-        val locales = listOf(currentLocale) + activeExtraLocales()
-        locales.forEach { locale ->
-            if (hardDeleteEverywhere) {
-                nextWordPredictor.forgetNextWordEverywhere(locale, candidate)
-            } else {
-                val previous = previousCompletedWord
-                if (previous != null) {
-                    nextWordPredictor.forget(locale, previous, candidate)
+        private fun forgetNextWordSuggestion(candidate: String, hardDeleteEverywhere: Boolean) {
+            val locales = listOf(currentLocale) + activeExtraLocales()
+            locales.forEach { locale ->
+                if (hardDeleteEverywhere) {
+                    nextWordPredictor.forgetNextWordEverywhere(locale, candidate)
                 } else {
-                    nextWordPredictor.forgetSentenceStart(locale, candidate)
+                    val previous = previousCompletedWord
+                    if (previous != null) {
+                        nextWordPredictor.forget(locale, previous, candidate)
+                    } else {
+                        nextWordPredictor.forgetSentenceStart(locale, candidate)
+                    }
                 }
             }
         }
-    }
 
     /**
      * Forces a refresh of user dictionary entries.
      * Should be called when words are added/removed from settings.
      */
+    /**
+     * Reloads the active base dictionary after an Extended dictionary is
+     * installed or removed.
+     *
+     * The repository cache must be invalidated first because the active
+     * repository may still contain the previously loaded Basic or Extended
+     * dictionary for the same language.
+     */
+    fun refreshBaseDictionary() {
+        if (!isEnabled()) return
+
+        // Stop any load that may still be using the previous repository.
+        currentLoadJob?.cancel()
+        currentLoadJob = null
+        cancelPendingWordSuggestions()
+
+        pendingInitialContextConnection = null
+        pendingPrimaryRefreshAfterLoad = false
+        pendingExtraRefreshAfterLoad = false
+
+        // Remove the cached repository for the active language.
+        /*
+         * A base dictionary update may affect either the primary language or one of
+         * the additional suggestion languages. Invalidate all cached repositories so
+         * that each language reloads its current Basic or Extended dictionary the next
+         * time it is used.
+         */
+        dictionaryRepositoryCache.clear()
+
+        // Recreate every component that depends on the primary repository.
+        dictionaryRepository = createDictionaryRepository(currentLocale)
+
+        suggestionEngine = SuggestionEngine(
+            dictionaryRepository,
+            locale = currentLocale,
+            debugLogging = debugLogging,
+            usageCountProvider = { locale, word ->
+                wordUsageStore.getUsage(locale, word)?.count ?: 0
+            },
+            exactUsageCountProvider = { locale, word ->
+                wordUsageStore.getExactUsage(locale, word)?.count ?: 0
+            },
+            correctionUsageCountProvider = { locale, original, correction ->
+        correctionUsageStore.getUsage(
+            locale = locale,
+            original = original,
+            correction = correction
+        )?.count ?: 0
+    }
+        ).apply {
+            setKeyboardLayout(keyboardLayoutProvider())
+        }
+
+        autoReplaceController = createAutoReplaceController()
+
+        /*
+         * Extra-language engines may also reference cached repositories.
+         * Recreate them lazily when they are needed again.
+         */
+        extraSuggestionEngines.clear()
+
+        // Start loading the newly selected Basic or Extended dictionary.
+        schedulePrimaryDictionaryLoad(refreshAfterLoad = true)
+
+        // Clear suggestions produced from the previous base dictionary.
+        latestSuggestions.set(emptyList())
+        suggestionsListener?.invoke(emptyList())
+    }
     fun refreshUserDictionary() {
         if (!isEnabled()) return
         loadScope.launch {
@@ -537,12 +1092,60 @@ class SuggestionController(
         }
     }
 
+    fun invalidateCorrectionUsageCache() {
+        correctionUsageStore.invalidateCache()
+    }
+
+
+    fun invalidateWordUsageCache() {
+        (wordUsageStore as? WordUsageStore)?.invalidateCache()
+    }
+
+    fun invalidateMultiWordCache() {
+        multiWordStore.invalidateCache()
+    }
+
+
+    suspend fun flushPendingNextWordLearning() {
+        nextWordPredictor.flushPendingLearning()
+    }
+
+
+    suspend fun awaitLearningMaintenance() {
+        maintenanceJob?.join()
+    }
+
+
+
+
     fun handleBackspaceUndo(keyCode: Int, inputConnection: InputConnection?): Boolean {
         if (!isEnabled()) return false
-        val undone = autoReplaceController.handleBackspaceUndo(keyCode, inputConnection)
+
+        val undone = autoReplaceController.handleBackspaceUndo(
+            keyCode,
+            inputConnection
+        )
+
         if (undone) {
-            pendingAddUserWord = autoReplaceController.consumeLastUndoOriginalWord()
+            val restoredWord =
+                autoReplaceController.consumeLastUndoOriginalWord()
+
+            val rejectedWord =
+                autoReplaceController.consumeLastUndoRejectedWord()
+
+            pendingAddUserWord = restoredWord
+
+            if (
+                !restoredWord.isNullOrBlank() &&
+                !rejectedWord.isNullOrBlank()
+            ) {
+                learnCorrection(
+                    original = rejectedWord,
+                    replacement = restoredWord
+                )
+            }
         }
+
         return undone
     }
 
@@ -560,14 +1163,184 @@ class SuggestionController(
         nextWordPredictor.flushLearningForTests()
     }
 
+    internal fun noteCompletedWordForMaintenanceForTests() {
+        noteCompletedWordForMaintenance()
+    }
+    internal fun setMaintenanceNowMsForTests(nowMs: Long) {
+        maintenanceNowMsProvider = { nowMs }
+    }
+
+    internal fun maybeConsolidateUnknownWordForTests(word: String) {
+        maybeConsolidateUnknownWord(word)
+    }
+
+    internal fun waitForMaintenanceForTests() {
+        kotlinx.coroutines.runBlocking {
+            maintenanceJob?.join()
+        }
+    }
+
     fun destroy() {
+        finishTypingStatistics()
         currentLoadJob?.cancel()
         suggestionJob?.cancel()
+        maintenanceJob?.cancel()
+        maintenanceJob = null
         cursorRunnable?.let { cursorHandler.removeCallbacks(it) }
         nextWordPredictor.destroy()
     }
 
-    private fun handleCompletedWordBoundary(completedWord: String?, boundaryChar: Char?) {
+    private fun learnPhraseUsage(
+        completedWord: String
+    ): List<List<String>> {
+        if (!settingsProvider().multiWordSuggestionsEnabled) {
+            recentCompletedWords.clear()
+            return emptyList()
+        }
+
+        recentCompletedWords.addLast(completedWord)
+
+        while (recentCompletedWords.size > PhraseUsageStore.MAX_SEQUENCE_LENGTH) {
+            recentCompletedWords.removeFirst()
+        }
+
+        val words = recentCompletedWords.toList()
+        val learnedSequences = mutableListOf<List<String>>()
+
+        for (length in PhraseUsageStore.MIN_SEQUENCE_LENGTH..words.size) {
+            val sequence = words.takeLast(length)
+
+            phraseUsageStore.learn(
+                currentLocale,
+                sequence
+            )
+
+            learnedSequences += sequence
+        }
+
+        return learnedSequences
+    }
+
+    private fun promoteEligibleMultiWordSequences() {
+        if (!settingsProvider().multiWordSuggestionsEnabled) {
+            return
+        }
+
+        multiWordPromotionEngine.promoteEligible(
+            locale = currentLocale
+        )
+    }
+
+    private fun maybeConsolidateUnknownWord(word: String) {
+        if (word.length < 3 || word.none { it.isLetter() }) return
+
+        // A normal dictionary word does not need promotion to personal vocabulary.
+        if (isKnownWordInActiveDictionaries(word)) return
+
+        val usage = wordUsageStore.getUsage(currentLocale, word) ?: return
+        if (usage.count < UNKNOWN_WORD_PROMOTION_THRESHOLD) return
+
+        userDictionaryStore.addAutoLearnedWord(
+            appContext,
+            usage.word
+        )
+
+        dictionaryRepositoryCache.values
+            .ifEmpty { listOf(dictionaryRepository) }
+            .forEach { repository ->
+                repository.indexStoredUserEntryQuick(usage.word)
+            }
+    }
+
+    private fun noteCompletedWordForMaintenance() {
+
+        if (LearningOperationGate.isLearningSuspended) {
+            return
+        }
+
+        completedWordsSinceMaintenance++
+
+        if (completedWordsSinceMaintenance < LEARNING_MAINTENANCE_INTERVAL_WORDS) {
+            return
+        }
+
+        completedWordsSinceMaintenance = 0
+
+        if (maintenanceJob?.isActive == true) {
+            return
+        }
+
+        maintenanceJob = loadScope.launch {
+            maintenanceRunCountForTests++
+
+            val nowMs = maintenanceNowMsProvider()
+
+            val removedAutoLearnedWords =
+                userDictionaryStore.pruneAutoLearnedWords(
+                    context = appContext,
+                    nowMs = nowMs,
+                    staleAfterMs = AUTO_LEARNED_STALE_AFTER_MS,
+                    weakFrequencyThreshold = AUTO_LEARNED_WEAK_FREQUENCY_THRESHOLD,
+                    maxEntries = AUTO_LEARNED_MAX_ENTRIES
+                )
+
+            if (removedAutoLearnedWords.isNotEmpty()) {
+                dictionaryRepositoryCache.values
+                    .ifEmpty { listOf(dictionaryRepository) }
+                    .forEach { repository ->
+                        removedAutoLearnedWords.forEach { word ->
+                            repository.removeStoredUserEntryQuick(word)
+                        }
+                    }
+            }
+
+            ensureActive()
+
+            wordUsageStore.prune(
+                nowMs = nowMs,
+                staleAfterMs = WORD_USAGE_STALE_AFTER_MS,
+                weakCountThreshold = WORD_USAGE_WEAK_COUNT_THRESHOLD,
+                maxEntriesPerLocale = WORD_USAGE_MAX_ENTRIES_PER_LOCALE
+            )
+
+            ensureActive()
+
+            nextWordPredictor.prune(
+                nowMs = nowMs,
+                staleAfterMs = NGRAM_STALE_AFTER_MS,
+                weakCountThreshold = NGRAM_WEAK_COUNT_THRESHOLD,
+                maxEntriesPerLocale = NGRAM_MAX_ENTRIES_PER_LOCALE
+            )
+
+            ensureActive()
+
+            phraseUsageStore.prune(
+                nowMs = nowMs,
+                staleAfterMs = PHRASE_USAGE_STALE_AFTER_MS,
+                weakCountThreshold = PHRASE_USAGE_WEAK_COUNT_THRESHOLD,
+                maxEntriesPerLocale = PHRASE_USAGE_MAX_ENTRIES_PER_LOCALE
+            )
+
+            ensureActive()
+
+            // The broad eligibility scan belongs to maintenance, not to every
+            // word boundary. Newly learned sequences are promoted individually.
+            promoteEligibleMultiWordSequences()
+            multiWordPromotionEngine.demoteIneligibleAll()
+
+            ensureActive()
+
+            maintenanceCompletedCountForTests++
+        }
+    }
+
+    private fun handleCompletedWordBoundary(
+        completedWord: String?,
+        boundaryChar: Char?
+    ) {
+        if (LearningOperationGate.isLearningSuspended) {
+            return
+        }
         val settings = settingsProvider()
         if (!settings.suggestionsEnabled) {
             previousCompletedWord = null
@@ -576,33 +1349,103 @@ class SuggestionController(
             return
         }
 
-        val cleanWord = completedWord?.trim()?.takeIf { it.any { ch -> ch.isLetterOrDigit() } }
+        val cleanWord = completedWord
+            ?.trim()
+            ?.takeIf { it.any { ch -> ch.isLetterOrDigit() } }
+
+        Log.d(
+            "PastieraPhraseDebug",
+            "completed='$completedWord' clean='$cleanWord' " +
+                    "previous='$previousCompletedWord' " +
+                    "context=${recentCompletedWords.toList()} " +
+                    "locale=${currentLocale.toLanguageTag()}"
+        )
+
+        val originalBeforeManualEdit = manualEditOriginalWord
+        val expectedAfterManualEdit = manualEditExpectedWord
+
+        manualEditOriginalWord = null
+        manualEditExpectedWord = null
+
+        if (
+            originalBeforeManualEdit != null &&
+            expectedAfterManualEdit != null &&
+            cleanWord != null &&
+            cleanWord == expectedAfterManualEdit &&
+            !originalBeforeManualEdit.equals(cleanWord, ignoreCase = false)
+        ) {
+            learnCorrection(
+                original = originalBeforeManualEdit,
+                replacement = cleanWord
+            )
+        }
+
         if (cleanWord != null) {
+            wordUsageStore.learn(currentLocale, cleanWord)
+            maybeConsolidateUnknownWord(cleanWord)
+
+            val learnedPhraseSequences =
+                learnPhraseUsage(cleanWord)
+
             if (sentenceStartPending) {
-                nextWordPredictor.learnSentenceStart(currentLocale, cleanWord)
+                nextWordPredictor.learnSentenceStart(
+                    currentLocale,
+                    cleanWord
+                )
             }
+
             previousCompletedWord?.let { previous ->
-                nextWordPredictor.learn(currentLocale, previous, cleanWord)
+                nextWordPredictor.learn(
+                    currentLocale,
+                    previous,
+                    cleanWord
+                )
             }
+
+            learnedPhraseSequences.forEach { sequence ->
+                multiWordStore.markUsed(
+                    locale = currentLocale,
+                    words = sequence
+                )
+
+                multiWordPromotionEngine.promoteIfEligible(
+                    locale = currentLocale,
+                    words = sequence
+                )
+            }
+
+            noteCompletedWordForMaintenance()
         }
 
         when {
             cleanWord != null && isSoftPredictionBoundary(boundaryChar) -> {
                 previousCompletedWord = cleanWord
                 sentenceStartPending = false
-                publishNextWordPredictions(cleanWord)
+                suppressCursorPredictionUntilMs =
+                    android.os.SystemClock.uptimeMillis() +
+                            CURSOR_PREDICTION_SUPPRESSION_MS
+
+                publishNextWordPredictions(
+                    previousWord = cleanWord
+                )
             }
+
             cleanWord == null && isSoftPredictionBoundary(boundaryChar) -> {
                 val previous = previousCompletedWord
+
                 if (previous != null) {
-                    publishNextWordPredictions(previous)
+                    publishNextWordPredictions(
+                        previousWord = previous
+                    )
                 } else {
                     latestSuggestions.set(emptyList())
                     suggestionsListener?.invoke(emptyList())
                 }
             }
+
             else -> {
                 previousCompletedWord = null
+                recentCompletedWords.clear()
                 sentenceStartPending = true
                 latestSuggestions.set(emptyList())
                 suggestionsListener?.invoke(emptyList())
@@ -610,24 +1453,324 @@ class SuggestionController(
         }
     }
 
-    private fun publishNextWordPredictions(previousWord: String) {
+    private fun phrasePredictions(
+        limit: Int
+    ): List<PhraseUsageStore.Prediction> {
+        if (!settingsProvider().multiWordSuggestionsEnabled) {
+            return emptyList()
+        }
+
+        if (limit <= 0 || recentCompletedWords.isEmpty()) {
+            return emptyList()
+        }
+
+        return phraseUsageStore.predictNext(
+            locale = currentLocale,
+            contextWords = recentCompletedWords.toList(),
+            limit = limit
+        )
+    }
+
+
+
+    private fun promotedMultiWordPredictions(
+        phrasePredictions: List<PhraseUsageStore.Prediction>,
+        limit: Int
+    ): List<SuggestionResult> {
+        if (!settingsProvider().multiWordSuggestionsEnabled || limit <= 0) {
+            return emptyList()
+        }
+
+        val context = recentCompletedWords
+            .map {
+                WordNormalization.normalizeForSuggestion(it, currentLocale)
+            }
+            .filter { it.isNotBlank() }
+
+        if (context.isEmpty()) return emptyList()
+
+        val predictedWords = phrasePredictions.associateBy {
+            WordNormalization.normalizeForSuggestion(it.word, currentLocale)
+        }
+
+        return multiWordStore.getForLocale(currentLocale)
+            .asSequence()
+            .flatMap { entry ->
+                val normalized = entry.normalizedWords
+
+                if (normalized.size < 2) {
+                    return@flatMap emptySequence<SuggestionResult>()
+                }
+
+                val matchLength =
+                    (minOf(context.size, normalized.size - 1) downTo 1)
+                        .firstOrNull { length ->
+                            context.takeLast(length) == normalized.take(length)
+                        }
+                        ?: return@flatMap emptySequence<SuggestionResult>()
+
+                val remainingWords = entry.words.drop(matchLength)
+
+                if (remainingWords.isEmpty()) {
+                    return@flatMap emptySequence<SuggestionResult>()
+                }
+
+                val prediction = predictedWords[normalized[matchLength]]
+                    ?: return@flatMap emptySequence<SuggestionResult>()
+
+                val baseScore =
+                    matchLength * 1_000_000.0 +
+                            prediction.count.toDouble() +
+                            entry.phraseCount.toDouble()
+
+                remainingWords.indices.asSequence().map { index ->
+                    val candidate = remainingWords
+                        .take(index + 1)
+                        .joinToString(" ")
+
+                    SuggestionResult(
+                        candidate = candidate,
+                        distance = 0,
+                        score = baseScore - index * 0.01,
+                        source = SuggestionSource.USER,
+                        kind = SuggestionKind.NEXT_WORD
+                    )
+                }
+            }
+            .distinctBy { it.candidate.lowercase(currentLocale) }
+            .sortedByDescending { it.score }
+            .take(limit)
+            .toList()
+    }
+
+
+
+    private fun canonicalizeNextWordPrediction(
+        result: SuggestionResult,
+        locale: Locale,
+        repository: DictionaryRepository
+    ): SuggestionResult {
+        if (result.kind != SuggestionKind.NEXT_WORD) {
+            return result
+        }
+
+        if (result.candidate.any { it.isWhitespace() }) {
+            return result
+        }
+
+        if (!repository.isReady) {
+            return result
+        }
+
+        val normalized =
+            WordNormalization.normalizeForSuggestion(
+                result.candidate,
+                locale
+            )
+
+        if (result.candidate.contains("souviens", ignoreCase = true)) {
+            val entries = repository.topByNormalized(normalized, limit = 16)
+
+            android.util.Log.d(
+                "PastieraSouviensRepo",
+                "candidate='${result.candidate}' normalized='$normalized' " +
+                        "entries=${entries.joinToString { "'${it.word}'(${it.source})" }}"
+            )
+        }
+
+        val canonical = repository
+            .topByNormalized(normalized, limit = 16)
+            .filter { entry ->
+                entry.word.equals(result.candidate, ignoreCase = true)
+            }
+            .let { entries ->
+                // Prefer the lowercase dictionary form when both sentence-initial
+                // and ordinary spellings exist. Preserve mixed-case proper names
+                // and acronyms when there is no lowercase dictionary alternative.
+                entries.firstOrNull { it.word == it.word.lowercase(locale) }
+                    ?: entries.firstOrNull()
+            }
+            ?.word
+            ?: return result
+
+        return result.copy(candidate = canonical)
+    }
+    private fun publishNextWordPredictions(
+        previousWord: String
+    ) {
         val settings = settingsProvider()
+
         val primary = nextWordPredictor.predict(
             currentLocale,
             previousWord,
             settings.maxSuggestions
+        ).map { result ->
+            canonicalizeNextWordPrediction(
+                result = result,
+                locale = currentLocale,
+                repository = dictionaryRepository
+            )
+        }
+
+        val extraLocales = activeExtraLocales()
+        val extras = extraLocales.flatMap { locale ->
+            val repository = dictionaryRepositoryCache[dictionaryCacheKey(locale)]
+
+            nextWordPredictor.predict(
+                locale,
+                previousWord,
+                settings.maxSuggestions
+            ).map { result ->
+                if (repository != null) {
+                    canonicalizeNextWordPrediction(
+                        result = result,
+                        locale = locale,
+                        repository = repository
+                    )
+                } else {
+                    result
+                }
+            }
+        }
+
+        val phrasePredictions = phrasePredictions(
+            limit = maxOf(settings.maxSuggestions, 30)
         )
-        val extras = activeExtraLocales().flatMap { locale ->
-            nextWordPredictor.predict(locale, previousWord, settings.maxSuggestions)
-        }
-        val predictions = mergeSuggestionResults(primary, extras, settings.maxSuggestions)
-        val suggestions = fillWithStarterSuggestions(predictions, settings)
-        if (suggestions.isNotEmpty()) {
-            latestSuggestions.set(suggestions)
-            suggestionsListener?.invoke(suggestions)
+
+        val phraseSingleWord = phrasePredictions
+            .filter { it.words.size == 1 }
+            .map { prediction ->
+                canonicalizeNextWordPrediction(
+                    result = SuggestionResult(
+                        candidate = prediction.word,
+                        distance = 0,
+                        score =
+                            (if (prediction.contextLength > 1) prediction.contextLength * 1_000_000.0 else 0.0) +
+                                    prediction.count.toDouble(),
+                        source = SuggestionSource.USER,
+                        kind = SuggestionKind.NEXT_WORD
+                    ),
+                    locale = currentLocale,
+                    repository = dictionaryRepository
+                )
+            }
+
+
+        val directlyPromotedMultiWord = promotedMultiWordPredictions(
+            phrasePredictions = phrasePredictions,
+            limit = settings.maxSuggestions
+        )
+
+        val predictedFirstWords = (phraseSingleWord + primary)
+            .map { prediction ->
+                WordNormalization.normalizeForSuggestion(
+                    prediction.candidate,
+                    currentLocale
+                )
+            }
+            .toSet()
+
+        val chainedMultiWord = if (
+            settings.multiWordSuggestionsEnabled &&
+            predictedFirstWords.isNotEmpty()
+        ) {
+            multiWordStore.getForLocale(currentLocale)
+                .asSequence()
+                .filter { entry ->
+                    entry.words.size >= 2 &&
+                            entry.normalizedWords.firstOrNull() in predictedFirstWords
+                }
+                .flatMap { entry ->
+                    val firstWord = entry.words.first()
+                    val remainingWords = entry.words.drop(1)
+
+                    remainingWords.indices.asSequence().map { index ->
+                        val candidate = (
+                                listOf(firstWord) + remainingWords.take(index + 1)
+                                ).joinToString(" ")
+
+                        SuggestionResult(
+                            candidate = candidate,
+                            distance = 0,
+                            score = entry.phraseCount.toDouble(),
+                            source = SuggestionSource.USER,
+                            kind = SuggestionKind.NEXT_WORD
+                        )
+                    }
+                }
+                .distinctBy { it.candidate.lowercase(currentLocale) }
+                .sortedByDescending { it.score }
+                .take(settings.maxSuggestions)
+                .toList()
         } else {
-            publishStarterSuggestions()
+            emptyList()
         }
+
+        val promotedMultiWord = (
+                directlyPromotedMultiWord + chainedMultiWord
+                ).map { result ->
+                result.copy(
+                    candidate = result.candidate
+                        .split(Regex("\\s+"))
+                        .joinToString(" ") { word ->
+                            canonicalizeNextWordPrediction(
+                                result.copy(candidate = word),
+                                currentLocale,
+                                dictionaryRepository
+                            ).candidate
+                        }
+                )
+            }.distinctBy {
+                it.candidate.lowercase(currentLocale)
+            }
+
+
+
+        val rankedPredictions = mergeSuggestionResults(
+            promotedMultiWord + phraseSingleWord + primary,
+            extras,
+            settings.maxSuggestions
+        )
+
+        val bestMultiWord = promotedMultiWord.firstOrNull {
+            it.candidate.any { char -> char.isWhitespace() }
+        }
+
+        val predictions = if (
+            bestMultiWord != null &&
+            settings.maxSuggestions > 0 &&
+            rankedPredictions.none {
+                it.candidate.equals(bestMultiWord.candidate, ignoreCase = true)
+            }
+        ) {
+            val remaining = rankedPredictions
+                .filterNot {
+                    it.candidate.equals(bestMultiWord.candidate, ignoreCase = true)
+                }
+                .take(settings.maxSuggestions - 1)
+
+            remaining + bestMultiWord
+        } else {
+            rankedPredictions
+        }
+
+        android.util.Log.d(
+            "PastieraSouviensRun",
+            "prev='$previousWord' " +
+                    "primary=${primary.joinToString { "'${it.candidate}'" }} " +
+                    "phraseSingle=${phraseSingleWord.joinToString { "'${it.candidate}'" }} " +
+                    "promoted=${promotedMultiWord.joinToString { "'${it.candidate}'" }} " +
+                    "extras=${extras.joinToString { "'${it.candidate}'" }} " +
+                    "FINAL=${predictions.joinToString { "'${it.candidate}'" }}"
+        )
+
+        // After a completed word, only genuine contextual predictions belong here.
+        // Do not fill empty slots with generic starter words: doing so can surface
+        // unrelated high-frequency words from the primary or extra dictionaries.
+        val suggestions = predictions
+
+        latestSuggestions.set(suggestions)
+        suggestionsListener?.invoke(suggestions)
     }
 
     private fun publishSentenceStartPredictionsOrStarter() {
@@ -647,6 +1790,7 @@ class SuggestionController(
     }
 
     private fun publishStarterSuggestions() {
+
         val settings = settingsProvider()
         if (!settings.suggestionsEnabled || !dictionaryRepository.isReady) {
             latestSuggestions.set(emptyList())
@@ -660,6 +1804,7 @@ class SuggestionController(
     }
 
     private fun starterSuggestions(settings: SuggestionSettings): List<SuggestionResult> {
+
         val primary = starterSuggestionsFor(dictionaryRepository, PRIMARY_SUGGESTION_BOOST, settings.maxSuggestions)
         val extras = activeExtraSuggestionEngines().flatMap { extra ->
             if (!extra.repository.isReady) {
@@ -708,13 +1853,17 @@ class SuggestionController(
         scoreBoost: Double,
         limit: Int
     ): List<SuggestionResult> {
-        return repository.topCommonEntries(limit * 3)
+        val starterEntries = repository.topCommonEntries(
+            limit = limit,
+            includeUserEntries = false
+        )
+
+        return starterEntries
             .map { entry ->
                 SuggestionResult(
                     candidate = entry.word,
                     distance = 0,
-                    score = repository.effectiveFrequency(entry) / 1_600.0 + scoreBoost +
-                        if (entry.source == SuggestionSource.USER) 5.0 else 0.0,
+                    score = repository.effectiveFrequency(entry) / 1_600.0 + scoreBoost,
                     source = entry.source,
                     kind = SuggestionKind.STARTER_WORD
                 )
@@ -758,7 +1907,17 @@ class SuggestionController(
             val tag = locale.toLanguageTag()
             extraSuggestionEngines.getOrPut(tag) {
                 val repository = createDictionaryRepository(locale)
-                val engine = SuggestionEngine(repository, locale = locale, debugLogging = debugLogging).apply {
+                val engine = SuggestionEngine(
+                    repository,
+                    locale = locale,
+                    debugLogging = debugLogging,
+                    usageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getUsage(usageLocale, word)?.count ?: 0
+                    },
+                            exactUsageCountProvider = { usageLocale, word ->
+                        wordUsageStore.getExactUsage(usageLocale, word)?.count ?: 0
+                    }
+                ).apply {
                     setKeyboardLayout(keyboardLayoutProvider())
                 }
                 SuggestionLanguageEngine(locale, repository, engine)
@@ -774,6 +1933,15 @@ class SuggestionController(
             loadScope.launch {
                 try {
                     repository.loadIfNeeded()
+
+// Warm up the starter-word cache for this repository off the main thread.
+                    if (repository.isReady) {
+                        repository.topCommonEntries(
+                            limit = settingsProvider().maxSuggestions,
+                            includeUserEntries = false
+                        )
+                    }
+
                     val shouldRefresh = refreshAfterLoad || pendingExtraRefreshAfterLoad
                     if (shouldRefresh && repository.isReady) {
                         pendingExtraRefreshAfterLoad = false
@@ -836,6 +2004,42 @@ class SuggestionController(
         val currentWord = extractWordAtCursor(inputConnection)
         if (currentWord == null || !currentWord.equals(pending, ignoreCase = true)) {
             pendingAddUserWord = null
+        }
+    }
+
+    private fun cursorOffsetInWord(
+        inputConnection: InputConnection?
+    ): Int? {
+        if (inputConnection == null) return null
+
+        return try {
+            val before = inputConnection
+                .getTextBeforeCursor(CURSOR_WORD_CONTEXT_CHARS, 0)
+                ?.toString()
+                ?: return null
+
+            var start = before.length
+
+            while (start > 0) {
+                val ch = before[start - 1]
+                val prev = before.getOrNull(start - 2)
+                val next = before.getOrNull(start)
+
+                if (!rocks.pkb.plektra.core.Punctuation.isWordBoundary(
+                        ch,
+                        prev,
+                        next
+                    )
+                ) {
+                    start--
+                } else {
+                    break
+                }
+            }
+
+            before.length - start
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -902,22 +2106,40 @@ class SuggestionController(
         if (refreshAfterLoad) {
             pendingPrimaryRefreshAfterLoad = true
         }
+
         if (repository.isReady) {
             if (refreshAfterLoad) {
                 pendingPrimaryRefreshAfterLoad = false
-                cursorHandler.post { refreshSuggestionsAfterDictionaryReady(repository) }
+                cursorHandler.post {
+                    refreshSuggestionsAfterDictionaryReady(repository)
+                }
             }
             return
         }
+
         if (repository.isLoadStarted) return
 
         currentLoadJob = loadScope.launch {
             try {
                 repository.loadIfNeeded()
-                val shouldRefresh = refreshAfterLoad || pendingPrimaryRefreshAfterLoad
+
+                // Warm up the starter-word cache off the main thread.
+                // The first topCommonEntries() call is expensive; later calls are effectively free.
+                if (repository.isReady) {
+                    repository.topCommonEntries(
+                        limit = settingsProvider().maxSuggestions,
+                        includeUserEntries = false
+                    )
+                }
+
+                val shouldRefresh =
+                    refreshAfterLoad || pendingPrimaryRefreshAfterLoad
+
                 if (shouldRefresh && repository.isReady) {
                     pendingPrimaryRefreshAfterLoad = false
-                    cursorHandler.post { refreshSuggestionsAfterDictionaryReady(repository) }
+                    cursorHandler.post {
+                        refreshSuggestionsAfterDictionaryReady(repository)
+                    }
                 }
             } catch (_: CancellationException) {
                 // Cancelled due to rapid switches; safe to ignore.
@@ -957,5 +2179,27 @@ class SuggestionController(
     companion object {
         private const val CURSOR_WORD_CONTEXT_CHARS = 128
         private const val PRIMARY_SUGGESTION_BOOST = 0.35
+        private const val CURSOR_PREDICTION_SUPPRESSION_MS = 300L
+        private const val UNKNOWN_WORD_PROMOTION_THRESHOLD = 3
+        private const val LEARNING_MAINTENANCE_INTERVAL_WORDS = 500
+        private const val WORD_USAGE_STALE_AFTER_MS =
+            90L * 24L * 60L * 60L * 1000L
+        private const val WORD_USAGE_WEAK_COUNT_THRESHOLD = 2
+        private const val WORD_USAGE_MAX_ENTRIES_PER_LOCALE = 20_000
+
+        private const val NGRAM_STALE_AFTER_MS =
+            60L * 24L * 60L * 60L * 1000L
+        private const val NGRAM_WEAK_COUNT_THRESHOLD = 1
+        private const val NGRAM_MAX_ENTRIES_PER_LOCALE = 30_000
+
+        private const val PHRASE_USAGE_STALE_AFTER_MS =
+            60L * 24L * 60L * 60L * 1000L
+        private const val PHRASE_USAGE_WEAK_COUNT_THRESHOLD = 1
+        private const val PHRASE_USAGE_MAX_ENTRIES_PER_LOCALE = 20_000
+        private const val AUTO_LEARNED_STALE_AFTER_MS =
+            90L * 24L * 60L * 60L * 1000L
+        private const val AUTO_LEARNED_WEAK_FREQUENCY_THRESHOLD = 2
+        private const val AUTO_LEARNED_MAX_ENTRIES = 10_000
     }
 }
+

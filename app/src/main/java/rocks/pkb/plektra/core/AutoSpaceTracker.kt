@@ -14,6 +14,52 @@ object AutoSpaceTracker {
     @Volatile
     private var autoSpacePending: Boolean = false
 
+    private var suggestionConnection: InputConnection? = null
+    private var suggestionSuffix: String? = null
+    private var trimmedBoundaryConnection: InputConnection? = null
+    private var trimmedBoundary: Char? = null
+
+    fun consumeTrimmedSuggestionBoundary(input: InputConnection?, boundary: Char?): Boolean {
+        val matches = input != null && trimmedBoundaryConnection === input && boundary == trimmedBoundary
+        trimmedBoundaryConnection = null; trimmedBoundary = null
+        return matches
+    }
+
+    fun markSuggestionAutoSpace(input: InputConnection) {
+        markAutoSpace()
+        suggestionConnection = input
+        suggestionSuffix = input.getTextBeforeCursor(128, 0)?.toString()?.takeIf { it.endsWith(" ") }
+    }
+
+    fun clearSuggestionSpace() {
+        suggestionConnection = null
+        suggestionSuffix = null
+    }
+
+    /** Remove only the space inserted by the preceding suggestion, before closing punctuation. */
+    fun prepareSuggestionSpace(input: InputConnection, text: CharSequence) {
+        if (text.isNotEmpty() && (trimmedBoundaryConnection !== input || text.first() != trimmedBoundary)) {
+            trimmedBoundaryConnection = null; trimmedBoundary = null
+        }
+        val suffix = suggestionSuffix ?: return
+        val first = text.firstOrNull() ?: return
+        val sameConnection = suggestionConnection === input
+        clearSuggestionSpace()
+        if (!sameConnection) return
+        val before = input.getTextBeforeCursor(128, 0)?.toString().orEmpty()
+        if (before != suffix || !before.endsWith(" ")) return
+        val closing = first in ".,;:!?)]}»›”" ||
+            (first == '"' && hasUnclosedStraightDoubleQuote(input))
+        // Opening parentheses and the separating space for the next word are retained.
+        if (!closing) { autoSpacePending = false; return }
+        autoSpacePending = false
+        if (input.deleteSurroundingText(1, 0)) {
+            trimmedBoundaryConnection = input
+            trimmedBoundary = first
+        }
+        // The ordinary commit path applies French nonbreaking spacing, then the configured after-space.
+    }
+
     fun markAutoSpace() {
         autoSpacePending = true
         Log.d(TAG, "markAutoSpace -> pending=true")
@@ -34,6 +80,8 @@ object AutoSpaceTracker {
     }
 
     fun clear() {
+        clearSuggestionSpace()
+        trimmedBoundaryConnection = null; trimmedBoundary = null
         autoSpacePending = false
         Log.d(TAG, "clear pending=false")
     }

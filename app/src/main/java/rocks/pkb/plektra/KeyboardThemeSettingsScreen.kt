@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -38,6 +40,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +52,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -117,7 +121,7 @@ fun KeyboardThemeScreen(
         } else if (
             initialTarget == null &&
             SettingsManager.resolveEffectiveSoftwareKeyboardMode(context) ==
-                SettingsManager.SoftwareKeyboardMode.FORCE_VIRTUAL
+            SettingsManager.SoftwareKeyboardMode.FORCE_VIRTUAL
         ) {
             1
         } else {
@@ -593,15 +597,15 @@ fun KeyboardThemeScreen(
                     Text(stringResource(R.string.keyboard_theme_action_import))
                 }
             }
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = { showSaveAsDialog = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                 ) {
                     Text(
                         stringResource(
@@ -613,10 +617,11 @@ fun KeyboardThemeScreen(
                         )
                     )
                 }
+                Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = { exportTheme = draftPreset ?: activeTheme },
                     enabled = editedDraft == null || draftComplete,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp)
                 ) {
                     Text(stringResource(R.string.keyboard_theme_action_export))
                 }
@@ -637,9 +642,10 @@ fun KeyboardThemeScreen(
                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp)
                 ) {
                     Text(stringResource(R.string.keyboard_theme_action_delete))
+                }
                 }
             }
 
@@ -682,7 +688,7 @@ fun KeyboardThemeScreen(
                     value = softwarePreviewViewportScale,
                     presetValue = SettingsManager.KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE_MIN,
                     valueRange = SettingsManager.KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE_MIN..
-                        SettingsManager.KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE_MAX,
+                            SettingsManager.KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE_MAX,
                     modifier = Modifier.padding(horizontal = 16.dp),
                     onValueChanged = { value ->
                         softwarePreviewViewportScale = value
@@ -912,8 +918,8 @@ fun KeyboardThemeScreen(
     deleteThemeRequest?.let { name ->
         AlertDialog(
             onDismissRequest = { deleteThemeRequest = null },
-            title = { Text("Delete theme?") },
-            text = { Text("Delete ‘$name’? The currently applied colors will be kept.") },
+            title = { Text(stringResource(R.string.menu_literal_1c2f0656aa)) },
+            text = { Text(stringResource(R.string.menu_literal_81292017fa, name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -921,12 +927,12 @@ fun KeyboardThemeScreen(
                         deleteSavedTheme(name)
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.menu_literal_f6fdbe48dc), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deleteThemeRequest = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.menu_literal_77dfd2135f))
                 }
             }
         )
@@ -1213,6 +1219,16 @@ private fun KeyboardThemeAssignmentSection(
     onEditOverride: (SettingsManager.KeyboardThemeLayoutOverride) -> Unit,
     onRemoveOverride: (SettingsManager.KeyboardThemeLayoutOverride) -> Unit
 ) {
+    val rotationContext = LocalContext.current
+    val savedRotationThemes = SettingsManager.getSavedKeyboardThemes(rotationContext)
+    /** *Selection stays local until the user explicitly saves it.* */
+    var savedRotationNames by remember(target, savedRotationThemes.map { it.name }) {
+        mutableStateOf(DailyThemeRotation.selectedNames(rotationContext, target))
+    }
+    var rotationSaved by remember(target) { mutableStateOf(false) }
+    var rotationNames by remember(target, savedRotationThemes.map { it.name }) {
+        mutableStateOf(DailyThemeRotation.selectedNames(rotationContext, target))
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         tonalElevation = 1.dp,
@@ -1247,6 +1263,39 @@ private fun KeyboardThemeAssignmentSection(
                     modifier = Modifier.weight(1f),
                     onClick = { onModeChanged(SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) }
                 )
+            }
+            KeyboardThemeModeButton(
+                label = stringResource(R.string.keyboard_theme_daily_rotation),
+                selected = mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onModeChanged(SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) }
+            )
+            if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+                Text(stringResource(R.string.keyboard_theme_daily_rotation_description), style = MaterialTheme.typography.bodySmall)
+                if (savedRotationThemes.isEmpty()) {
+                    Text(stringResource(R.string.keyboard_theme_daily_rotation_empty))
+                }
+                savedRotationThemes.forEach { saved ->
+                    val checked = saved.name in rotationNames
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = checked, onCheckedChange = { enable ->
+                            rotationNames = if (enable) rotationNames + saved.name else rotationNames - saved.name
+                            rotationSaved = false
+                        })
+                        Text(if (checked) "${rotationNames.indexOf(saved.name) + 1}. ${saved.name}" else saved.name)
+                    }
+                }
+                Button(onClick = {
+                    DailyThemeRotation.select(rotationContext, target, rotationNames)
+                    savedRotationNames = rotationNames
+                    rotationSaved = true
+                }, enabled = rotationNames != savedRotationNames) {
+                    Text(stringResource(R.string.keyboard_theme_rotation_save))
+                }
+                if (rotationSaved) Text(stringResource(R.string.keyboard_theme_rotation_saved))
+                if (rotationNames.none { name -> savedRotationThemes.any { it.name == name } }) {
+                    Text(stringResource(R.string.keyboard_theme_daily_rotation_none), style = MaterialTheme.typography.bodySmall)
+                }
             }
             if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
                 KeyboardThemePickerRow(
@@ -1336,6 +1385,8 @@ private fun KeyboardThemeAssignmentSummaryRow(
                 Text(
                     text = if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
                         "${stringResource(R.string.keyboard_theme_assignment_follow_system)}: $lightThemeName / $darkThemeName"
+                    } else if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+                        stringResource(R.string.keyboard_theme_daily_rotation)
                     } else {
                         stringResource(R.string.keyboard_theme_assignment_fixed)
                     },
@@ -1650,7 +1701,7 @@ private fun keyboardThemeOverrideTargets(context: Context): List<KeyboardThemeOv
 
     val imeInfo = imm?.getInputMethodList()?.firstOrNull { info ->
         info.packageName == context.packageName &&
-            info.serviceName == PhysicalKeyboardInputMethodService::class.java.name
+                info.serviceName == PhysicalKeyboardInputMethodService::class.java.name
     }
     val cycleableSubtypes = if (imm != null && imeInfo != null) {
         SubtypeCycler.getCycleableSubtypes(
@@ -1808,35 +1859,35 @@ private fun keyboardThemesEquivalent(
 ): Boolean {
     fun close(a: Float, b: Float): Boolean = abs(a - b) < 0.001f
     return left.background == right.background &&
-        left.divider == right.divider &&
-        left.normalKey == right.normalKey &&
-        left.specialKey == right.specialKey &&
-        left.textAndIcons == right.textAndIcons &&
-        left.ledInactive == right.ledInactive &&
-        left.ledActive == right.ledActive &&
-        left.ledLocked == right.ledLocked &&
-        left.accent == right.accent &&
-        left.cursorSwipe == right.cursorSwipe &&
-        left.keyPopup == right.keyPopup &&
-        left.keyPopupSelected == right.keyPopupSelected &&
-        left.suggestion == right.suggestion &&
-        left.statusBarButton == right.statusBarButton &&
-        close(left.keyCornerRadiusRatio, right.keyCornerRadiusRatio) &&
-        close(left.chromeCornerRadiusRatio, right.chromeCornerRadiusRatio) &&
-        close(left.keyHeightScale, right.keyHeightScale) &&
-        close(left.numberRowHeightScale, right.numberRowHeightScale) &&
-        close(left.keyWidthScale, right.keyWidthScale) &&
-        close(left.rowGapScale, right.rowGapScale) &&
-        left.distributeHorizontalSpacing == right.distributeHorizontalSpacing &&
-        left.ortholinear == right.ortholinear &&
-        left.showLeds == right.showLeds &&
-        close(left.suggestionsHeightScale, right.suggestionsHeightScale) &&
-        close(left.variationsHeightScale, right.variationsHeightScale) &&
-        left.keyPopupStyle == right.keyPopupStyle &&
-        left.keyPopupAttached == right.keyPopupAttached &&
-        left.keyPopupTailEnabled == right.keyPopupTailEnabled &&
-        left.keyPreviewAfterLongPress == right.keyPreviewAfterLongPress &&
-        left.keyAlternatesPopupEnabled == right.keyAlternatesPopupEnabled
+            left.divider == right.divider &&
+            left.normalKey == right.normalKey &&
+            left.specialKey == right.specialKey &&
+            left.textAndIcons == right.textAndIcons &&
+            left.ledInactive == right.ledInactive &&
+            left.ledActive == right.ledActive &&
+            left.ledLocked == right.ledLocked &&
+            left.accent == right.accent &&
+            left.cursorSwipe == right.cursorSwipe &&
+            left.keyPopup == right.keyPopup &&
+            left.keyPopupSelected == right.keyPopupSelected &&
+            left.suggestion == right.suggestion &&
+            left.statusBarButton == right.statusBarButton &&
+            close(left.keyCornerRadiusRatio, right.keyCornerRadiusRatio) &&
+            close(left.chromeCornerRadiusRatio, right.chromeCornerRadiusRatio) &&
+            close(left.keyHeightScale, right.keyHeightScale) &&
+            close(left.numberRowHeightScale, right.numberRowHeightScale) &&
+            close(left.keyWidthScale, right.keyWidthScale) &&
+            close(left.rowGapScale, right.rowGapScale) &&
+            left.distributeHorizontalSpacing == right.distributeHorizontalSpacing &&
+            left.ortholinear == right.ortholinear &&
+            left.showLeds == right.showLeds &&
+            close(left.suggestionsHeightScale, right.suggestionsHeightScale) &&
+            close(left.variationsHeightScale, right.variationsHeightScale) &&
+            left.keyPopupStyle == right.keyPopupStyle &&
+            left.keyPopupAttached == right.keyPopupAttached &&
+            left.keyPopupTailEnabled == right.keyPopupTailEnabled &&
+            left.keyPreviewAfterLongPress == right.keyPreviewAfterLongPress &&
+            left.keyAlternatesPopupEnabled == right.keyAlternatesPopupEnabled
 }
 
 @Composable
@@ -1850,7 +1901,7 @@ private fun KeyboardThemeExportDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Export theme") },
+        title = { Text(stringResource(R.string.menu_literal_2dfa334895)) },
         text = {
             OutlinedTextField(
                 value = exportString,
@@ -1868,12 +1919,12 @@ private fun KeyboardThemeExportDialog(
                     onDismiss()
                 }
             ) {
-                Text("Copy")
+                Text(stringResource(R.string.menu_literal_af74f7c536))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.menu_literal_bbfa773e5a))
             }
         }
     )
@@ -2224,7 +2275,7 @@ private fun KeyboardThemeColorsEditor(
         )
         add(
             KeyboardThemeColorEditorItem(
-                label = "Suggestions",
+                label = stringResource(R.string.menu_literal_861edba005),
                 color = theme.suggestion,
                 presetColor = preset.suggestion,
                 onColorChanged = { onThemeChanged(theme.copy(suggestion = it)) }
@@ -2232,7 +2283,7 @@ private fun KeyboardThemeColorsEditor(
         )
         add(
             KeyboardThemeColorEditorItem(
-                label = "Status bar buttons",
+                label = stringResource(R.string.menu_literal_3abdbb8538),
                 color = theme.statusBarButton,
                 presetColor = preset.statusBarButton,
                 onColorChanged = { onThemeChanged(theme.copy(statusBarButton = it)) }
@@ -2240,7 +2291,7 @@ private fun KeyboardThemeColorsEditor(
         )
         add(
             KeyboardThemeColorEditorItem(
-                label = "Cursor swipe",
+                label = stringResource(R.string.menu_literal_66f4745135),
                 color = theme.cursorSwipe,
                 presetColor = preset.cursorSwipe,
                 onColorChanged = { onThemeChanged(theme.copy(cursorSwipe = it)) }
@@ -2249,7 +2300,7 @@ private fun KeyboardThemeColorsEditor(
         if (isSoftware) {
             add(
                 KeyboardThemeColorEditorItem(
-                    label = "Key popup",
+                    label = stringResource(R.string.menu_literal_7de9a1a7f3),
                     color = theme.keyPopup,
                     presetColor = preset.keyPopup,
                     onColorChanged = { onThemeChanged(theme.copy(keyPopup = it)) }
@@ -2257,7 +2308,7 @@ private fun KeyboardThemeColorsEditor(
             )
             add(
                 KeyboardThemeColorEditorItem(
-                    label = "Selected popup key",
+                    label = stringResource(R.string.menu_literal_dcf513dc4b),
                     color = theme.keyPopupSelected,
                     presetColor = preset.keyPopupSelected,
                     onColorChanged = { onThemeChanged(theme.copy(keyPopupSelected = it)) }
@@ -2337,6 +2388,11 @@ private fun KeyboardThemeKeysEditor(
     isSoftware: Boolean,
     onThemeChanged: (KeyboardThemePreset) -> Unit
 ) {
+    val context = LocalContext.current
+    var suggestions_bold by remember {
+        mutableStateOf(context.isSuggestionsBoldEnabled())
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (isSoftware) {
             KeyboardThemeSliderRow(
@@ -2371,6 +2427,15 @@ private fun KeyboardThemeKeysEditor(
             presetValue = preset.variationsHeightScale,
             valueRange = 0.65f..1.6f,
             onValueChanged = { onThemeChanged(theme.copy(variationsHeightScale = it)) }
+        )
+        KeyboardThemeSwitchRow(
+            label = stringResource(R.string.menu_literal_0a7e2bdfe4),
+            checked = suggestions_bold,
+            presetChecked = false,
+            onCheckedChanged = { enabled ->
+                suggestions_bold = enabled
+                context.setSuggestionsBoldEnabled(enabled)
+            }
         )
         if (isSoftware) {
 
@@ -2407,42 +2472,42 @@ private fun KeyboardThemeKeysEditor(
                 onValueChanged = { onThemeChanged(theme.copy(rowGapScale = it)) }
             )
             KeyboardThemeSwitchRow(
-                label = "Distribute spacing",
+                label = stringResource(R.string.menu_literal_30f296e582),
                 checked = theme.distributeHorizontalSpacing,
                 presetChecked = preset.distributeHorizontalSpacing,
                 onCheckedChanged = { onThemeChanged(theme.copy(distributeHorizontalSpacing = it)) },
                 linkId = SettingLinkIds.KEYBOARD_THEME_TOGGLE_DISTRIBUTE_SPACING
             )
             KeyboardThemeSwitchRow(
-                label = "Ortholinear",
+                label = stringResource(R.string.menu_literal_16cad07269),
                 checked = theme.ortholinear,
                 presetChecked = preset.ortholinear,
                 onCheckedChanged = { onThemeChanged(theme.copy(ortholinear = it)) },
                 linkId = SettingLinkIds.KEYBOARD_THEME_TOGGLE_ORTHOLINEAR
             )
             KeyboardThemeSwitchRow(
-                label = "Attach popup to key",
+                label = stringResource(R.string.menu_literal_ff440268a6),
                 checked = theme.keyPopupAttached,
                 presetChecked = preset.keyPopupAttached,
                 onCheckedChanged = { onThemeChanged(theme.copy(keyPopupAttached = it)) },
                 linkId = SettingLinkIds.KEYBOARD_THEME_TOGGLE_ATTACH_POPUP
             )
             KeyboardThemeSwitchRow(
-                label = "Popup tail connector",
+                label = stringResource(R.string.menu_literal_c2ab69d158),
                 checked = theme.keyPopupTailEnabled,
                 presetChecked = preset.keyPopupTailEnabled,
                 onCheckedChanged = { onThemeChanged(theme.copy(keyPopupTailEnabled = it)) },
                 linkId = SettingLinkIds.KEYBOARD_THEME_TOGGLE_POPUP_TAIL
             )
             KeyboardThemeSwitchRow(
-                label = "Show key preview only on hold",
+                label = stringResource(R.string.menu_literal_82d5e876b9),
                 checked = theme.keyPreviewAfterLongPress,
                 presetChecked = preset.keyPreviewAfterLongPress,
                 onCheckedChanged = { onThemeChanged(theme.copy(keyPreviewAfterLongPress = it)) },
                 linkId = SettingLinkIds.KEYBOARD_THEME_TOGGLE_PREVIEW_ON_HOLD
             )
             KeyboardThemeSwitchRow(
-                label = "Long-press character picker",
+                label = stringResource(R.string.menu_literal_e672b515da),
                 checked = theme.keyAlternatesPopupEnabled,
                 presetChecked = preset.keyAlternatesPopupEnabled,
                 onCheckedChanged = { onThemeChanged(theme.copy(keyAlternatesPopupEnabled = it)) },
@@ -2655,7 +2720,8 @@ private fun KeyboardThemeSwitchRow(
     checked: Boolean,
     presetChecked: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
-    linkId: String? = null
+    linkId: String? = null,
+    accentColor: Color? = null
 ) {
     Surface(
         modifier = Modifier
@@ -2673,6 +2739,11 @@ private fun KeyboardThemeSwitchRow(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Medium,
+                color = if (checked && accentColor != null) {
+                    accentColor
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 modifier = Modifier.weight(1f),
                 maxLines = 1
             )
@@ -2688,7 +2759,16 @@ private fun KeyboardThemeSwitchRow(
             }
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChanged
+                onCheckedChange = onCheckedChanged,
+                colors = if (accentColor != null) {
+                    SwitchDefaults.colors(
+                        checkedThumbColor = accentColor,
+                        checkedTrackColor = accentColor.copy(alpha = 0.45f),
+                        checkedBorderColor = accentColor
+                    )
+                } else {
+                    SwitchDefaults.colors()
+                }
             )
         }
     }
@@ -2790,7 +2870,7 @@ private fun KeyboardThemeColorPickerDialog(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "Presets",
+                        text = stringResource(R.string.menu_literal_e709e76ff5),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -2842,7 +2922,7 @@ private fun KeyboardThemeColorPickerDialog(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        label = { Text("Hex color") },
+                        label = { Text(stringResource(R.string.menu_literal_1ba7b1495f)) },
                         isError = hexValue.isNotEmpty() && parseKeyboardThemeHexColor(hexValue) == null
                     )
                     Row(
@@ -2853,7 +2933,7 @@ private fun KeyboardThemeColorPickerDialog(
                             enabled = parseKeyboardThemeHexColor(hexValue) != null,
                             onClick = { onColorSelected(color) }
                         ) {
-                            Text("Apply")
+                            Text(stringResource(R.string.menu_literal_cfea419c3b))
                         }
                     }
                 }

@@ -1,5 +1,5 @@
 package rocks.pkb.plektra.dictionaries
-
+import rocks.pkb.plektra.core.suggestions.UserDictionaryStore
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -99,7 +99,10 @@ internal data class UnifiedDictionaryItem(
     val displayName: String,
     val fileName: String,
     val isInstalled: Boolean,
+    val isActive: Boolean = false,
     val source: DictionarySource,
+    val variant: DictionaryVariant = DictionaryVariant.Basic,
+    val wordCount: Int? = null,
     val onlineItem: DictionaryItem? = null,
     val downloadProgress: Pair<Long, Long>? = null,
     val isDownloading: Boolean = false
@@ -109,6 +112,13 @@ internal enum class DictionarySource {
     Asset,
     Imported,
     Online
+}
+/**
+ * Dictionary content variant, independent from where the dictionary comes from.
+ */
+internal enum class DictionaryVariant {
+    Basic,
+    Extended
 }
 
 @Composable
@@ -227,15 +237,77 @@ fun InstalledDictionariesScreen(
             snackbarHostState.showSnackbar(message)
         }
     }
-    
+
+    fun activateDictionary(dictionary: UnifiedDictionaryItem) {
+        val activeDictionaryPrefs =
+            context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
+
+        Log.i(
+            "InstalledDictionaries",
+            "ACTIVATE_DEBUG language=${dictionary.languageCode} file=${dictionary.fileName}"
+        )
+
+        activeDictionaryPrefs.edit()
+            .putString(dictionary.languageCode, dictionary.fileName)
+            .apply()
+
+        installedDictionaries = loadSerializedDictionaries(context)
+
+        context.sendBroadcast(
+            android.content.Intent(
+                rocks.pkb.plektra.AppBroadcastActions.BASE_DICTIONARY_UPDATED
+            ).setPackage(context.packageName)
+        )
+    }
+
     fun uninstallDictionary(dictionary: UnifiedDictionaryItem) {
         coroutineScope.launch {
             val result = deleteDictionaryFile(context, dictionary)
             val message = when (result) {
                 is UninstallResult.Success -> {
+                    if (dictionary.isActive) {
+                        context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
+                            .edit()
+                            .remove(dictionary.languageCode)
+                            .apply()
+                    }
+
                     DictionaryRepositoryManager.notifyDictionariesChanged(context)
                     installedDictionaries = loadSerializedDictionaries(context)
-                    context.getString(R.string.installed_dictionaries_uninstall_success, dictionary.displayName)
+
+                    /*
+                     * Restore personal entries that had been temporarily removed because
+                     * they were already covered by this language's Extended dictionary.
+                     */
+                    val locale = Locale.forLanguageTag(dictionary.languageCode)
+
+                    val restoredDuplicates =
+                        UserDictionaryStore().restoreWordsRemovedForBase(
+                            context = context,
+                            locale = locale
+                        )
+
+                    Log.i(
+                        "InstalledDictionaries",
+                        "Uninstalled ${dictionary.fileName}. " +
+                                "Restored $restoredDuplicates personal dictionary entries."
+                    )
+
+                    /*
+                     * Notify the running IME that the Extended dictionary was removed.
+                                     * The repository will be rebuilt and will fall back to the bundled
+                                     * Basic dictionary for this language.
+                                     */
+                    context.sendBroadcast(
+                        android.content.Intent(
+                            rocks.pkb.plektra.AppBroadcastActions.BASE_DICTIONARY_UPDATED
+                        ).setPackage(context.packageName)
+                    )
+
+                    context.getString(
+                        R.string.installed_dictionaries_uninstall_success,
+                        dictionary.displayName
+                    )
                 }
                 UninstallResult.NotFound -> context.getString(R.string.installed_dictionaries_uninstall_not_found)
                 UninstallResult.CannotDeleteAsset -> context.getString(R.string.installed_dictionaries_uninstall_cannot_delete_asset)
@@ -331,7 +403,10 @@ fun InstalledDictionariesScreen(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(unifiedDictionaries, key = { it.fileName }) { dictionary ->
+                items(
+                    unifiedDictionaries,
+                    key = { "${it.languageCode}_${it.fileName}_${it.source}" }
+                ) { dictionary ->
                     UnifiedDictionaryItem(
                         dictionary = dictionary,
                         onDownload = { onlineItem ->
@@ -341,6 +416,9 @@ fun InstalledDictionariesScreen(
                         },
                         onUninstall = { dict ->
                             dictionaryToDelete = dict
+                        },
+                        onActivate = { dict ->
+                            activateDictionary(dict)
                         }
                     )
                 }
@@ -384,7 +462,8 @@ fun InstalledDictionariesScreen(
 private fun UnifiedDictionaryItem(
     dictionary: UnifiedDictionaryItem,
     onDownload: (DictionaryItem?) -> Unit,
-    onUninstall: (UnifiedDictionaryItem) -> Unit
+    onUninstall: (UnifiedDictionaryItem) -> Unit,
+    onActivate: (UnifiedDictionaryItem) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -409,6 +488,13 @@ private fun UnifiedDictionaryItem(
                         fontWeight = FontWeight.Medium,
                         maxLines = 1
                     )
+
+                    Text(
+                        text = dictionary.fileName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
                     Text(
                         text = stringResource(
                             R.string.installed_dictionaries_language_code,
@@ -418,6 +504,35 @@ private fun UnifiedDictionaryItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
+                    Text(
+                        text = when (dictionary.variant) {
+                            DictionaryVariant.Basic ->
+                                stringResource(R.string.installed_dictionaries_variant_basic)
+
+                            DictionaryVariant.Extended ->
+                                stringResource(R.string.installed_dictionaries_variant_extended)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (dictionary.variant == DictionaryVariant.Extended) {
+                            FontWeight.Medium
+                        } else {
+                            FontWeight.Normal
+                        },
+                        maxLines = 1
+                    )
+
+                    dictionary.wordCount?.let { wordCount ->
+                        Text(
+                            text = stringResource(
+                                R.string.installed_dictionaries_word_count,
+                                wordCount
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
                     if (dictionary.onlineItem != null) {
                         Text(
                             text = stringResource(
@@ -463,6 +578,14 @@ private fun UnifiedDictionaryItem(
                         strokeWidth = 2.dp
                     )
                 } else {
+                    if (dictionary.isInstalled && !dictionary.isActive) {
+                        TextButton(
+                            onClick = { onActivate(dictionary) }
+                        ) {
+                            Text("Activer")
+                        }
+                    }
+
                     // Uninstall button (only for imported/downloaded dictionaries, not assets)
                     if (dictionary.isInstalled && dictionary.source != DictionarySource.Asset) {
                         IconButton(
@@ -499,94 +622,242 @@ private fun UnifiedDictionaryItem(
 /**
  * Merges installed dictionaries with online available dictionaries.
  */
+/**
+ * Merges installed Basic dictionaries with dictionaries available online.
+ *
+ * Dictionary source (Asset / Imported / Online) and dictionary variant
+ * (Basic / Extended) are intentionally kept separate. This allows an
+ * installed bundled Basic dictionary and an available Extended dictionary
+ * for the same language to coexist in the UI.
+ */
 private fun mergeDictionaries(
     installed: List<InstalledDictionary>,
     onlineManifest: DictionaryManifest?,
     downloadingItems: Set<String>,
     downloadProgress: Map<String, Pair<Long, Long>>
 ): List<UnifiedDictionaryItem> {
-    Log.d("InstalledDictionaries", "Merging dictionaries - Installed: ${installed.size}, Online: ${onlineManifest?.items?.size ?: 0}")
-    val installedMap = installed.associateBy { it.fileName.lowercase(Locale.getDefault()) }
-    val onlineMap = onlineManifest?.items?.associateBy { it.filename.lowercase(Locale.getDefault()) } ?: emptyMap()
-    
-    Log.d("InstalledDictionaries", "Installed files: ${installedMap.keys.joinToString(", ")}")
-    Log.d("InstalledDictionaries", "Online files: ${onlineMap.keys.joinToString(", ")}")
-    
-    val allFileNames = (installedMap.keys + onlineMap.keys).distinct()
-    Log.d("InstalledDictionaries", "Total unique files: ${allFileNames.size}")
-    
-    return allFileNames.map { fileName ->
-        val installed = installedMap[fileName]
-        val online = onlineMap[fileName]
-        
-        val languageCode = installed?.languageCode 
-            ?: online?.let { DictionaryRepositoryManager.extractLanguageCode(it.filename) }
-            ?: fileName.removeSuffix("_base.dict").removeSuffix(".dict")
-        
-        val displayName = installed?.displayName
-            ?: online?.name
-            ?: getLanguageDisplayName(languageCode)
-        
-        val item = UnifiedDictionaryItem(
-            languageCode = languageCode,
-            displayName = displayName,
-            fileName = online?.filename ?: installed?.fileName ?: fileName,
-            isInstalled = installed != null,
-            source = installed?.source ?: DictionarySource.Online,
-            onlineItem = online,
-            downloadProgress = downloadProgress[online?.id],
-            isDownloading = online?.id in downloadingItems
+    Log.d(
+        "InstalledDictionaries",
+        "Merging dictionaries - Installed: ${installed.size}, " +
+                "Online: ${onlineManifest?.items?.size ?: 0}"
+    )
+
+    val installedItems = installed.map { dictionary ->
+        UnifiedDictionaryItem(
+            languageCode = dictionary.languageCode,
+            displayName = dictionary.displayName,
+            fileName = dictionary.fileName,
+            isInstalled = true,
+            isActive = dictionary.isActive,
+            source = dictionary.source,
+            variant = dictionary.variant,
+            wordCount = dictionary.wordCount
         )
-        Log.d("InstalledDictionaries", "Merged: ${item.displayName} (installed=${item.isInstalled}, online=${item.onlineItem != null})")
-        item
-    }.sortedBy { it.displayName.lowercase(Locale.getDefault()) }.also { result ->
-        Log.d("InstalledDictionaries", "Final merged list: ${result.size} items")
-        result.forEach { item ->
-            Log.d("InstalledDictionaries", "  - ${item.displayName}: installed=${item.isInstalled}, hasOnline=${item.onlineItem != null}, canDownload=${item.onlineItem != null && !item.isInstalled}")
-        }
     }
+
+    val onlineItems = onlineManifest?.items.orEmpty().map { dictionary ->
+        val languageCode =
+            DictionaryRepositoryManager.extractLanguageCode(dictionary.filename)
+
+        val variant = when (dictionary.variant.lowercase(Locale.ROOT)) {
+            "extended" -> DictionaryVariant.Extended
+            else -> DictionaryVariant.Basic
+        }
+
+        /*
+         * A bundled Basic dictionary satisfies an online Basic entry for the
+         * same language. An Extended entry remains a separate downloadable
+         * item even when its filename matches the bundled Basic filename.
+         */
+        val matchingInstalled = installed.firstOrNull { local ->
+            local.fileName.equals(dictionary.filename, ignoreCase = true)
+        }
+
+        UnifiedDictionaryItem(
+            languageCode = languageCode,
+            displayName = dictionary.name,
+            fileName = dictionary.filename,
+            isInstalled = matchingInstalled != null,
+            isActive = matchingInstalled?.isActive ?: false,
+            source = matchingInstalled?.source ?: DictionarySource.Online,
+            variant = variant,
+            wordCount = dictionary.wordCount,
+            onlineItem = dictionary,
+            downloadProgress = downloadProgress[dictionary.id],
+            isDownloading = dictionary.id in downloadingItems
+        )
+    }
+
+    /*
+     * When an online item matches an already installed dictionary with the same
+     * language and variant, keep the richer online representation and remove the
+     * duplicate local row. This applies equally to Basic and Extended variants.
+     */
+    val installedOnlineKeys = onlineItems
+        .filter { it.isInstalled }
+        .map {
+            it.fileName.lowercase(Locale.ROOT)
+        }
+        .toSet()
+
+    val localItemsToKeep = installedItems.filterNot { local ->
+        local.fileName.lowercase(Locale.ROOT) in installedOnlineKeys
+    }
+    (localItemsToKeep + onlineItems).forEach {
+        Log.i(
+            "InstalledDictionaries",
+            "LIST_DEBUG file=${it.fileName} installed=${it.isInstalled} active=${it.isActive} source=${it.source}"
+        )
+    }
+    val result = (localItemsToKeep + onlineItems)
+        .sortedWith(
+            compareBy<UnifiedDictionaryItem>(
+                { it.displayName.lowercase(Locale.getDefault()) },
+                { it.variant.ordinal }
+            )
+        )
+
+    Log.d(
+        "InstalledDictionaries",
+        "Final merged list: ${result.size} items"
+    )
+
+    result.forEach { item ->
+        Log.d(
+            "InstalledDictionaries",
+            "  - ${item.displayName}: variant=${item.variant}, " +
+                    "installed=${item.isInstalled}, " +
+                    "hasOnline=${item.onlineItem != null}"
+        )
+    }
+
+    return result
 }
 
 private data class InstalledDictionary(
     val languageCode: String,
     val displayName: String,
     val fileName: String,
-    val source: DictionarySource
+    val isActive: Boolean = false,
+    val source: DictionarySource,
+    val variant: DictionaryVariant,
+    val wordCount: Int? = null
 )
 
-private fun loadSerializedDictionaries(context: Context): List<InstalledDictionary> {
+/**
+ * Loads the dictionaries currently available to the keyboard.
+ *
+ * Bundled asset dictionaries are the Basic variant. A dictionary stored in
+ * the custom directory replaces the bundled dictionary for the same language
+ * at runtime and is therefore represented as the installed Extended variant.
+ */
+private fun loadSerializedDictionaries(
+    context: Context
+): List<InstalledDictionary> {
     return try {
         Log.d("InstalledDictionaries", "Loading installed dictionaries...")
+
         val assetFiles = context.assets
             .list("common/dictionaries_serialized")
             ?.filter { it.endsWith("_base.dict") }
             ?: emptyList()
-        Log.d("InstalledDictionaries", "Found ${assetFiles.size} dictionaries in assets: ${assetFiles.joinToString(", ")}")
 
-        val importedDir = File(context.filesDir, "dictionaries_serialized/custom")
-        val importedFiles = importedDir.listFiles { file ->
-            file.isFile && file.name.endsWith(".dict")
-        }?.map { it.name } ?: emptyList()
-        Log.d("InstalledDictionaries", "Found ${importedFiles.size} imported dictionaries: ${importedFiles.joinToString(", ")}")
+        Log.d(
+            "InstalledDictionaries",
+            "Found ${assetFiles.size} dictionaries in assets: " +
+                    assetFiles.joinToString(", ")
+        )
 
-        val allFiles = (assetFiles.map { DictionarySource.Asset to it } +
-                importedFiles.map { DictionarySource.Imported to it })
-            .distinctBy { it.second.lowercase(Locale.getDefault()) }
+        val customDir =
+            File(context.filesDir, "dictionaries_serialized/custom")
 
-        val result = allFiles.map { (source, fileName) ->
-            val languageCode = fileName.removeSuffix("_base.dict").removeSuffix(".dict")
+        val activeDictionaryPrefs =
+            context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
+
+        fun activeFilenameFor(languageCode: String): String =
+            activeDictionaryPrefs.getString(
+                languageCode,
+                "${languageCode}_base.dict"
+            ) ?: "${languageCode}_base.dict"
+
+        val customFiles = customDir
+            .listFiles { file ->
+                file.isFile && file.name.endsWith(".dict")
+            }
+            ?.map { it.name }
+            ?: emptyList()
+
+        Log.d(
+            "InstalledDictionaries",
+            "Found ${customFiles.size} custom dictionaries: " +
+                    customFiles.joinToString(", ")
+        )
+
+        val assetDictionaries = assetFiles.map { fileName ->
+            val languageCode =
+                DictionaryRepositoryManager.extractLanguageCode(fileName)
+
             InstalledDictionary(
                 languageCode = languageCode,
                 displayName = getLanguageDisplayName(languageCode),
                 fileName = fileName,
-                source = source
+                isActive = activeFilenameFor(languageCode) == fileName,
+                source = DictionarySource.Asset,
+                variant = DictionaryVariant.Basic,
+                wordCount = 50_000
             )
-        }.sortedBy { it.displayName.lowercase(Locale.getDefault()) }
-        
-        Log.d("InstalledDictionaries", "Loaded ${result.size} installed dictionaries: ${result.map { "${it.displayName} (${it.fileName})" }.joinToString(", ")}")
+        }
+
+        val customDictionaries = customFiles.map { fileName ->
+            val languageCode =
+                DictionaryRepositoryManager.extractLanguageCode(fileName)
+
+            InstalledDictionary(
+                languageCode = languageCode,
+                displayName = getLanguageDisplayName(languageCode),
+                fileName = fileName,
+                isActive = fileName == activeFilenameFor(languageCode),
+                source = DictionarySource.Imported,
+                variant = DictionaryVariant.Extended
+            )
+        }
+
+        /*
+         * The runtime loader gives a custom dictionary priority over the
+         * bundled asset for the same language. Mirror that behavior here so
+         * the UI reports the dictionary that is actually active.
+         */
+
+        val result = (assetDictionaries + customDictionaries)
+            .sortedBy {
+                it.displayName.lowercase(Locale.getDefault())
+            }
+
+        Log.i(
+            "InstalledDictionaries",
+            "LOAD_DEBUG " +
+                    result
+                        .filter { it.languageCode == "fr" }
+                        .joinToString(" | ") {
+                            "${it.fileName}: active=${it.isActive}"
+                        }
+        )
+
+        Log.d(
+            "InstalledDictionaries",
+            "Loaded ${result.size} active dictionaries: " +
+                    result.joinToString(", ") {
+                        "${it.displayName} (${it.variant}, ${it.source})"
+                    }
+        )
+
         result
     } catch (e: Exception) {
-        Log.e("InstalledDictionaries", "Error reading serialized dictionaries", e)
+        Log.e(
+            "InstalledDictionaries",
+            "Error reading serialized dictionaries",
+            e
+        )
         emptyList()
     }
 }
@@ -614,7 +885,7 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
             cursor.getString(nameIndex)
         } else null
     } ?: return ImportResult.InvalidName
-    if (!name.endsWith(".dict", ignoreCase = true) || !name.contains("_base", ignoreCase = true)) {
+    if (!name.endsWith(".dict", ignoreCase = true)) {
         return ImportResult.InvalidName
     }
 
@@ -622,8 +893,8 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
     val destFile = File(destDir, name)
 
     return try {
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            // Validate by attempting to deserialize
+        // Validate the dictionary and keep its index for post-install deduplication.
+        val dictionaryIndex = context.contentResolver.openInputStream(uri)?.use { input ->
             validateDictionaryStream(input)
         } ?: return ImportResult.CopyError
 
@@ -633,6 +904,34 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
                 input.copyTo(output)
             }
         } ?: return ImportResult.CopyError
+
+// Keep the personal dictionary focused on words not already covered
+// by the newly installed base dictionary.
+        val languageCode =
+            DictionaryRepositoryManager.extractLanguageCode(name)
+
+        val locale = Locale.forLanguageTag(languageCode)
+
+        val removedDuplicates = UserDictionaryStore().removeWordsAlreadyInBase(
+            context = context,
+            baseNormalizedWords = dictionaryIndex.normalizedIndex.keys,
+            locale = locale
+        )
+
+        Log.i(
+            "InstalledDictionaries",
+            "Imported ${destFile.name}. Removed $removedDuplicates duplicate personal dictionary entries."
+        )
+
+        /*
+         * Notify the running IME that the imported base dictionary has changed.
+         * The repository cache will be invalidated and the new dictionary loaded.
+         */
+        context.sendBroadcast(
+            android.content.Intent(
+                rocks.pkb.plektra.AppBroadcastActions.BASE_DICTIONARY_UPDATED
+            ).setPackage(context.packageName)
+        )
 
         ImportResult.Success(destFile.name)
     } catch (e: SerializationException) {
@@ -645,10 +944,10 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-private fun validateDictionaryStream(input: InputStream) {
+private fun validateDictionaryStream(input: InputStream): DictionaryIndex {
     val bytes = input.readBytes()
     val isJson = bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
-    if (isJson) {
+    return if (isJson) {
         val json = Json { ignoreUnknownKeys = true }
         json.decodeFromString<DictionaryIndex>(bytes.decodeToString())
     } else {
@@ -656,32 +955,61 @@ private fun validateDictionaryStream(input: InputStream) {
     }
 }
 
-private fun deleteDictionaryFile(context: Context, dictionary: UnifiedDictionaryItem): UninstallResult {
+private fun deleteDictionaryFile(
+    context: Context,
+    dictionary: UnifiedDictionaryItem
+): UninstallResult {
     return try {
-        // Cannot delete asset dictionaries
+        // Bundled Basic dictionaries are part of the application and cannot be deleted.
         if (dictionary.source == DictionarySource.Asset) {
-            Log.w("InstalledDictionaries", "Cannot delete asset dictionary: ${dictionary.fileName}")
+            Log.w(
+                "InstalledDictionaries",
+                "Cannot delete asset dictionary: ${dictionary.fileName}"
+            )
             return UninstallResult.CannotDeleteAsset
         }
-        
-        // Delete from custom directory
-        val customDir = File(context.filesDir, "dictionaries_serialized/custom")
-        val dictFile = File(customDir, dictionary.fileName)
-        
+
+        /*
+         * Remote Extended dictionaries use a distinct repository filename
+         * (for example "fr_extended.dict"), but are installed locally using
+         * the runtime-compatible "<language>_base.dict" filename.
+         */
+        val customDir = File(
+            context.filesDir,
+            "dictionaries_serialized/custom"
+        )
+
+        val installedFilename = dictionary.fileName
+
+        val dictFile = File(customDir, installedFilename)
+
         if (!dictFile.exists()) {
-            Log.w("InstalledDictionaries", "Dictionary file not found: ${dictFile.absolutePath}")
+            Log.w(
+                "InstalledDictionaries",
+                "Dictionary file not found: ${dictFile.absolutePath}"
+            )
             return UninstallResult.NotFound
         }
-        
+
         if (dictFile.delete()) {
-            Log.d("InstalledDictionaries", "Successfully deleted dictionary: ${dictionary.fileName}")
-            UninstallResult.Success(dictionary.fileName)
+            Log.d(
+                "InstalledDictionaries",
+                "Successfully deleted dictionary: $installedFilename"
+            )
+            UninstallResult.Success(installedFilename)
         } else {
-            Log.e("InstalledDictionaries", "Failed to delete dictionary file: ${dictFile.absolutePath}")
+            Log.e(
+                "InstalledDictionaries",
+                "Failed to delete dictionary file: ${dictFile.absolutePath}"
+            )
             UninstallResult.DeleteError
         }
     } catch (e: Exception) {
-        Log.e("InstalledDictionaries", "Error deleting dictionary: ${dictionary.fileName}", e)
+        Log.e(
+            "InstalledDictionaries",
+            "Error deleting dictionary: ${dictionary.fileName}",
+            e
+        )
         UninstallResult.DeleteError
     }
 }

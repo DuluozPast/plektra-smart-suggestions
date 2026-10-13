@@ -641,13 +641,13 @@ fun AdvancedSettingsScreen(
                                     )
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "IME Test Screen",
+                                            text = stringResource(R.string.menu_literal_52f2c47cad),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Medium,
                                             maxLines = 1
                                         )
                                         Text(
-                                            text = "Test all input field types and IME actions",
+                                            text = stringResource(R.string.menu_literal_8e422dc02d),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1

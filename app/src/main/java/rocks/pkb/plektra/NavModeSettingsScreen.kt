@@ -619,8 +619,8 @@ private fun KeyMappingDialog(
     var selectedValue by remember { mutableStateOf<String?>(currentMapping?.value) }
     val commandTargets = remember { CommandRegistry(context).getCommands(CommandSurface.NavMode) }
     val defaultLabel = defaultMapping?.let { getMappingLabel(it) }
-    val dialogMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.9f
-    val gridMaxHeight = dialogMaxHeight * 0.6f
+    val dialogMaxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.85f
+    val gridMaxHeight = dialogMaxHeight * 0.45f
 
     BasicAlertDialog(
         onDismissRequest = onDismiss,
@@ -694,7 +694,7 @@ private fun KeyMappingDialog(
                                 selectedType = "command"
                                 selectedValue = null
                             },
-                            label = { Text("Command") }
+                            label = { Text(stringResource(R.string.menu_literal_8901895fb1)) }
                         )
                         FilterChip(
                             selected = selectedType == "none",
@@ -750,7 +750,7 @@ private fun KeyMappingDialog(
                     } else if (selectedType == "action") {
                         val actions = listOf(
                             "copy", "paste", "cut", "undo",
-                            "select_all", "expand_selection_left", "expand_selection_right",
+                            "select_all", "expand_selection_left", "expand_selection_right", "expand_selection_up", "expand_selection_down",
                             "move_word_left", "move_word_right",
                             "expand_selection_word_left", "expand_selection_word_right",
                             "page_start", "page_end",
@@ -899,6 +899,8 @@ private fun getActionLabel(action: String): String {
         "select_all" -> stringResource(R.string.nav_mode_action_select_all)
         "expand_selection_left" -> stringResource(R.string.nav_mode_action_expand_selection_left)
         "expand_selection_right" -> stringResource(R.string.nav_mode_action_expand_selection_right)
+        "expand_selection_up" -> stringResource(R.string.nav_mode_action_expand_selection_up)
+        "expand_selection_down" -> stringResource(R.string.nav_mode_action_expand_selection_down)
         "move_word_left" -> stringResource(R.string.nav_mode_action_move_word_left)
         "move_word_right" -> stringResource(R.string.nav_mode_action_move_word_right)
         "expand_selection_word_left" -> stringResource(R.string.nav_mode_action_expand_selection_word_left)
@@ -937,6 +939,8 @@ private fun getMappingLabelShort(mapping: KeyMappingLoader.CtrlMapping): String?
             "select_all" -> stringResource(R.string.nav_mode_action_select_all)
             "expand_selection_left" -> stringResource(R.string.nav_mode_action_expand_selection_left)
             "expand_selection_right" -> stringResource(R.string.nav_mode_action_expand_selection_right)
+            "expand_selection_up" -> stringResource(R.string.nav_mode_action_expand_selection_up)
+            "expand_selection_down" -> stringResource(R.string.nav_mode_action_expand_selection_down)
             "move_word_left" -> stringResource(R.string.nav_mode_action_move_word_left)
             "move_word_right" -> stringResource(R.string.nav_mode_action_move_word_right)
             "expand_selection_word_left" -> stringResource(R.string.nav_mode_action_expand_selection_word_left)

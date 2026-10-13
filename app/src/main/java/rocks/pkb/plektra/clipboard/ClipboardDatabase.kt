@@ -35,5 +35,13 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
             }
         }
+
+        internal fun resetForTests() {
+            synchronized(this) {
+                instance?.close()
+                instance = null
+            }
+        }
     }
 }
+

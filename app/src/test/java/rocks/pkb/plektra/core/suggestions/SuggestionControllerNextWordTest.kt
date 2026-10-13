@@ -16,6 +16,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -73,9 +75,15 @@ class SuggestionControllerNextWordTest {
         pressSpace(controller)
 
         val latest = snapshots.last()
-        assertEquals(listOf("bin", "bar"), latest.map { it.candidate })
-        assertEquals(SuggestionKind.NEXT_WORD, latest.first().kind)
-        assertEquals(SuggestionKind.STARTER_WORD, latest[1].kind)
+
+        assertEquals(
+            listOf("bin"),
+            latest.map { it.candidate }
+        )
+        assertEquals(
+            SuggestionKind.NEXT_WORD,
+            latest.first().kind
+        )
     }
 
     @Test
@@ -125,7 +133,7 @@ class SuggestionControllerNextWordTest {
 
         assertEquals(listOf("bin"), store.predict("de-DE", "ich", limit = 3).map { it.word })
         assertTrue(store.predict("de-DE", "bin", limit = 3).isEmpty())
-        assertEquals(SuggestionKind.STARTER_WORD, snapshots.last().first().kind)
+        assertTrue(snapshots.last().isEmpty())
     }
 
     @Test
@@ -176,6 +184,60 @@ class SuggestionControllerNextWordTest {
     }
 
     @Test
+    fun updateLocaleClearsOldSuggestionsAndUsesNewLocale() {
+        val frRepository = FakeDictionaryRepository().apply {
+            isReady = true
+            addTestEntry("français", 200)
+        }
+        val enRepository = FakeDictionaryRepository().apply {
+            isReady = true
+            addTestEntry("english", 200)
+        }
+
+        val context = RuntimeEnvironment.getApplication()
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = Locale.FRENCH,
+            dictionaryRepositoryFactory = { _, _, _, locale, _ ->
+                if (locale.language == "en") enRepository else frRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(store),
+            activeSuggestionLocalesProvider = { emptyList() }
+        )
+        controllers.add(controller)
+
+        // Produce a real French suggestion first.
+        typeWord(controller, "fran")
+
+        assertTrue(
+            waitForSuggestionCandidates("français")
+                .any { it.candidate == "français" }
+        )
+
+        // Switching locale must immediately remove the old French state.
+        controller.updateLocale(Locale.ENGLISH)
+
+        assertTrue(snapshots.last().isEmpty())
+
+        // New typing must now be handled by the English engine.
+        typeWord(controller, "eng")
+
+        assertEquals(
+            listOf("english"),
+            waitForSuggestionCandidates("english")
+                .map { it.candidate }
+        )
+    }
+
+    @Test
     fun emptyInitialContextShowsStarterSuggestions() {
         fakeRepository.addTestEntry("Plektra", 255, SuggestionSource.DEFAULT_USER)
         fakeRepository.addTestEntry("BlackBerry", 255, SuggestionSource.DEFAULT_USER)
@@ -206,21 +268,7 @@ class SuggestionControllerNextWordTest {
     }
 
     @Test
-    fun softBoundaryFallsBackToStarterSuggestionsWhenNoBigramExists() {
-        fakeRepository.addTestEntry("ich", 220)
-        fakeRepository.addTestEntry("dann", 210)
-        val controller = newController()
-
-        typeWord(controller, "neu")
-        pressSpace(controller)
-
-        val latest = snapshots.last()
-        assertEquals(listOf("ich", "dann", "bar"), latest.map { it.candidate })
-        assertEquals(SuggestionKind.STARTER_WORD, latest.first().kind)
-    }
-
-    @Test
-    fun learnedBigramOverridesSoftBoundaryStarterFallback() {
+    fun learnedBigramIsShownWithoutStarterFallback() {
         fakeRepository.addTestEntry("ich", 220)
         fakeRepository.addTestEntry("dann", 210)
         val controller = newController()
@@ -233,9 +281,8 @@ class SuggestionControllerNextWordTest {
         pressSpace(controller)
 
         val latest = snapshots.last()
-        assertEquals(listOf("bin", "ich", "dann"), latest.map { it.candidate })
+        assertEquals(listOf("bin"), latest.map { it.candidate })
         assertEquals(SuggestionKind.NEXT_WORD, latest.first().kind)
-        assertEquals(SuggestionKind.STARTER_WORD, latest[1].kind)
     }
 
     @Test
@@ -279,43 +326,1036 @@ class SuggestionControllerNextWordTest {
         assertEquals(SuggestionKind.STARTER_WORD, latest[2].kind)
     }
 
-    private fun newController(): SuggestionController {
+    @Test
+    fun autoLearnedWordIsPersistedOnlyOnceWithMultipleRepositories() {
+        val deRepository = FakeDictionaryRepository().apply {
+            isReady = true
+        }
+
+        val enRepository = FakeDictionaryRepository().apply {
+            isReady = true
+        }
+
         val context = RuntimeEnvironment.getApplication()
-        return SuggestionController(
+
+        val controller = SuggestionController(
             context = context,
             assets = context.assets,
-            settingsProvider = { SuggestionSettings(suggestionsEnabled = true, maxSuggestions = 3) },
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3
+                )
+            },
             onSuggestionsUpdated = { snapshots.add(it) },
             currentLocale = Locale.GERMANY,
-            dictionaryRepositoryFactory = { _, _, _, _, _ -> fakeRepository },
-            nextWordPredictorOverride = NextWordPredictor(store)
-        ).also { controllers.add(it) }
-    }
+            dictionaryRepositoryFactory = { _, _, _, locale, _ ->
+                if (locale.language == "en") {
+                    enRepository
+                } else {
+                    deRepository
+                }
+            },
+            nextWordPredictorOverride = NextWordPredictor(store),
+            activeSuggestionLocalesProvider = {
+                listOf(Locale.ENGLISH)
+            }
+        )
 
-    private fun typeWord(controller: SuggestionController, word: String) {
-        word.forEach { ch ->
-            controller.onCharacterCommitted(ch.toString(), null)
+        controllers.add(controller)
+
+        repeat(3) {
+            typeWord(controller, "monpetitloup")
+            pressSpace(controller)
         }
+
+        assertEquals(
+            0,
+            deRepository.autoLearnedAddCount +
+                    enRepository.autoLearnedAddCount
+        )
+
+        assertEquals(
+            2,
+            deRepository.storedUserIndexCount +
+                    enRepository.storedUserIndexCount
+        )
     }
 
-    private fun waitForSuggestionCandidates(vararg candidates: String): List<SuggestionResult> {
-        val expected = candidates.toList()
+    @Test
+    fun learningMaintenanceRunsAfterFiveHundredCompletedWords() {
+        val controller = newController()
+
+        repeat(499) {
+            controller.noteCompletedWordForMaintenanceForTests()
+        }
+
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            0,
+            controller.maintenanceRunCountForTests
+        )
+
+        controller.noteCompletedWordForMaintenanceForTests()
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            1,
+            controller.maintenanceRunCountForTests
+        )
+    }
+    @Test
+    fun learningMaintenanceRemovesPrunedAutoLearnedWordFromLoadedRepository() {
+        val context = RuntimeEnvironment.getApplication()
+
+        val userDictionaryStore = UserDictionaryStore()
+
+        userDictionaryStore.getSnapshot()
+            .map { it.word }
+            .forEach { word ->
+                userDictionaryStore.removeWord(context, word)
+            }
+
+        userDictionaryStore.addAutoLearnedWord(
+            context,
+            "monpetitloup"
+        )
+
+        fakeRepository.addTestEntry(
+            "monpetitloup",
+            1,
+            SuggestionSource.USER
+        )
+
+        assertTrue(
+            fakeRepository.isKnownWord("monpetitloup")
+        )
+
+        val controller = newController()
+        controller.setMaintenanceNowMsForTests(
+            System.currentTimeMillis() +
+                    91L * 24L * 60L * 60L * 1000L
+        )
+
+        repeat(500) {
+            controller.noteCompletedWordForMaintenanceForTests()
+        }
+
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            1,
+            fakeRepository.storedUserRemoveCount
+        )
+
+        assertTrue(
+            !fakeRepository.isKnownWord("monpetitloup")
+        )
+    }
+
+    @Test
+    fun learningMaintenanceDemotesMultiWordSequenceAfterNGramEvidenceIsPruned() {
+        val context = RuntimeEnvironment.getApplication()
+        val locale = Locale.GERMANY
+
+        val phraseStore = PhraseUsageStore(context).apply {
+            clearAll()
+        }
+
+        val multiWordStore = MultiWordStore(context).apply {
+            clearAll()
+        }
+
+        val words = listOf("ich", "bin", "hier")
+        val oldNow = 1_000L
+
+        // PhraseUsage reste volontairement forte :
+        // elle ne doit PAS être supprimée par la maintenance.
+        repeat(8) {
+            phraseStore.learn(
+                locale = locale,
+                words = words,
+                nowMs = oldNow
+            )
+        }
+
+        // Les NGram sont anciens et faibles.
+        // Avec le seuil de pruning actuel (count <= 1),
+        // ils doivent disparaître pendant la maintenance.
+        store.learn(
+            locale.toLanguageTag(),
+            "ich",
+            "bin",
+            oldNow
+        )
+
+        store.learn(
+            locale.toLanguageTag(),
+            "bin",
+            "hier",
+            oldNow
+        )
+
+        multiWordStore.promote(
+            locale = locale,
+            words = words,
+            phraseCount = 8,
+            nowMs = oldNow
+        )
+
+        assertTrue(
+            multiWordStore.find(locale, words) != null
+        )
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3,
+                    multiWordSuggestionsEnabled = true
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = locale,
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(
+                store = store,
+                asyncLearning = false
+            ),
+            phraseUsageRepositoryOverride = phraseStore,
+            multiWordStoreOverride = multiWordStore
+        )
+
+        controllers.add(controller)
+
+        controller.setMaintenanceNowMsForTests(
+            oldNow +
+                    365L * 24L * 60L * 60L * 1000L
+        )
+
+        repeat(500) {
+            controller.noteCompletedWordForMaintenanceForTests()
+        }
+
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            1,
+            controller.maintenanceRunCountForTests
+        )
+
+        // PhraseUsage forte : elle doit avoir survécu.
+        assertTrue(
+            phraseStore.getUsage(locale, words) != null
+        )
+
+        // NGram faibles et anciens : ils doivent avoir été supprimés.
+        assertTrue(
+            store.predict(
+                locale.toLanguageTag(),
+                "ich",
+                limit = 3
+            ).isEmpty()
+        )
+
+        // Le MultiWord promu n'a donc plus les preuves NGram requises :
+        // la maintenance doit l'avoir démoté.
+        assertTrue(
+            multiWordStore.find(locale, words) == null
+        )
+
+        phraseStore.close()
+    }
+
+    @Test
+    fun learningMaintenanceDemotesMultiWordSequenceFromInactiveLocale() {
+        val context = RuntimeEnvironment.getApplication()
+
+        val activeLocale = Locale.GERMANY
+        val inactiveLocale = Locale.FRENCH
+
+        val phraseStore = PhraseUsageStore(context).apply {
+            clearAll()
+        }
+
+        val multiWordStore = MultiWordStore(context).apply {
+            clearAll()
+        }
+
+        val words = listOf("à", "la", "maison")
+
+        multiWordStore.promote(
+            locale = inactiveLocale,
+            words = words,
+            phraseCount = 8,
+            nowMs = 1_000L
+        )
+
+        assertTrue(
+            multiWordStore.find(inactiveLocale, words) != null
+        )
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3,
+                    multiWordSuggestionsEnabled = true
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+
+            // La langue ACTIVE est volontairement l'allemand.
+            currentLocale = activeLocale,
+
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(
+                store = store,
+                asyncLearning = false
+            ),
+            phraseUsageRepositoryOverride = phraseStore,
+            multiWordStoreOverride = multiWordStore
+        )
+
+        controllers.add(controller)
+
+        repeat(500) {
+            controller.noteCompletedWordForMaintenanceForTests()
+        }
+
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            1,
+            controller.maintenanceRunCountForTests
+        )
+
+        assertTrue(
+            multiWordStore.find(inactiveLocale, words) == null
+        )
+
+        phraseStore.close()
+    }
+
+    @Test
+    fun destroyCancelsRunningLearningMaintenanceBeforeItCompletes() {
+        val context = RuntimeEnvironment.getApplication()
+        val blockingWordUsageStore = BlockingWordUsageRepository()
+        val countingPhraseUsageStore = CountingPhraseUsageRepository()
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = Locale.GERMANY,
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(
+                store = store,
+                asyncLearning = false
+            ),
+            wordUsageRepositoryOverride = blockingWordUsageStore,
+            phraseUsageRepositoryOverride = countingPhraseUsageStore
+        )
+
+        controllers.add(controller)
+
+        // Déclenche la maintenance.
+        repeat(500) {
+            controller.noteCompletedWordForMaintenanceForTests()
+        }
+
+        // Attend qu'elle soit réellement entrée dans WordUsage.prune().
+        assertTrue(
+            blockingWordUsageStore.pruneStarted.await(
+                5,
+                TimeUnit.SECONDS
+            )
+        )
+
+        assertEquals(
+            1,
+            controller.maintenanceRunCountForTests
+        )
+
+        // Le contrôleur disparaît pendant que prune() est encore bloqué.
+        controller.destroy()
+
+        // Autorise le prune synchrone déjà commencé à revenir.
+        blockingWordUsageStore.allowPruneToFinish.countDown()
+        assertTrue(
+            blockingWordUsageStore.pruneFinished.await(
+                5,
+                TimeUnit.SECONDS
+            )
+        )
+
+        controller.waitForMaintenanceForTests()
+
+        assertEquals(
+            0,
+            controller.maintenanceCompletedCountForTests
+        )
+        assertEquals(
+            0,
+            countingPhraseUsageStore.pruneCallCount
+        )
+    }
+
+    @Test
+    fun committedSuggestionLearnsBigramFromPreviousCompletedWord() {
+        val controller = newController()
+
+        // Establish "mon" as the current completed-word context.
+        typeWord(controller, "mon")
+        pressSpace(controller)
+
+        // Simulate selecting BlackBerry from the suggestion bar.
+        controller.onSuggestionCommitted("BlackBerry")
+        controller.flushNextWordLearningForTests()
+
+        val predictions = store.predict(
+            "de-DE",
+            "mon",
+            limit = 3
+        )
+
+        assertEquals(
+            listOf("BlackBerry"),
+            predictions.map { it.word }
+        )
+    }
+
+    @Test
+    fun committedMultiWordSuggestionLearnsEachBigramInSequence() {
+        val controller = newController()
+
+        typeWord(controller, "je")
+        pressSpace(controller)
+
+        controller.onSuggestionCommitted("voudrais savoir")
+        controller.flushNextWordLearningForTests()
+
+        assertEquals(
+            listOf("voudrais"),
+            store.predict(
+                "de-DE",
+                "je",
+                limit = 3
+            ).map { it.word }
+        )
+
+        assertEquals(
+            listOf("savoir"),
+            store.predict(
+                "de-DE",
+                "voudrais",
+                limit = 3
+            ).map { it.word }
+        )
+    }
+
+    @Test
+    fun nextWordPredictionUsesCanonicalDictionaryCasing() {
+        fakeRepository.addTestEntry(
+            "BlackBerry",
+            255,
+            SuggestionSource.DEFAULT_USER
+        )
+
+        val controller = newController()
+
+        // Learn the casing exactly as it may have been typed by the user.
+        typeWord(controller, "mon")
+        pressSpace(controller)
+
+        typeWord(controller, "blackBerry")
+        pressSpace(controller)
+
+        // Ask for predictions after "mon" again.
+        typeWord(controller, "mon")
+        pressSpace(controller)
+
+        val latest = snapshots.last()
+
+        assertEquals(
+            listOf("BlackBerry"),
+            latest.map { it.candidate }
+        )
+    }
+
+    @Test
+    fun frenchNextWordPredictionLowercasesSentenceInitialCasingMidSentence() {
+        fakeRepository.addTestEntry(
+            "souviens-toi",
+            255,
+            SuggestionSource.DEFAULT_USER
+        )
+
+        val context = RuntimeEnvironment.getApplication()
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = Locale.FRENCH,
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(store)
+        )
+
+        controllers.add(controller)
+
+        // Reproduit une forme historiquement apprise en début de phrase.
+        store.learn(
+            Locale.FRENCH.toLanguageTag(),
+            "je",
+            "Souviens-toi"
+        )
+
+        // En milieu de phrase, la graphie canonique française doit être utilisée.
+        typeWord(controller, "je")
+        pressSpace(controller)
+
+        val latest = snapshots.last()
+
+        assertTrue(
+            latest.any { it.candidate == "souviens-toi" }
+        )
+
+        assertTrue(
+            latest.none { it.candidate == "Souviens-toi" }
+        )
+    }
+
+    @Test
+    fun extraLocaleNextWordPredictionUsesCanonicalDictionaryCasing() {
+        val deRepository = FakeDictionaryRepository().apply {
+            isReady = true
+        }
+
+        val enRepository = FakeDictionaryRepository().apply {
+            isReady = true
+            addTestEntry(
+                "BlackBerry",
+                255,
+                SuggestionSource.DEFAULT_USER
+            )
+        }
+
+        val context = RuntimeEnvironment.getApplication()
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = Locale.GERMANY,
+            dictionaryRepositoryFactory = { _, _, _, locale, _ ->
+                if (locale.language == "en") {
+                    enRepository
+                } else {
+                    deRepository
+                }
+            },
+            nextWordPredictorOverride = NextWordPredictor(store),
+            activeSuggestionLocalesProvider = {
+                listOf(Locale.ENGLISH)
+            }
+        )
+
+        controllers.add(controller)
+
+        // Create an English NGram whose stored casing is non-canonical.
+        store.learn(
+            Locale.ENGLISH.toLanguageTag(),
+            "mon",
+            "blackBerry"
+        )
+
+        // Force creation/loading of the extra English repository.
+        typeWord(controller, "bla")
+        waitForSuggestionCandidates("BlackBerry")
+
+        // Return to a clean context and request predictions after "mon".
+        controller.onContextReset()
+
+        typeWord(controller, "mon")
+        pressSpace(controller)
+
+        val latest = snapshots.last()
+
+        assertTrue(
+            latest.any { it.candidate == "BlackBerry" }
+        )
+
+        assertTrue(
+            latest.none { it.candidate == "blackBerry" }
+        )
+    }
+
+    @Test
+    fun phraseUsageNextWordUsesCanonicalDictionaryCasing() {
+        val context = RuntimeEnvironment.getApplication()
+        val locale = Locale.GERMANY
+
+        fakeRepository.addTestEntry(
+            "BlackBerry",
+            255,
+            SuggestionSource.DEFAULT_USER
+        )
+
+        val phraseStore = PhraseUsageStore(context).apply {
+            clearAll()
+        }
+
+        // Reproduce the historical casing seen on the physical phone.
+        repeat(4) {
+            phraseStore.learn(
+                locale = locale,
+                words = listOf("mon", "blackBerry")
+            )
+        }
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3,
+                    multiWordSuggestionsEnabled = true
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = locale,
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(store),
+            phraseUsageRepositoryOverride = phraseStore
+        )
+
+        controllers.add(controller)
+
+        typeWord(controller, "mon")
+        pressSpace(controller)
+
+        val latest = snapshots.last()
+
+        println(
+            "PHRASE_CANON latest=" +
+                    latest.joinToString { result ->
+                        "'${result.candidate}'[${result.score}/${result.source}/${result.kind}]"
+                    }
+        )
+
+        println(
+            "PHRASE_CANON normalized=" +
+                    WordNormalization.normalizeForSuggestion(
+                        "blackBerry",
+                        locale
+                    )
+        )
+
+        println(
+            "PHRASE_CANON repository=" +
+                    fakeRepository.topByNormalized(
+                        WordNormalization.normalizeForSuggestion(
+                            "blackBerry",
+                            locale
+                        ),
+                        limit = 16
+                    ).joinToString { "'${it.word}'" }
+        )
+
+        assertTrue(
+            latest.any { it.candidate == "BlackBerry" }
+        )
+
+        assertTrue(
+            latest.none { it.candidate == "blackBerry" }
+        )
+
+        phraseStore.close()
+    }
+
+    @Test
+    fun promotedMultiWordUsesCanonicalDictionaryCasing() {
+        val context = RuntimeEnvironment.getApplication()
+        val locale = Locale.FRENCH
+
+        fakeRepository.addTestEntry(
+            "je",
+            255,
+            SuggestionSource.MAIN
+        )
+        fakeRepository.addTestEntry(
+            "voudrais",
+            255,
+            SuggestionSource.MAIN
+        )
+
+        val phraseStore = PhraseUsageStore(context).apply {
+            clearAll()
+        }
+
+        val multiWordStore = MultiWordStore(context).apply {
+            clearAll()
+        }
+
+        // Forme historiquement enregistrée avec une majuscule
+        // provenant d'un début de phrase.
+        multiWordStore.promote(
+            locale = locale,
+            words = listOf("Je", "voudrais"),
+            phraseCount = 8,
+            nowMs = 1_000L
+        )
+
+        // Rend "Je voudrais" éligible après "ici".
+        repeat(4) {
+            phraseStore.learn(
+                locale = locale,
+                words = listOf("ici", "Je", "voudrais")
+            )
+        }
+
+        val controller = SuggestionController(
+            context = context,
+            assets = context.assets,
+            settingsProvider = {
+                SuggestionSettings(
+                    suggestionsEnabled = true,
+                    maxSuggestions = 3,
+                    multiWordSuggestionsEnabled = true
+                )
+            },
+            onSuggestionsUpdated = { snapshots.add(it) },
+            currentLocale = locale,
+            dictionaryRepositoryFactory = { _, _, _, _, _ ->
+                fakeRepository
+            },
+            nextWordPredictorOverride = NextWordPredictor(
+                store = store,
+                asyncLearning = false
+            ),
+            phraseUsageRepositoryOverride = phraseStore,
+            multiWordStoreOverride = multiWordStore
+        )
+
+        controllers.add(controller)
+
+        typeWord(controller, "ici")
+        pressSpace(controller)
+
+        val latest = snapshots.last()
+
+        println(
+            "CASE_TEST latest=" +
+                    latest.joinToString(" | ") {
+                        "'${it.candidate}'"
+                    }
+        )
+
+        assertTrue(latest.any { it.candidate == "je voudrais" })
+        assertTrue(latest.none { it.candidate == "Je voudrais" })
+
+        phraseStore.close()
+    }
+
+
+    @Test
+    fun numericAltLockedSpaceLearnsRepeatedNumberAheadOfSingleTypo() {
+        val controller = newController()
+        val context = RuntimeEnvironment.getApplication()
+        val router = rocks.pkb.plektra.inputmethod.InputEventRouter(
+            context,
+            rocks.pkb.plektra.core.NavModeController(context,
+                rocks.pkb.plektra.core.ModifierStateController(300L))
+        ).apply { suggestionController = controller }
+        val alternate = rocks.pkb.plektra.inputmethod.AlternateCharacterManager(
+            context.assets, rocks.pkb.plektra.SettingsManager.getPreferences(context), context
+        )
+        val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+            override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence = ""
+            override fun getTextAfterCursor(n: Int, flags: Int): CharSequence = ""
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean = true
+        }
+        fun altSpace() {
+            assertTrue(router.handleAltModifiedKey(KeyEvent.KEYCODE_SPACE, null, input, alternate,
+                updateStatusBar = {}, callSuperWithKey = { _, _ -> false }))
+        }
+        repeat(3) {
+            controller.onContextReset()
+            typeWord(controller, "à"); altSpace()
+            typeWord(controller, "11"); altSpace()
+            typeWord(controller, "heures"); altSpace()
+        }
+        controller.onContextReset()
+        typeWord(controller, "à"); altSpace()
+        typeWord(controller, "ZZ"); altSpace()
+        controller.onContextReset()
+        typeWord(controller, "à"); altSpace()
+        assertEquals("11", snapshots.last().first().candidate)
+        typeWord(controller, "11"); altSpace()
+        assertEquals("heures", snapshots.last().first().candidate)
+    }
+
+    @Test
+    fun compoundAltHyphenPreservesElisionContextAndCompletesPrefix() {
+        val controller = newController()
+        val context = RuntimeEnvironment.getApplication()
+        val router = rocks.pkb.plektra.inputmethod.InputEventRouter(context,
+            rocks.pkb.plektra.core.NavModeController(context,
+                rocks.pkb.plektra.core.ModifierStateController(300L)))
+            .apply { suggestionController = controller }
+        val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+            override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence = "rendez-".takeLast(n)
+            override fun getTextAfterCursor(n: Int, flags: Int): CharSequence = ""
+        }
+        typeWord(controller, "J'ai"); pressSpace(controller)
+        typeWord(controller, "rendez")
+        router.handleCommittedAltCharacter('-', input)
+        typeWord(controller, "vous"); pressSpace(controller)
+        controller.onContextReset()
+        controller.onSuggestionCommitted("J'ai")
+        assertEquals("rendez-vous", snapshots.last().first().candidate)
+        snapshots.clear()
+        typeWord(controller, "rendez")
+        assertEquals(SuggestionKind.CURRENT_WORD, waitForSuggestionCandidates("rendez-vous", kind = SuggestionKind.CURRENT_WORD).first().kind)
+        snapshots.clear()
+        typeWord(controller, "-")
+        assertEquals(SuggestionKind.CURRENT_WORD, waitForSuggestionCandidates("rendez-vous", kind = SuggestionKind.CURRENT_WORD).first().kind)
+    }
+
+    @Test
+    fun compoundStandaloneAltHyphenResetsContext() {
+        val controller = newController()
+        val context = RuntimeEnvironment.getApplication()
+        val router = rocks.pkb.plektra.inputmethod.InputEventRouter(context,
+            rocks.pkb.plektra.core.NavModeController(context,
+                rocks.pkb.plektra.core.ModifierStateController(300L)))
+            .apply { suggestionController = controller }
+        typeWord(controller, "J'ai"); pressSpace(controller)
+        router.handleCommittedAltCharacter('-', null)
+        typeWord(controller, "vous"); pressSpace(controller)
+        controller.flushNextWordLearningForTests()
+        assertTrue(store.predict("de-DE", "jai", 3).isEmpty())
+    }
+
+    @Test
+    fun backupNumericCountOutranksSingleLetterOnlyPhrase() {
+        val context = RuntimeEnvironment.getApplication()
+        val phrases = PhraseUsageStore(context).apply { clearAll() }
+        val predictor = NextWordPredictor(store, asyncLearning = false)
+        val locale = Locale.GERMANY
+        repeat(27) { predictor.learn(locale, "à", "11") }
+        predictor.learn(locale, "à", "ZZ")
+        phrases.learn(locale, listOf("à", "ZZ"))
+        repeat(14) { phrases.learn(locale, listOf("à", "la")) }
+        val controller = SuggestionController(context, context.assets,
+            settingsProvider = { SuggestionSettings(suggestionsEnabled = true) },
+            onSuggestionsUpdated = { snapshots += it }, currentLocale = locale,
+            dictionaryRepositoryFactory = { _, _, _, _, _ -> fakeRepository },
+            nextWordPredictorOverride = predictor, phraseUsageRepositoryOverride = phrases)
+        controllers.add(controller)
+        typeWord(controller, "à"); pressSpace(controller)
+        assertEquals("11", snapshots.last().first().candidate)
+        controller.destroy(); controllers.remove(controller)
+        phrases.close()
+    }
+
+    @Test
+    fun backupLearningRetainsNumberInsidePhraseAndWordUsage() {
+        val context = RuntimeEnvironment.getApplication()
+        val locale = Locale.FRANCE
+        val phrases = PhraseUsageStore(context).apply { clearAll() }
+        phrases.learn(locale, listOf("à", "11", "heures"))
+        assertEquals(1, phrases.getUsage(locale, listOf("à", "11", "heures"))?.count)
+        val words = WordUsageStore(context).apply { clearAll() }
+        words.learn(locale, "11")
+        assertEquals(1, words.getUsage(locale, "11")?.count)
+        assertEquals("11", WordNormalization.normalizeForSuggestion("11", locale))
+        assertEquals("12", WordNormalization.normalizeForSuggestion("12", locale))
+        phrases.close(); words.close()
+    }
+
+    @Test
+    fun backupCursorRefreshKeepsCompoundCompletionAheadOfDictionaryFillers() {
+        val controller = newController()
+        fakeRepository.addTestEntry("retour", 10000)
+        fakeRepository.addTestEntry("reste", 10000)
+        fakeRepository.addTestEntry("région", 10000)
+        typeWord(controller, "J'ai"); pressSpace(controller)
+        typeWord(controller, "rendez-vous"); pressSpace(controller)
+        controller.onContextReset()
+        val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(RuntimeEnvironment.getApplication()), true) {
+            override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence = "heures. J'ai re".takeLast(n)
+            override fun getTextAfterCursor(n: Int, flags: Int): CharSequence = ""
+        }
+        snapshots.clear()
+        controller.onCursorMoved(input)
+        shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
         repeat(50) {
             shadowOf(Looper.getMainLooper()).idle()
-            snapshots.lastOrNull()?.let { latest ->
-                if (latest.map { it.candidate } == expected) {
-                    return latest
-                }
-            }
+            if (snapshots.lastOrNull()?.firstOrNull()?.candidate == "rendez-vous") return@repeat
             Thread.sleep(10)
         }
-        shadowOf(Looper.getMainLooper()).idle()
-        return snapshots.last()
+        assertEquals("rendez-vous", snapshots.last().first().candidate)
+        assertEquals(SuggestionKind.CURRENT_WORD, snapshots.last().first().kind)
     }
 
-    private fun pressSpace(controller: SuggestionController) {
-        controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, null)
+    @Test
+    fun provisionalPunctuationDoesNotLearnAcceptedWordTwice() {
+        val controller = newController()
+        val context = RuntimeEnvironment.getApplication()
+        val usage = WordUsageStore(context).apply { clearAll() }
+        typeWord(controller, "je"); pressSpace(controller)
+        controller.onSuggestionCommitted("voudrais")
+        val countBefore = usage.getUsage(Locale.GERMANY, "voudrais")?.count
+        val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+            private val buffer = StringBuilder("voudrais ")
+            override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence = buffer.takeLast(n)
+            override fun getTextAfterCursor(n: Int, flags: Int): CharSequence = ""
+            override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
+                buffer.setLength(buffer.length - beforeLength); return true
+            }
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
+                buffer.append(text); return true
+            }
+        }
+        rocks.pkb.plektra.core.AutoSpaceTracker.markSuggestionAutoSpace(input)
+        rocks.pkb.plektra.core.PunctuationAfterSpace.beforeTextCommit(input, ")")
+        controller.onBoundaryKey(KeyEvent.KEYCODE_UNKNOWN, null, input, boundaryCharOverride = ')')
+        assertEquals(countBefore, usage.getUsage(Locale.GERMANY, "voudrais")?.count)
+        usage.close()
     }
+
+    @Test
+    fun numericTransitionsPredictNumberThenHours() {
+        val controller = newController()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "11"); pressSpace(controller)
+        typeWord(controller, "heures"); pressSpace(controller)
+        controller.onContextReset()
+        typeWord(controller, "à"); pressSpace(controller)
+        assertEquals(listOf("11"), snapshots.last().map { it.candidate })
+        typeWord(controller, "11"); pressSpace(controller)
+        assertEquals(listOf("heures"), snapshots.last().map { it.candidate })
+    }
+
+    @Test
+    fun numericPrefixCompletesContextualNumberWithoutPersonalDictionaryEntry() {
+        val controller = newController()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "11"); pressSpace(controller)
+        controller.onContextReset()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "1")
+        assertEquals(listOf("11"), waitForSuggestionCandidates("11").map { it.candidate })
+        assertEquals(null, controller.pendingAddWord())
+    }
+
+    @Test
+    fun numericLongPressReplacementPreservesPreviousWordContext() {
+        val controller = newController()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "11"); pressSpace(controller)
+        controller.onContextReset()
+        typeWord(controller, "à"); pressSpace(controller)
+        controller.onCharacterCommitted("x", null)
+        controller.onCharacterCommitted("1", null, replacesPreviousCharacter = true)
+        assertEquals(listOf("11"), waitForSuggestionCandidates("11").map { it.candidate })
+        assertEquals(null, controller.pendingAddWord())
+    }
+
+    @Test
+    fun numericTokensNeverAutoPromoteToPersonalVocabulary() {
+        val controller = newController()
+        repeat(4) { typeWord(controller, "123"); pressSpace(controller) }
+        assertEquals(0, fakeRepository.autoLearnedAddCount)
+        assertEquals(false, fakeRepository.isKnownWord("123"))
+    }
+
+    @Test
+    fun numericAcceptedSuggestionImmediatelyPredictsHours() {
+        val controller = newController()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "11"); pressSpace(controller)
+        typeWord(controller, "heures"); pressSpace(controller)
+        controller.onContextReset()
+        typeWord(controller, "à"); pressSpace(controller)
+        typeWord(controller, "1")
+        controller.onSuggestionCommitted("11")
+        assertEquals(listOf("heures"), snapshots.last().map { it.candidate })
+    }
+
+        private fun newController(): SuggestionController {
+            val context = RuntimeEnvironment.getApplication()
+            return SuggestionController(
+                context = context,
+                assets = context.assets,
+                settingsProvider = { SuggestionSettings(suggestionsEnabled = true, maxSuggestions = 3) },
+                onSuggestionsUpdated = { snapshots.add(it) },
+                currentLocale = Locale.GERMANY,
+                dictionaryRepositoryFactory = { _, _, _, _, _ -> fakeRepository },
+                nextWordPredictorOverride = NextWordPredictor(store)
+            ).also { controllers.add(it) }
+        }
+
+        private fun typeWord(controller: SuggestionController, word: String) {
+            word.forEach { ch ->
+                controller.onCharacterCommitted(ch.toString(), null)
+            }
+        }
+
+        private fun waitForSuggestionCandidates(vararg candidates: String, kind: SuggestionKind? = null): List<SuggestionResult> {
+            val expected = candidates.toList()
+            repeat(50) {
+                shadowOf(Looper.getMainLooper()).idle()
+                snapshots.lastOrNull()?.let { latest ->
+                    if (latest.map { it.candidate } == expected && (kind == null || latest.firstOrNull()?.kind == kind)) {
+                        return latest
+                    }
+                }
+                Thread.sleep(10)
+            }
+            shadowOf(Looper.getMainLooper()).idle()
+            return snapshots.last()
+        }
+
+        private fun pressSpace(controller: SuggestionController) {
+            controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, null)
+        }
 
     private fun pressSemicolon(controller: SuggestionController) {
         controller.onBoundaryKey(KeyEvent.KEYCODE_SEMICOLON, keyEvent(KeyEvent.KEYCODE_SEMICOLON), null)
@@ -358,5 +1398,91 @@ class SuggestionControllerNextWordTest {
                 else -> null
             }
         } as InputConnection
+    }
+
+    private class CountingPhraseUsageRepository : PhraseUsageRepository {
+
+        var pruneCallCount = 0
+            private set
+
+        override fun learn(
+            locale: Locale,
+            words: List<String>,
+            nowMs: Long
+        ) = Unit
+
+        override fun getUsage(
+            locale: Locale,
+            words: List<String>
+        ): PhraseUsageStore.Usage? = null
+
+        override fun getPromotionCandidates(
+            locale: Locale,
+            minimumCount: Int,
+            limit: Int
+        ): List<PhraseUsageStore.Usage> = emptyList()
+
+        override fun predictNext(
+            locale: Locale,
+            contextWords: List<String>,
+            limit: Int
+        ): List<PhraseUsageStore.Prediction> = emptyList()
+
+        override fun prune(
+            nowMs: Long,
+            staleAfterMs: Long,
+            weakCountThreshold: Int,
+            maxEntriesPerLocale: Int
+        ): Int {
+            pruneCallCount++
+            return 0
+        }
+
+        override fun clearAll() = Unit
+    }
+
+    private class BlockingWordUsageRepository : WordUsageRepository {
+
+        val pruneStarted = CountDownLatch(1)
+        val allowPruneToFinish = CountDownLatch(1)
+
+        val pruneFinished = CountDownLatch(1)
+
+        override fun learn(
+            locale: Locale,
+            word: String,
+            nowMs: Long
+        ) = Unit
+
+        override fun getUsage(
+            locale: Locale,
+            word: String
+        ): WordUsageStore.Usage? = null
+
+        override fun getExactUsage(
+            locale: Locale,
+            word: String
+        ): WordUsageStore.Usage? = null
+
+        override fun delete(
+            locale: Locale,
+            word: String
+        ): Int = 0
+
+        override fun prune(
+            nowMs: Long,
+            staleAfterMs: Long,
+            weakCountThreshold: Int,
+            maxEntriesPerLocale: Int
+        ): Int {
+            pruneStarted.countDown()
+
+            allowPruneToFinish.await(5, TimeUnit.SECONDS)
+
+            pruneFinished.countDown()
+            return 0
+        }
+
+        override fun clearAll() = Unit
     }
 }

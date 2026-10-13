@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
+import rocks.pkb.plektra.LiteralEntryKeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -166,7 +166,7 @@ private fun AddSubstitutionSheet(
                 onValueChange = { trigger = it },
                 label = { Text(stringResource(R.string.add_substitution_trigger_label)) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardOptions = LiteralEntryKeyboardOptions.copy(imeAction = ImeAction.Done),
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)

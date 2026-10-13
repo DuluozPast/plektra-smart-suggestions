@@ -40,7 +40,7 @@ internal object DictionaryPackageBackup {
             if (pack != null && pack.sha256 == sha) {
                 refs[file.name] = JSONObject().put("filename", file.name).put("id", pack.id).put("sha256", sha)
             } else {
-                file.inputStream().use(DictionaryRepositoryManager::validateDictionaryStream)
+                validatePackage(file)
                 val path = "$DIRECTORY/${file.name}"
                 File(destination, path).apply { parentFile?.mkdirs() }.also { file.copyTo(it, overwrite = true) }
                 paths.add(path)
@@ -72,10 +72,19 @@ internal object DictionaryPackageBackup {
         return paths
     }
 
+    private fun validatePackage(file: File) {
+        val magic = file.inputStream().use { stream -> ByteArray(4).also { stream.read(it) } }.decodeToString()
+        if (magic == "P31D") {
+            rocks.pkb.plektra.core.suggestions.CompactDictionaryV31Reader(file).use { reader ->
+                require(reader.wordCount >= 0)
+            }
+        } else file.inputStream().use(DictionaryRepositoryManager::validateDictionaryStream)
+    }
+
     fun validate(root: File) {
         File(root, DIRECTORY).walkTopDown().filter { it.isFile }.forEach { file ->
             require(file.parentFile == File(root, DIRECTORY) && file.extension.equals("dict", ignoreCase = true)) { "Invalid dictionary backup path" }
-            file.inputStream().use(DictionaryRepositoryManager::validateDictionaryStream)
+            validatePackage(file)
         }
         references(root)
     }

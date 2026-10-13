@@ -151,6 +151,13 @@ class AutoCorrectionManager(
                     return true
                 }
             } else if (boundaryChar in bracketSet) {
+                val before = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
+                if (
+                    before.lastOrNull() == ' ' &&
+                    before.dropLast(1).lastOrNull()?.isLetterOrDigit() == true
+                ) {
+                    inputConnection.deleteSurroundingText(1, 0)
+                }
                 AutoSpaceTracker.clear()
                 return false
             }

@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.junit.Assert.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -94,5 +95,170 @@ class UserNGramStoreTest {
         assertEquals(2, deleted)
         assertTrue(store.predict("de-DE", "ich", limit = 3).isEmpty())
         assertTrue(store.predict("de-DE", "wir", limit = 3).isEmpty())
+    }
+
+    @Test
+    fun prune_removesWeakStaleTransition() {
+        store.learn("fr-FR", "je", "vais", nowMs = 100L)
+
+        val deleted = store.prune(
+            nowMs = 10_000L,
+            staleAfterMs = 5_000L,
+            weakCountThreshold = 2,
+            maxEntriesPerLocale = 100
+        )
+
+        assertEquals(1, deleted)
+        assertNull(store.getUsage("fr-FR", "je", "vais"))
+    }
+
+    @Test
+    fun prune_keepsWeakRecentTransition() {
+        store.learn("fr-FR", "je", "vais", nowMs = 9_000L)
+
+        val deleted = store.prune(
+            nowMs = 10_000L,
+            staleAfterMs = 5_000L,
+            weakCountThreshold = 2,
+            maxEntriesPerLocale = 100
+        )
+
+        assertEquals(0, deleted)
+        assertEquals(
+            1,
+            store.getUsage("fr-FR", "je", "vais")?.count
+        )
+    }
+
+    @Test
+    fun prune_keepsStrongStaleTransition() {
+        repeat(3) { index ->
+            store.learn(
+                "fr-FR",
+                "je",
+                "vais",
+                nowMs = 100L + index
+            )
+        }
+
+        val deleted = store.prune(
+            nowMs = 10_000L,
+            staleAfterMs = 5_000L,
+            weakCountThreshold = 2,
+            maxEntriesPerLocale = 100
+        )
+
+        assertEquals(0, deleted)
+        assertEquals(
+            3,
+            store.getUsage("fr-FR", "je", "vais")?.count
+        )
+    }
+
+    @Test
+    fun prune_enforcesCapPerLocale() {
+        store.learn("fr-FR", "je", "pars", nowMs = 300L)
+
+        repeat(2) {
+            store.learn("fr-FR", "je", "vais", nowMs = 200L)
+        }
+
+        repeat(3) {
+            store.learn("fr-FR", "je", "suis", nowMs = 100L)
+        }
+
+        val deleted = store.prune(
+            nowMs = 1_000L,
+            staleAfterMs = 10_000L,
+            weakCountThreshold = 0,
+            maxEntriesPerLocale = 2
+        )
+
+        assertEquals(1, deleted)
+        assertNull(store.getUsage("fr-FR", "je", "pars"))
+        assertEquals(
+            2,
+            store.getUsage("fr-FR", "je", "vais")?.count
+        )
+        assertEquals(
+            3,
+            store.getUsage("fr-FR", "je", "suis")?.count
+        )
+    }
+
+    @Test
+    fun prune_capUsesRecencyWhenCountsAreEqual() {
+        store.learn("fr-FR", "je", "pars", nowMs = 100L)
+        store.learn("fr-FR", "je", "reste", nowMs = 200L)
+
+        val deleted = store.prune(
+            nowMs = 1_000L,
+            staleAfterMs = 10_000L,
+            weakCountThreshold = 0,
+            maxEntriesPerLocale = 1
+        )
+
+        assertEquals(1, deleted)
+        assertNull(store.getUsage("fr-FR", "je", "pars"))
+        assertEquals(
+            1,
+            store.getUsage("fr-FR", "je", "reste")?.count
+        )
+    }
+
+    @Test
+    fun prune_appliesCapIndependentlyPerLocale() {
+        store.learn("fr-FR", "je", "pars", nowMs = 100L)
+        store.learn("fr-FR", "je", "reste", nowMs = 200L)
+
+        store.learn("en-US", "i", "leave", nowMs = 100L)
+        store.learn("en-US", "i", "stay", nowMs = 200L)
+
+        val deleted = store.prune(
+            nowMs = 1_000L,
+            staleAfterMs = 10_000L,
+            weakCountThreshold = 0,
+            maxEntriesPerLocale = 1
+        )
+
+        assertEquals(2, deleted)
+
+        assertNull(store.getUsage("fr-FR", "je", "pars"))
+        assertEquals(
+            1,
+            store.getUsage("fr-FR", "je", "reste")?.count
+        )
+
+        assertNull(store.getUsage("en-US", "i", "leave"))
+        assertEquals(
+            1,
+            store.getUsage("en-US", "i", "stay")?.count
+        )
+    }
+
+    @Test
+    fun prune_capCountsTransitionsNotPrefixes() {
+        store.learn("fr-FR", "je", "vais", nowMs = 100L)
+        store.learn("fr-FR", "tu", "vas", nowMs = 200L)
+        store.learn("fr-FR", "nous", "allons", nowMs = 300L)
+
+        val deleted = store.prune(
+            nowMs = 1_000L,
+            staleAfterMs = 10_000L,
+            weakCountThreshold = 0,
+            maxEntriesPerLocale = 2
+        )
+
+        assertEquals(1, deleted)
+
+        assertNull(store.getUsage("fr-FR", "je", "vais"))
+        assertEquals(
+            1,
+            store.getUsage("fr-FR", "tu", "vas")?.count
+        )
+        assertEquals(
+            1,
+            store.getUsage("fr-FR", "nous", "allons")?.count
+        )
     }
 }

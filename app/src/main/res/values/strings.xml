@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="speech_external_enable">Enable FUTO Voice Input in Android keyboard settings</string>
     <string name="speech_external_installed">FUTO Voice Input is installed.</string>
@@ -19,20 +20,14 @@
     <string name="input_method_name_ru">Русский</string>
     <string name="input_method_name_sr">Српски</string>
     <string name="input_method_name_uk">Українська</string>
-
-    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="back">Back</string>
     <string name="settings_back_content_description">Back</string>
-    
-    <!-- Long Press Section -->
     <string name="long_press_title">Long Press</string>
     <string name="keyboard_timing_long_press_value">%1$dms</string>
     <string name="long_press_duration">Long Press Duration: %1$dms</string>
     <string name="long_press_description">Wait time before a long press is recognized. A lower value makes long press more responsive, while a higher value requires a longer press.</string>
     <string name="setting_applied_immediately">Setting applied immediately</string>
-    
-    <!-- Text Input Sections -->
     <string name="text_input_section_capitalization">Capitalization</string>
     <string name="text_input_section_spacing_punctuation">Spacing &amp; punctuation</string>
     <string name="text_input_section_typography">Typography</string>
@@ -40,24 +35,16 @@
     <string name="experimental_smooth_caret_title">Smooth caret overlay</string>
     <string name="experimental_smooth_caret_description">Experimentally replaces the app cursor with an animated Plektra cursor. Requires permission to display over other apps; editor support varies.</string>
     <string name="text_input_section_delete">Delete</string>
-
-    <!-- Auto Capitalize Section -->
     <string name="auto_capitalize_title">Capitalize at text start</string>
     <string name="auto_capitalize_description">Capitalize the first letter when starting in an empty text field.</string>
     <string name="auto_capitalize_respect_manual_shift_off_title">Respect manual Shift off</string>
     <string name="auto_capitalize_respect_manual_shift_off_description">Keep automatic Shift off while you remain in the same text field.</string>
     <string name="auto_capitalize_restricted_fields_title">Shift in all text fields</string>
     <string name="auto_capitalize_restricted_fields_description">Also start address bars, email, and search fields with Shift. Password fields remain unchanged.</string>
-
-    <!-- Auto Capitalize After Period Section -->
     <string name="auto_capitalize_after_period_title">Capitalize after sentence end</string>
     <string name="auto_capitalize_after_period_description">Capitalize the next letter after a period and space.</string>
-
-    <!-- Double Space to Period Section -->
     <string name="double_space_to_period_title">Double Space inserts period</string>
     <string name="double_space_to_period_description">Press Space twice to insert a period and a space.</string>
-
-    <!-- Smart punctuation Section -->
     <string name="spaced_hyphen_to_en_dash_title">Hyphen to dash</string>
     <string name="spaced_hyphen_to_en_dash_description">Turn “word - word” into a dash.</string>
     <string name="mid_word_quote_to_apostrophe_title">Quotes inside words</string>
@@ -71,30 +58,21 @@
     <string name="auto_space_punctuation_title">Punctuation spacing</string>
     <string name="auto_space_punctuation_selected">Selected:</string>
     <string name="auto_space_punctuation_none_selected">none</string>
-    <string name="auto_space_punctuation_dialog_instruction">Choose whether Plektra removes its own auto-space before each character and inserts a deferred space before following text.</string>
     <string name="auto_space_punctuation_character_column">Character</string>
     <string name="auto_space_punctuation_before_column">Remove before</string>
-    <string name="auto_space_punctuation_after_column">Before next text</string>
     <string name="auto_space_punctuation_help_action">Explain punctuation spacing</string>
     <string name="auto_space_punctuation_help_title">How punctuation spacing works</string>
-    <string name="auto_space_punctuation_help_text">“Remove before” removes only a space automatically inserted by Plektra, not one you typed manually.\n\n“Before next text” defers the space until more text is typed. Enter or Send therefore leaves no trailing space.</string>
     <string name="auto_space_punctuation_choose">Selected:</string>
     <string name="auto_space_punctuation_choose_off">Off</string>
     <string name="auto_space_punctuation_reset">Reset</string>
     <string name="smart_quotes_title">Quotation mark style</string>
-
-    <!-- Clear Alt on Space Section -->
     <string name="clear_alt_on_space_title">Release Alt with Space</string>
     <string name="clear_alt_on_space_description">End Alt or Alt-Lock when Space is pressed.</string>
-    
-    <!-- Swipe to Delete Section -->
     <string name="swipe_to_delete_title">Enable Swipe to Delete</string>
     <string name="swipe_to_delete_description">Delete the previous word with a left swipe on supported trackpad input.</string>
     <string name="swipe_to_delete_provider_title">Swipe to Delete Provider</string>
     <string name="swipe_to_delete_provider_titan2_keycode">Titan 2 keycode workaround</string>
     <string name="swipe_to_delete_provider_native_ime">Native IME events</string>
-
-    <!-- Delete Alternatives Section -->
     <string name="delete_alternatives_title">Delete</string>
     <string name="delete_alternatives_description">Alternative methods to delete characters to the right of cursor</string>
     <string name="delete_alternatives_nav_mode_title">Open Nav Mode settings</string>
@@ -103,20 +81,12 @@
     <string name="backspace_at_start_delete_title">Backspace at line start</string>
     <string name="delete_alternatives_hint">Hint: Ctrl + key can be configured in Nav Mode settings</string>
     <string name="delete_alternatives_selection_hint">When text is selected, these alternatives are disabled and Backspace deletes the selection.</string>
-
-    <!-- Swipe Incremental Threshold Section -->
     <string name="swipe_incremental_threshold_title">Swipe Bar Sensitivity</string>
     <string name="swipe_incremental_threshold_description">Distance required to move cursor one position. Lower values make the cursor move faster.</string>
-    
-    <!-- Auto Show Keyboard Section -->
     <string name="auto_show_keyboard_title">Show keyboard automatically</string>
     <string name="auto_show_keyboard_description">Show the on-screen keyboard automatically in text fields.</string>
-    
-    <!-- Alt+Ctrl Speech Recognition Shortcut Section -->
     <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 for speech input</string>
     <string name="alt_ctrl_speech_shortcut_description">Start speech input with Alt+Ctrl / BlackBerry Alt+0.</string>
-
-    <!-- Static Variation Bar Mode -->
     <string name="static_variation_bar_mode_title">Static Variation Bar</string>
     <string name="static_variation_bar_mode_description">Always show a fixed set of utility keys in the variation row instead of context-based variations.</string>
     <string name="static_variation_preset_title">Static variation preset</string>
@@ -135,12 +105,8 @@
     <string name="static_variation_layer_sticky_title">Sticky Layer</string>
     <string name="static_variation_layer_sticky_description">When the Shift or Device SYM layer is latched by double tap, keep it active after selecting a symbol from that layer.</string>
     <string name="swipe_to_move_cursor">Swipe to move cursor</string>
-    
-    <!-- Info Section -->
     <string name="info_title">Information</string>
     <string name="info_description">Settings are automatically saved and immediately applied to the input method.</string>
-    
-    <!-- Main Activity -->
     <string name="keyboard_title">Plektra Keyboard</string>
     <string name="software_keyboard_accessibility_shift">Shift</string>
     <string name="software_keyboard_accessibility_backspace">Backspace</string>
@@ -159,45 +125,31 @@
     <string name="software_keyboard_accessibility_disabled">Disabled</string>
     <string name="keyboard_subtitle">Physical keyboard with long press support</string>
     <string name="settings_content_description">Settings</string>
-    
-    <!-- Installation Section -->
     <string name="installation_title">Installation</string>
     <string name="installation_step1">1. Click the button below to open settings</string>
     <string name="installation_step2">2. Enable \'Plektra Physical Keyboard\'</string>
     <string name="installation_step3">3. Come back here and test the keyboard</string>
     <string name="open_keyboard_settings">Open Keyboard Settings</string>
-    
-    <!-- Main Activity - Enable/Select IME -->
     <string name="enable_plektra">Enable Plektra</string>
     <string name="plektra_not_enabled">Plektra is not enabled</string>
     <string name="choose_input_method">Choose input method</string>
     <string name="plektra_not_selected">Plektra is not selected</string>
-    
-    <!-- Test Section -->
     <string name="test_keyboard_title">Keyboard Test</string>
     <string name="test_keyboard_description">Connect a physical keyboard and test below:</string>
     <string name="test_keyboard_normal">• Normal press: inserts the character</string>
     <string name="test_keyboard_long_press">• Long press (500ms): inserts the Alt character</string>
     <string name="test_field_label">Test field</string>
     <string name="test_field_placeholder">Type here with the physical keyboard…</string>
-    
-    <!-- Last Event Section -->
     <string name="last_keyboard_event_title">Last Keyboard Event</string>
     <string name="no_event_yet">No event yet</string>
     <string name="ignore_back_short">Ignore BACK</string>
-    
-    <!-- Long Press Mappings Section -->
     <string name="long_press_mappings_title">Long Press Mappings</string>
     <string name="long_press_mappings_line1">Q→0, W→1, E→2, R→3, T→(, Y→), U→-, I→_, O→\', P→:</string>
     <string name="long_press_mappings_line2">A→@, S→4, D→5, F→6, G→*, H→#, J→+, K→\", L→\'</string>
     <string name="long_press_mappings_line3">Z→!, X→7, C→8, V→9, B→., N→\', M→?</string>
-    
-    <!-- Buttons -->
     <string name="settings_button">Settings</string>
     <string name="change_keyboard_button">Change Keyboard</string>
     <string name="save">Save</string>
-    
-    <!-- SYM Customization -->
     <string name="sym_customization_title">Customize SYM Layers</string>
     <string name="sym_customization_button">Customize SYM Layers</string>
     <string name="sym_customization_description">Arrange and customize Device, Emoji, and Symbols SYM layers.</string>
@@ -206,8 +158,6 @@
     <string name="reset_to_default">Reset to Default</string>
     <string name="select_emoji">Select Emoji</string>
     <string name="close">Close</string>
-    
-    <!-- Auto-Correction Section -->
     <string name="auto_correct_title">Text replacements</string>
     <string name="auto_correct_title_description">Apply saved rules like “ca → ça” when pressing Space or Enter.</string>
     <string name="auto_correct_languages_title">Manage text replacements</string>
@@ -254,20 +204,16 @@
     <string name="auto_correct_keyboard_proximity_title">Keyboard Proximity Ranking</string>
     <string name="auto_correct_keyboard_proximity_description">Filter unlikely typos based on key distance (QWERTY/AZERTY/QWERTZ)</string>
     <string name="auto_correct_edit_type_ranking_title">Edit Type Ranking</string>
-    <string name="auto_correct_edit_type_ranking_description">Rank suggestions by edit type (insert > substitute > delete)</string>
+    <string name="auto_correct_edit_type_ranking_description">Rank suggestions by edit type (insert &gt; substitute &gt; delete)</string>
     <string name="clear">Clear</string>
     <string name="experimental_suggestions_title">Experimental suggestions</string>
     <string name="experimental_suggestions_subtitle">Enable the new dictionary/suggestion engine (beta)</string>
-
-    <!-- User dictionary management -->
     <string name="user_dict_title">User dictionary</string>
     <string name="user_dict_add_hint">Add a word</string>
     <string name="user_dict_add_button">Save word</string>
     <string name="user_dict_empty_state">No user words saved yet.</string>
     <string name="user_dict_edit_title">Edit word</string>
     <string name="user_dict_frequency_label">Uses: %1$d</string>
-    
-    <!-- SYM Customization Screen -->
     <string name="sym_customize_title">Customize SYM Keyboard</string>
     <string name="sym_auto_close_title">Auto-Close SYM Layout</string>
     <string name="sym_auto_close_description">Automatically close SYM layout after inserting a character, pressing Alt, or pressing Enter. Does not close with Control or Shift.</string>
@@ -322,8 +268,6 @@
     <string name="sym_reset_confirm_message">Are you sure you want to reset all SYM mappings to default? This action cannot be undone.</string>
     <string name="sym_reset_confirm_button">Reset</string>
     <string name="cancel">Cancel</string>
-    
-    <!-- Emoji Picker Dialog -->
     <string name="emoji_picker_title">Select Emoji</string>
     <string name="emoji_picker_title_for_letter">Select emoji for letter %1$s</string>
     <string name="emoji_picker_close">Close</string>
@@ -331,12 +275,8 @@
     <string name="emoji_category_animals">Animals &amp; Nature</string>
     <string name="emoji_category_food">Food &amp; Drink</string>
     <string name="emoji_category_travel">Travel &amp; Places</string>
-    
-    <!-- Modifiers -->
     <string name="modifier_shift">SHIFT</string>
     <string name="modifier_ctrl">CTRL</string>
-    
-    <!-- Long Press Modifier Section -->
     <string name="long_press_modifier_title">Long Press Modifier</string>
     <string name="long_press_modifier_description">Choose whether long press opens a SYM layer or Variations, or applies Shift.</string>
     <string name="long_press_modifier_alt">Device SYM Layer (formerly Alt)</string>
@@ -375,8 +315,6 @@
     <string name="tap_haptic_system_description">Use Android keyboard haptics for suggestions and variations on compatible devices.</string>
     <string name="tap_haptic_duration_title">Custom vibration: %1$d ms</string>
     <string name="tap_haptic_duration_description">Used when Android keyboard haptics are disabled.</string>
-    
-    <!-- Keyboard Layout Section -->
     <string name="keyboard_layout_title">Keyboard Layout</string>
     <string name="keyboard_layout_description">Select your keyboard layout. ALT, SYM and Ctrl mappings remain based on physical key position.</string>
     <string name="keyboard_layout_editor_title">Keyboard Layout Editor</string>
@@ -666,8 +604,6 @@
     <string name="tutorial_feature_status_experimental_title">Experimental</string>
     <string name="tutorial_feature_status_experimental_description">The feature can work already, but it is new and may be adjusted or improved soon. Bug reports are welcome.</string>
     <string name="tutorial_feature_status_footer">Tap either symbol in Settings for a short explanation. A roadmap marker is not a promise for a particular release.</string>
-    
-    <!-- About Section -->
     <string name="about_github">GitHub</string>
     <string name="about_build_info">Plektra IME - Palsoftware 2026</string>
     <string name="settings_device_keyboard_info">Device: %1$s; Keyboard: %2$s</string>
@@ -684,8 +620,6 @@
     <string name="about_canonical_downloads">Canonical downloads</string>
     <string name="about_signing_attestations">Signing attestations</string>
     <string name="about_sbom_export">Export software bill of materials (CycloneDX JSON)</string>
-    
-    <!-- Launcher Shortcuts Section -->
     <string name="starter_launcher_shortcuts_title">Plektra-QuickLauncher</string>
     <string name="starter_launcher_shortcuts_description">Quick launching, SYM shortcuts, and launcher key assignments</string>
     <string name="starter_launcher_shortcuts_intro">These settings share one launcher-key assignment list. Choose where Plektra should listen for those assigned keys.</string>
@@ -696,8 +630,6 @@
     <string name="launcher_shortcuts_configure_description">Tap a key to assign or replace a command. Assigned keys are shared by both trigger modes.</string>
     <string name="launcher_shortcuts_configure_description_with_quick_launcher">Tap a key to assign or replace a command. Quick launcher is currently assigned to %1$s.</string>
     <string name="quick_launcher_default_blocked_hint">New: SYM can open the quick launcher. Plektra would normally assign it to Space, but Space already has a shortcut. Open the assignments page and choose “Open quick launcher” on any key to try it.</string>
-    
-    <!-- Launcher Shortcuts Screen -->
     <string name="launcher_shortcuts_screen_title">Plektra-QuickLauncher</string>
     <string name="launcher_shortcuts_not_assigned">Not assigned</string>
     <string name="launcher_shortcuts_remove">Remove</string>
@@ -705,8 +637,6 @@
     <string name="launcher_shortcuts_shortcut_type">Shortcut: %1$s</string>
     <string name="launcher_shortcuts_shortcut_unknown">unknown</string>
     <string name="launcher_shortcuts_action_type">Action: %1$s</string>
-    
-    <!-- Launcher Shortcut Assignment Activity -->
     <string name="launcher_shortcut_assignment_title">Assign command to key</string>
     <string name="launcher_shortcut_assignment_key">Key %1$s</string>
     <string name="launcher_shortcut_assignment_header">Shortcut</string>
@@ -860,8 +790,6 @@
     <string name="quick_launcher_no_apps">No apps found</string>
     <string name="quick_launcher_no_results">No results for \"%1$s\"</string>
     <string name="quick_launcher_enter_hint">Enter</string>
-    
-    <!-- Power Shortcuts Section -->
     <string name="power_shortcuts_title">SYM key shortcuts</string>
     <string name="power_shortcuts_description">Use SYM with assigned keys to launch apps and actions.</string>
     <string name="alt_key_shortcuts_title">Alt Key Shortcuts</string>
@@ -874,22 +802,16 @@
     <string name="sym_shortcuts_compatibility_title">SYM key compatibility</string>
     <string name="sym_shortcuts_compatibility_description">SYM key shortcuts require a keyboard that exposes SYM as a modifier to Android. They cannot currently work with keyboards whose firmware converts SYM combinations into final characters or navigation events before Plektra receives them. This includes the Clicks Power Keyboard’s current SYM behaviour.</string>
     <string name="power_shortcuts_press_key">Press shortcut key to launch</string>
-    
-    <!-- Notification Helper -->
     <string name="notification_nav_mode_channel_name">Plektra Nav Mode</string>
     <string name="notification_nav_mode_channel_description">Notifications for Plektra nav mode</string>
     <string name="notification_nav_mode_activated_title">Nav Mode Activated</string>
     <string name="notification_nav_mode_activated_text">Nav mode activated</string>
-    
-    <!-- Update Notifications -->
     <string name="notification_update_channel_name">Plektra Updates</string>
     <string name="notification_update_channel_description">Notifications about new Plektra versions</string>
     <string name="notification_successor_release_title">Plektra update available</string>
     <string name="notification_successor_release_text">%1$s is available.</string>
     <string name="notification_plektra_stable_update_title">Plektra security update available</string>
     <string name="notification_plektra_stable_update_text">%1$s is available for Plektra.</string>
-    
-    <!-- Speech Recognition -->
     <string name="speech_recognition_prompt">Speak now...</string>
     <string name="speech_recognition_error_no_match">No text recognized. Try again.</string>
     <string name="speech_recognition_error_timeout">No speech input detected.</string>
@@ -897,14 +819,10 @@
     <string name="speech_recognition_error_network">Network error.</string>
     <string name="speech_recognition_error_generic">Speech recognition error.</string>
     <string name="speech_recognition_error_not_available">Speech recognition not available.</string>
-    
-    <!-- Auto Correct Edit Screen -->
     <string name="auto_correct_search_placeholder">Search corrections...</string>
     <string name="auto_correct_search_description">Search</string>
     <string name="auto_correct_clear_search">Clear search</string>
     <string name="auto_correct_no_corrections_found">No corrections found</string>
-    
-    <!-- Nav Mode Settings -->
     <string name="nav_mode_title">Nav Mode</string>
     <string name="nav_mode_guide_title">Nav Mode guide</string>
     <string name="nav_mode_guide_description">How Ctrl, mappings, app shortcuts, and layout hints work together.</string>
@@ -954,8 +872,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="nav_mode_save">Save</string>
     <string name="nav_mode_cancel">Cancel</string>
     <string name="nav_mode_default">default</string>
-    
-    <!-- Unicode Character Picker -->
     <string name="unicode_picker_title_for_letter">Select character for %1$s</string>
     <string name="unicode_picker_title">Select unicode character</string>
     <string name="unicode_picker_close">Close</string>
@@ -981,8 +897,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>
     <string name="emoji_picker_no_results">No emoji found</string>
-    
-    <!-- Variation Customization -->
     <string name="variation_customize_title">Customize Variations</string>
     <string name="app_enter_behaviour_title">Enter key behaviour</string>
     <string name="app_enter_behaviour_description">Configure app-specific Enter and newline handling</string>
@@ -1061,17 +975,11 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="variation_global_layout_override_title">Global Variation Mapping</string>
     <string name="variation_global_layout_override_description">Force variation ordering from one layout across all layouts. Default is current IME layout (%1$s).</string>
     <string name="variation_global_layout_override_none">None (use current layout)</string>
-    
-    <!-- SYM Customization Screen -->
     <string name="sym_tab_emoji">Emoji</string>
     <string name="sym_tab_characters">Characters</string>
-    
-    <!-- App Picker Dialog -->
     <string name="app_picker_title">Select an app</string>
     <string name="app_picker_cancel">Cancel</string>
     <string name="app_picker_search_placeholder">Search apps...</string>
-    
-    <!-- Settings Screen -->
     <string name="settings_support_open_collective">Support the project</string>
     <string name="settings_support_open_collective_description">Open Collective</string>
     <string name="settings_support_creator_ko_fi">Support the creator on Ko-fi</string>
@@ -1092,11 +1000,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="plektra_stable_update_title">Plektra security update available</string>
     <string name="plektra_stable_update_message">%1$s is available for Plektra. Install it to receive the latest security fixes.</string>
     <string name="plektra_stable_update_open">View Plektra release</string>
-    
-    <!-- Auto Correct Settings -->
     <string name="auto_correct_ricette_plektra_name">Ricette Plektra</string>
-    
-    <!-- Settings Categories -->
     <string name="settings_category_text_input">Smart Features</string>
     <string name="settings_category_accessibility">Accessibility</string>
     <string name="settings_category_auto_correction">Auto-correction</string>
@@ -1138,13 +1042,9 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="settings_accessibility_bounce_keys_backspace_description">Ignore accidental repeated deletes.</string>
     <string name="settings_accessibility_overlapping_keys_title">Ignore overlapping key presses</string>
     <string name="settings_accessibility_overlapping_keys_description">For every physical keyboard, ignore a second non-modifier key until the first is released. Modifier shortcuts still work.</string>
-    
-    <!-- Languages (Input Method Subtypes) -->
     <string name="languages_title">Languages</string>
     <string name="languages_description">Add languages to the Android input method selector. Only languages with dictionaries that are not system languages are shown.</string>
     <string name="languages_no_available">All available languages are already added or are system languages.</string>
-    
-    <!-- Keyboard Layout Settings -->
     <string name="layout_save_content_description">Save layout</string>
     <string name="layout_import_content_description">Import layout</string>
     <string name="layout_imported_successfully">Layout imported successfully</string>
@@ -1196,8 +1096,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="layout_enable_for_cycling">Enable for cycling</string>
     <string name="layout_select_as_active">Select as active layout</string>
     <string name="delete">Delete</string>
-    
-    <!-- Main Activity Event Display -->
     <string name="modifier_alt">ALT</string>
     <string name="event_action_label">Action: </string>
     <string name="event_keycode_label">KeyCode: </string>
@@ -1219,9 +1117,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="debug_recorder_started_at">Started at: </string>
     <string name="debug_recorder_include_suggestions">incl. suggestions</string>
     <string name="debug_recorder_include_raw_trackpad">incl. raw trackpad</string>
-    <string name="debug_report_viewer_title">Debug Report Viewer</string>
-    
-    <!-- Nav Mode Key Labels -->
     <string name="nav_mode_action_copy">Copy</string>
     <string name="nav_mode_action_paste">Paste</string>
     <string name="nav_mode_action_cut">Cut</string>
@@ -1252,8 +1147,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="nav_mode_keycode_tab">Tab</string>
     <string name="nav_mode_keycode_forward_delete">Del→</string>
     <string name="nav_mode_key_unknown">?</string>
-    
-    <!-- Tutorial -->
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_skip_update">Skip</string>
     <string name="tutorial_previous">Previous</string>
@@ -1302,7 +1195,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="tutorial_android16_ime_caption_missing_requirement">Missing: %1$s.</string>
     <string name="tutorial_android16_ime_caption_vendor_toast">This is vendor-specific behaviour from Unihertz. The shortcut only works on supported Titan 2 firmware where Android exposes the OEM gesture setting.</string>
     <string name="tutorial_android16_ime_caption_fallback">Could not open the Titan 2 gesture setting. Opening Android Settings instead.</string>
-
     <string name="app_icon_title">App icon</string>
     <string name="main_background_title">Main screen background</string>
     <string name="main_background_description">Choose flowing strings or the Titan 2 keyboard</string>
@@ -1368,7 +1260,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="tutorial_review_description">Review the introductory tutorial</string>
     <string name="tutorial_show_release_notes">Show release notes tutorial</string>
     <string name="tutorial_show_release_notes_description">Preview the update intro without installing an upgrade</string>
-
     <string name="slim_mode_title">Slim Mode</string>
     <string name="slim_mode_description">Toggle minimal ui</string>
     <string name="software_keyboard_mode_title">Keyboard Mode</string>
@@ -1408,11 +1299,8 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="software_keyboard_right_modifier_key_title">Right key</string>
     <string name="software_keyboard_modifier_key_ctrl">Ctrl</string>
     <string name="software_keyboard_modifier_key_alt">Alt</string>
-
     <string name="titan2_layout_title">Titan 2 Layout Alignment</string>
     <string name="titan2_layout_description">Align on-screen keyboard with Titan 2 physical keys</string>
-
-    <!-- Backup & Restore -->
     <string name="backup_now">Backup now</string>
     <string name="backup_now_description">Export all settings and custom layouts to a ZIP</string>
     <string name="restore_from_file">Restore from file</string>
@@ -1425,11 +1313,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="restore_device_change_message">This backup was created on %1$s and is being imported on %2$s. Adapting keeps this device’s detected keyboard profile and display-specific settings.</string>
     <string name="restore_device_change_adapt">Adapt for this device</string>
     <string name="restore_device_change_unchanged">Import unchanged</string>
-    
-    <!-- Units -->
     <string name="dip_unit">DIP</string>
-    
-    <!-- Custom Input Styles -->
     <string name="custom_input_styles_title">Input Languages</string>
     <string name="keyboards_devices_title">Keyboards &amp; Devices</string>
     <string name="keyboard_switching_section_title">Automatic switching</string>
@@ -1508,8 +1392,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="custom_input_styles_suggestion_dictionaries">Suggestion dictionaries</string>
     <string name="custom_input_styles_primary_suggestion_dictionary">Primary: %1$s</string>
     <string name="custom_input_styles_no_extra_suggestion_dictionaries">No other installed dictionaries available.</string>
-
-    <!-- Installed dictionaries screen -->
     <string name="installed_dictionaries_title">Installed dictionaries</string>
     <string name="installed_dictionaries_empty">No serialized dictionaries found.</string>
     <string name="installed_dictionaries_language_code">Language: %1$s</string>
@@ -1539,8 +1421,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="installed_dictionaries_uninstall_not_found">Dictionary file not found</string>
     <string name="installed_dictionaries_uninstall_cannot_delete_asset">Cannot uninstall built-in dictionaries</string>
     <string name="installed_dictionaries_uninstall_failed">Failed to uninstall dictionary</string>
-
-    <!-- Clipboard page UI -->
     <string name="clipboard_history_title">Clipboard History</string>
     <string name="clipboard_clear_all">Clear All</string>
     <string name="clipboard_empty_state">No clipboard history</string>
@@ -1554,8 +1434,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="clipboard_retention_time_title">Clipboard Retention Time</string>
     <string name="clipboard_retention_time_description">Normal contents expire after the selected time. Pinned entries are kept until deleted.</string>
     <string name="clipboard_retention_time_minutes">%1$d minutes</string>
-
-    <!-- Trackpad Gesture Settings -->
     <string name="trackpad_gestures_title">Trackpad Gesture Suggestions</string>
     <string name="trackpad_gestures_description">Swipe up on the trackpad to accept suggestions</string>
     <string name="trackpad_gestures_enabled_title">Enable Trackpad Gestures</string>
@@ -1598,8 +1476,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="trackpad_suggestion_swipe_threshold_description">Distance required to swipe up and accept a suggestion.</string>
     <string name="trackpad_delete_swipe_threshold_title">Delete Swipe</string>
     <string name="trackpad_delete_swipe_threshold_description">Distance required to swipe left and delete the previous word.</string>
-
-    <!-- Trackpad Gesture Tutorial -->
     <string name="trackpad_tutorial_title">Trackpad Gesture Suggestions</string>
     <string name="trackpad_tutorial_welcome_title">Trackpad Gesture Suggestions</string>
     <string name="trackpad_tutorial_welcome_description">Swipe up on your trackpad to quickly accept word suggestions without clicking!</string>
@@ -1612,11 +1488,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="trackpad_tutorial_complete">Got It</string>
     <string name="trackpad_tutorial_next">Next</string>
     <string name="trackpad_tutorial_previous">Previous</string>
-
-    <!-- Trackpad Debug Accessibility Service -->
     <string name="trackpad_debug_service_description">Displays trackpad events in a small overlay for debugging purposes</string>
-
-    <!-- Status Bar Buttons Configuration -->
     <string name="status_bar_buttons_title">Keyboard bar</string>
     <string name="status_bar_buttons_description">Suggestions, menu buttons, LEDs and profiles</string>
     <string name="status_bar_style_section">Keyboard bar presentation</string>
@@ -1731,8 +1603,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="symbol_shortcodes_enable_description">Type :name to search typographic and mathematical symbols.</string>
     <string name="emoji_symbols_close_title">Expand :name:</string>
     <string name="emoji_symbols_close_description">A closing colon expands a unique exact match. Collisions stay selectable.</string>
-
-    <!-- Settings search and shareable setting links -->
     <string name="settings_search_hint">Search Settings</string>
     <string name="settings_search_no_results">No matching settings</string>
     <string name="settings_link_copy">Copy link</string>
@@ -1741,9 +1611,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="settings_link_with_description">With description</string>
     <string name="settings_link_copied_toast">Link copied</string>
     <string name="settings_link_unavailable_toast">This setting is not available</string>
-
-    <!-- Invisible search keywords per settings entry; never rendered, only
-         consumed by the settings search. -->
     <string name="kw_main_keyboards_devices">keyboards, devices, hardware, bluetooth, physical keyboard, clicks</string>
     <string name="kw_main_modifiers">LED, LEDs, lights, indicators, shift, ctrl, alt, sym</string>
     <string name="kw_main_custom_input_styles">keyboard layout, layouts, input styles, languages, per language</string>
@@ -1792,7 +1659,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="titan2_elite_top_corner_title">Upper button corners</string>
     <string name="titan2_elite_top_corner_description">Round only the upper corner facing the display edge. Corners facing inward and inner buttons stay unchanged.</string>
     <string name="titan2_elite_max_icon_shrink_title">Maximum icon reduction: %1$d%%</string>
-    <string name="titan2_elite_max_icon_shrink_description">Automatically shrink outer button icons only as much as needed, up to this limit. 0% disables shrinking; positioning stays active.</string>
     <string name="keyboard_bar_profile">Profile to configure</string>
     <string name="keyboard_bar_normal_profile">Normal</string>
     <string name="keyboard_bar_slim_profile">Slim</string>
@@ -1832,8 +1698,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="keyboard_bar_geometry_unavailable">Corner adjustments are available for the Titan 2 Elite device profile.</string>
     <string name="keyboard_bar_variations_title">Variations</string>
     <string name="keyboard_bar_corner_size">Corner size</string>
-
-    <!-- Cloud speech recognition -->
     <string name="speech_settings_title">Voice input</string>
     <string name="speech_settings_summary">Android, OpenRouter or OpenAI</string>
     <string name="speech_provider_title">Provider</string>
@@ -1903,7 +1767,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="clipboard_sensitive_retention_description">Passwords and other marked sensitive contents expire separately and cannot be pinned.</string>
     <string name="clipboard_sensitive_preview">•••••••• · Sensitive content — tap to paste</string>
     <string name="clipboard_retention_24_hours">24 hours</string>
-
     <string name="speech_preview_title">Dictation preview</string>
     <string name="speech_preview_three_words">Three word fields</string>
     <string name="speech_preview_continuous">Continuous line</string>
@@ -1929,4 +1792,37 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="alt_space_previous_language_description">Switch backwards through visible input languages. Enabling this disables Alt+Space for the Quick Launcher; enabling the launcher shortcut disables this option.</string>
     <string name="ctrl_language_previous_title">Ctrl+language button: previous input language</string>
     <string name="ctrl_language_previous_description">On the software keyboard, hold or activate Ctrl and tap the keyboard language button to switch backwards.</string>
+    <string name="auto_space_punctuation_dialog_instruction">Choose the characters that remove an automatic space before them or add a space immediately after them.</string>
+    <string name="auto_space_punctuation_after_column">Add after</string>
+    <string name="auto_space_punctuation_help_text">Remove before affects only an automatic space. Add after inserts a space immediately. Typing Space again does not duplicate it. The en dash and closing parenthesis can be selected independently.</string>
+    <string name="multi_word_suggestions">Multi-word suggestions</string>
+    <string name="multi_word_suggestions_description">Learn and suggest multi-word continuations</string>
+    <string name="dictionaries_title">Dictionaries</string>
+    <string name="dictionaries_description">Manage base and personal dictionaries</string>
+    <string name="base_dictionary_title">Base Dictionary</string>
+    <string name="base_dictionary_description">Manage and download extended base dictionaries</string>
+    <string name="debug_report_viewer_title">Debug Report Viewer</string>
+    <string name="trackpad_calibration_title">Gesture calibration</string>
+    <string name="trackpad_calibration_target_left">on the left</string>
+    <string name="trackpad_calibration_target_center">in the center</string>
+    <string name="trackpad_calibration_target_right">on the right</string>
+    <string name="trackpad_calibration_instruction">Naturally perform the gesture you would use to select the suggestion %1$s.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 gestures</string>
+    <string name="trackpad_calibration_text_field_hint">Calibration field — Pastiera must be active here</string>
+    <string name="trackpad_calibration_cancel">Cancel</string>
+    <string name="trackpad_calibration_save">Save</string>
+    <string name="installed_dictionaries_variant_basic">Basic</string>
+    <string name="installed_dictionaries_variant_extended">Extended</string>
+    <string name="installed_dictionaries_word_count">%1$d words</string>
+    <string name="titan2_elite_max_icon_shrink_description">Automatically shrink outer button icons only as much as needed, up to this limit. 0% disables shrinking; positioning stays active.</string>
+    <string name="nav_mode_action_expand_selection_up">Select line up</string>
+    <string name="nav_mode_action_expand_selection_down">Select line down</string>
+    <string name="typing_statistics_title">Typing statistics</string>
+    <string name="typing_statistics_total_words">Total words entered</string>
+    <string name="typing_statistics_manual_words">Words entered manually</string>
+    <string name="typing_statistics_suggested_words">Words entered through suggestions</string>
+    <string name="app_enter_behaviour_newline_shift_send">Enter: new line; Shift + Enter: send</string>
+    <string name="app_enter_behaviour_send_shift_side">Shift key for sending</string>
+    <string name="app_enter_behaviour_shift_left">Left Shift</string>
+    <string name="app_enter_behaviour_shift_right">Right Shift</string>
 </resources>

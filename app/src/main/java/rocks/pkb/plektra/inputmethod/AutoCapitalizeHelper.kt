@@ -182,6 +182,12 @@ object AutoCapitalizeHelper {
             return
         }
 
+        // *A literal editor restriction takes precedence over field capitalization flags.*
+        if (inputContextState?.restrictedReason == InputContextState.RestrictedReason.LITERAL_ENTRY) {
+            clearSmartShift(disableShift, onUpdateStatusBar)
+            return
+        }
+
         // Check field-specific capitalization flags first.
         if (inputContextState != null) {
             // CAP_CHARACTERS is handled separately (caps lock)
@@ -443,7 +449,7 @@ object AutoCapitalizeHelper {
         enableShiftOneShot: () -> Boolean,
         onUpdateStatusBar: () -> Unit
     ) {
-        if (!state.isEditable) return
+        if (!state.isEditable || state.restrictedReason == InputContextState.RestrictedReason.LITERAL_ENTRY) return
         
         // Handle textCapCharacters: enable caps lock automatically
         if (state.requiresCapCharacters) {

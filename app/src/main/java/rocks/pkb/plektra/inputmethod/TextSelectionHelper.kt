@@ -3,6 +3,7 @@ package rocks.pkb.plektra.inputmethod
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 import android.util.Log
+import android.view.KeyEvent
 
 /**
  * Helper for handling text selection operations.
@@ -18,7 +19,9 @@ object TextSelectionHelper {
 
     private enum class SelectionDirection {
         Left,
-        Right
+        Right,
+        Up,
+        Down
     }
 
     private var selectionAnchorState: SelectionAnchorState? = null
@@ -39,11 +42,106 @@ object TextSelectionHelper {
             return matchingAnchor
         }
         return when (direction) {
-            SelectionDirection.Left -> selectionEnd
-            SelectionDirection.Right -> selectionStart
+            SelectionDirection.Left,
+            SelectionDirection.Up -> selectionEnd
+
+            SelectionDirection.Right,
+            SelectionDirection.Down -> selectionStart
         }
     }
+    /**
+     * Expands the current selection vertically while preserving its anchor.
+     * Vertical movement is delegated to the target editor so wrapped lines,
+     * proportional fonts and editor-specific layout are handled correctly.
+     */
+    private fun expandSelectionVertically(
+        inputConnection: InputConnection,
+        direction: SelectionDirection,
+        keyCode: Int
+    ): Boolean {
+        return try {
+            val extractedText = inputConnection.getExtractedText(
+                ExtractedTextRequest().apply {
+                    flags = android.view.inputmethod.ExtractedText.FLAG_SELECTING
+                },
+                0
+            ) ?: return false
 
+            val selectionStart = extractedText.selectionStart
+            val selectionEnd = extractedText.selectionEnd
+
+            if (selectionStart < 0 || selectionEnd < 0) {
+                Log.d(TAG, "expandSelectionVertically: unable to get selection")
+                return false
+            }
+
+            val anchor = selectionAnchor(selectionStart, selectionEnd, direction)
+
+            val movingEdge = movingSelectionEdge(selectionStart, selectionEnd, anchor)
+            if (selectionStart != anchor && !inputConnection.setSelection(anchor, movingEdge)) {
+                return false
+            }
+
+            // Move the active edge vertically using the editor's own layout logic.
+            // Holding Shift makes DPAD_UP/DOWN extend the selection rather than
+            // simply moving the cursor.
+            val now = android.os.SystemClock.uptimeMillis()
+            val metaState = KeyEvent.META_SHIFT_ON
+
+            val downAccepted = inputConnection.sendKeyEvent(
+                KeyEvent(
+                    now,
+                    now,
+                    KeyEvent.ACTION_DOWN,
+                    keyCode,
+                    0,
+                    metaState
+                )
+            )
+            val upAccepted = inputConnection.sendKeyEvent(
+                KeyEvent(
+                    now,
+                    android.os.SystemClock.uptimeMillis(),
+                    KeyEvent.ACTION_UP,
+                    keyCode,
+                    0,
+                    metaState
+                )
+            )
+
+            if (!downAccepted || !upAccepted) return false
+
+            // Read back the selection produced by the editor and remember the
+            // original anchor so horizontal and vertical expansion can be mixed.
+            val updatedText = inputConnection.getExtractedText(
+                ExtractedTextRequest().apply {
+                    flags = android.view.inputmethod.ExtractedText.FLAG_SELECTING
+                },
+                0
+            )
+
+            if (updatedText != null &&
+                updatedText.selectionStart >= 0 &&
+                updatedText.selectionEnd >= 0
+            ) {
+                selectionAnchorState = SelectionAnchorState(
+                    anchor = anchor,
+                    selectionStart = updatedText.selectionStart,
+                    selectionEnd = updatedText.selectionEnd
+                )
+            }
+
+            Log.d(
+                TAG,
+                "expandSelectionVertically: $direction from " +
+                        "[$selectionStart, $selectionEnd]"
+            )
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in expandSelectionVertically", e)
+            false
+        }
+    }
     private fun movingSelectionEdge(selectionStart: Int, selectionEnd: Int, anchor: Int): Int {
         return if (anchor == selectionStart) selectionEnd else selectionStart
     }
@@ -163,7 +261,7 @@ object TextSelectionHelper {
         }
         return false
     }
-    
+
     /**
      * Expands selection one character to the right.
      * If there's no selection, creates a selection of one character to the right of cursor.
@@ -225,7 +323,31 @@ object TextSelectionHelper {
         }
         return false
     }
-    
+    /**
+     * Expands the selection to the previous visual line.
+     * Keeps the original selection anchor and lets the target editor handle
+     * vertical cursor movement, matching the behavior of Shift + DPAD_UP.
+     */
+    fun expandSelectionUp(inputConnection: InputConnection): Boolean {
+        return expandSelectionVertically(
+            inputConnection = inputConnection,
+            direction = SelectionDirection.Up,
+            keyCode = KeyEvent.KEYCODE_DPAD_UP
+        )
+    }
+
+    /**
+     * Expands the selection to the next visual line.
+     * Keeps the original selection anchor and lets the target editor handle
+     * vertical cursor movement, matching the behavior of Shift + DPAD_DOWN.
+     */
+    fun expandSelectionDown(inputConnection: InputConnection): Boolean {
+        return expandSelectionVertically(
+            inputConnection = inputConnection,
+            direction = SelectionDirection.Down,
+            keyCode = KeyEvent.KEYCODE_DPAD_DOWN
+        )
+    }
     /**
      * Moves cursor one character to the left (without creating a selection).
      * This is safer than using DPAD keys as it only affects the text field, not UI navigation.

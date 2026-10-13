@@ -42,6 +42,8 @@ import rocks.pkb.plektra.R
 import rocks.pkb.plektra.inputmethod.NotificationHelper
 import rocks.pkb.plektra.core.AutoCorrectionManager
 import rocks.pkb.plektra.core.DeferredPunctuationSpaceTracker
+import rocks.pkb.plektra.core.PunctuationAfterSpace
+import rocks.pkb.plektra.core.EnterSendShiftMatcher
 import rocks.pkb.plektra.core.InputContextState
 import rocks.pkb.plektra.core.ModifierStateController
 import rocks.pkb.plektra.core.NavModeController
@@ -80,6 +82,7 @@ import android.view.inputmethod.InputMethodSubtype
 import rocks.pkb.plektra.clipboard.ClipboardHistoryManager
 import android.content.pm.PackageManager
 import rikka.shizuku.Shizuku
+import rocks.pkb.plektra.backup.LearningOperationGate
 
 /**
  * Input method service specialized for physical keyboards.
@@ -171,6 +174,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var lastLayoutToastTime: Long = 0
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
+    private var themeRotationScheduler: rocks.pkb.plektra.DailyThemeRotationScheduler? = null
     private var consumeAltEnterUntilKeyUp: Boolean = false
     private val consumedLanguageSwitchKeys = mutableSetOf<Int>()
     private var dispatchingSoftwareKeyboardKey: Boolean = false
@@ -252,9 +256,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     private val shouldDisableAutoCapitalize: Boolean
         get() {
-            if (!inputContextState.shouldDisableAutoCapitalize) return false
-            val includeRestrictedFields = SettingsManager.getAutoCapitalizeRestrictedFields(this)
-            return !includeRestrictedFields || inputContextState.isPasswordField
+            return inputContextState.disablesAutoCapitalize(SettingsManager.getAutoCapitalizeRestrictedFields(this))
         }
     
     // Current package name
@@ -955,6 +957,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         return SuggestionSettings(
             textReplacementsEnabled = SettingsManager.getAutoCorrectEnabled(this),
             suggestionsEnabled = suggestionsEnabled,
+            multiWordSuggestionsEnabled = SettingsManager.getMultiWordSuggestionsEnabled(this),
             accentMatching = SettingsManager.getAccentMatchingEnabled(this),
             autoReplaceOnSpaceEnter = SettingsManager.getAutoReplaceOnSpaceEnter(this),
             maxAutoReplaceDistance = SettingsManager.getMaxAutoReplaceDistance(this),
@@ -1042,13 +1045,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 } else {
                     SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE
                 }
+            SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND ->
+                SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND
             SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND ->
                 SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND
+            SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND ->
+                SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND
             SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ONLY ->
                 SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE
             else -> null
         }
     }
+
+    /** *Configured message sending takes priority over Alt + Enter language switching only in the selected apps.* */
+    internal fun isAltEnterSendConfigured(info: EditorInfo?): Boolean =
+        resolveAppEnterBehavior(info) == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND ||
+            resolveAppEnterAdditionalSendShortcut(info) == SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER
 
     private fun resolveAppEnterAdditionalSendShortcut(info: EditorInfo?): String {
         val packageName = info?.packageName ?: return SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_NONE
@@ -1181,6 +1193,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         return true
     }
 
+    private val enterSendHeldShiftKeys = mutableSetOf<Int>()
+
     private fun isShiftModifierActive(event: KeyEvent?): Boolean {
         return event?.isShiftPressed == true || shiftPressed || shiftOneShot || shiftLayerLatched
     }
@@ -1312,6 +1326,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val ic = inputConnection ?: return false
         val actionId = resolveEditorAction(info)
         val ctrlActiveForEnter = ctrlActiveBeforePrelude || isCtrlModifierActive(event)
+        // *Alt + Enter uses the selected app send strategy and respects the opt-in setting.*
+        val altEnterSendActive = resolveAppEnterAdditionalSendShortcut(info) == SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER &&
+            (event?.isAltPressed == true || altPressed || altPhysicallyPressed || altLatchActive || altOneShot)
+        if (altEnterSendActive) {
+            suggestionController.finishTypingStatistics()
+            return performConfiguredAppEnterSend(keyCode, info, ic, event, consumeCtrlState = false)
+        }
         val symEnterSendActive =
             symTogglePendingOnKeyUp &&
                 resolveAppEnterAdditionalSendShortcut(info) == SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_SYM_ENTER
@@ -1340,6 +1361,21 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     )
                 }
                 return commitEnterNewline(keyCode, ic, event, "app_enter_newline")
+            }
+            SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND -> {
+                val send = event?.isAltPressed == true || altPressed || altPhysicallyPressed || altLatchActive || altOneShot
+                if (!send) return commitEnterNewline(keyCode, ic, event, "app_enter_newline")
+                altOneShot = false
+                suggestionController.finishTypingStatistics()
+                return performConfiguredAppEnterSend(keyCode, info, ic, event, consumeCtrlState = false)
+            }
+            SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND -> {
+                val send = EnterSendShiftMatcher.isActive(SettingsManager.getAppEnterSendShiftSide(this),
+                    event?.metaState ?: 0, enterSendHeldShiftKeys,
+                    allowEventShift = shiftPhysicallyPressed && !dispatchingSoftwareKeyboardKey)
+                if (!send) return commitEnterNewline(keyCode, ic, event, "app_enter_newline")
+                suggestionController.finishTypingStatistics()
+                return performConfiguredAppEnterSend(keyCode, info, ic, event, consumeCtrlState = false)
             }
             SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND -> {
                 if (!ctrlActiveForEnter) {
@@ -1460,18 +1496,19 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         forceLeadingCapital: Boolean,
         locale: Locale
     ): String {
+        if (!forceLeadingCapital) {
+            return candidate
+        }
+
         val firstLetterIndex = candidate.indexOfFirst { it.isLetter() }
         if (firstLetterIndex < 0) return candidate
 
         val firstLetter = candidate[firstLetterIndex]
-        val replacement = if (forceLeadingCapital) {
-            firstLetter.titlecase(locale)
-        } else {
-            firstLetter.lowercase(locale)
-        }
+        val replacement = firstLetter.titlecase(locale)
+
         return candidate.substring(0, firstLetterIndex) +
-            replacement +
-            candidate.substring(firstLetterIndex + 1)
+                replacement +
+                candidate.substring(firstLetterIndex + 1)
     }
 
     private fun autoCapContextKey(): String? {
@@ -1515,7 +1552,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun requestAutoCapShiftOneShot(): Boolean {
-        if (isAutoCapSuppressedAtCursor()) return false
+        if (shouldDisableAutoCapitalize || isAutoCapSuppressedAtCursor()) return false
         return modifierStateController.requestShiftOneShotFromAutoCap()
     }
     
@@ -1830,6 +1867,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onCreate() {
+
         super.onCreate()
         smoothCaretOverlayController = SmoothCaretOverlayController(this)
         ClicksAccessibilityKeyBridge.register(this)
@@ -1862,7 +1900,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         
         // Get locale from current IME subtype
         val initialLocale = getLocaleFromSubtype()
-        
+
         suggestionController = SuggestionController(
             context = this,
             assets = assets,
@@ -1875,8 +1913,15 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             activeSuggestionLocalesProvider = { getAdditionalSuggestionLocalesForActiveInputStyle() }
         )
         inputEventRouter.suggestionController = suggestionController
-        
+
+        LearningOperationGate.prepareForRestore = {
+            suggestionController.awaitLearningMaintenance()
+            suggestionController.flushPendingNextWordLearning()
+        }
+
+
         // Preload dictionary in background so it's ready when user focuses a field
+
         suggestionController.preloadDictionary()
 
         // Initialize clipboard history manager first (needed by candidatesBarController)
@@ -1957,7 +2002,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         candidatesBarController.onAddUserWordSubstitutionRequested = { word ->
             showAddSubstitutionDialog(word)
         }
-        candidatesBarController.onSuggestionCommitted = {
+        candidatesBarController.onSuggestionCommitted = { original, replacement ->
             if (shiftLayerLatched || altModifierLayerLatched) {
                 shiftLayerLatched = false
                 altModifierLayerLatched = false
@@ -1968,6 +2013,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 modifierStateController.consumeShiftOneShot()
             }
             variationInteractedDuringHold = true
+
+            suggestionController.learnCorrection(
+                original = original,
+                replacement = replacement
+            )
+
+            suggestionController.onSuggestionCommitted(replacement)
             suggestionController.readInitialContext(currentInputConnection)
             updateStatusBarText()
         }
@@ -2213,21 +2265,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Variations are updated automatically by updateStatusBarText().
         alternateCharacterManager.onAltCharInserted = { char ->
             DeferredPunctuationSpaceTracker.onTextCommitted(this, char.toString())
+            currentInputConnection?.let { PunctuationAfterSpace.afterCommit(this, it, char) }
             updateStatusBarText()
             val ic = currentInputConnection
-            // Apostrophe is never a boundary: use centralized punctuation set.
-            val punctuationSet = rocks.pkb.plektra.core.Punctuation.BOUNDARY
-            val normalizedChar = rocks.pkb.plektra.core.Punctuation.normalizeApostrophe(char)
-            if (normalizedChar == '\'') {
-                inputEventRouter.handleInWordApostrophe(ic, pendingApostrophe = false)
-            } else if (normalizedChar.isLetter()) {
-                // Variations-mode long-press replaces a letter: keep suggestion context in sync.
-                markSelectionUpdateSkipAfterCommit()
-                suggestionController.onCharacterCommitted(normalizedChar.toString(), ic)
-            } else if (normalizedChar !in punctuationSet) {
-                // Non-boundary Alt long-press (e.g., numbers/symbols) resets current word tracking
-                suggestionController.onContextReset()
-            }
+            if (char.isLetterOrDigit() || char == '-') markSelectionUpdateSkipAfterCommit()
+            inputEventRouter.handleCommittedAltCharacter(char, ic)
         }
         // Track normal characters committed via Alt short press (no long press triggered)
         alternateCharacterManager.onNormalCharCommitted = { text ->
@@ -2277,7 +2319,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             hideInputWindow = { hideWindow() },
             requestHideInputView = { requestHideSelf(0) },
             requestShowInputView = ::requestKeyboardInputView,
-            trace = ::traceImeVisibility,
             refreshStatusBar = {
                 invalidateRenderedStatusSnapshot()
                 refreshStatusBar()
@@ -2510,6 +2551,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             } else if (SettingsManager.isKeyboardThemePreferenceKey(key)) {
                 Handler(Looper.getMainLooper()).post {
                     updateStatusBarText()
+                    themeRotationScheduler?.refreshAndSchedule()
                 }
             } else if (SettingsManager.isModifierIndicatorPreferenceKey(key) ||
                 key == "suggestions_enabled" || key == "suggestions_bold" || key == "status_bar_variations_visible" ||
@@ -2564,34 +2606,56 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         
         Log.d(TAG, "Broadcast receiver registered for permission request results")
-        
-        // Register broadcast receiver for user dictionary updates
+
+        // Register broadcast receiver for dictionary updates.
         userDictionaryReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == rocks.pkb.plektra.dictionaries.DictionaryRepositoryManager.ACTION_DICTIONARIES_CHANGED) {
-                    if (::suggestionController.isInitialized) suggestionController.reloadDictionaries()
-                    invalidateRenderedStatusSnapshot()
-                    updateStatusBarText()
-                } else if (intent?.action == AppBroadcastActions.USER_DICTIONARY_UPDATED) {
-                    Log.d(TAG, "User dictionary updated, refreshing...")
-                    if (::suggestionController.isInitialized) {
+                if (!::suggestionController.isInitialized) return
+
+                when (intent?.action) {
+                    AppBroadcastActions.USER_DICTIONARY_UPDATED -> {
+                        Log.d(TAG, "User dictionary updated, refreshing...")
                         suggestionController.refreshUserDictionary()
+                    }
+
+                    rocks.pkb.plektra.dictionaries.DictionaryRepositoryManager.ACTION_DICTIONARIES_CHANGED,
+                    AppBroadcastActions.BASE_DICTIONARY_UPDATED -> {
+                        Log.d(TAG, "Base dictionary updated, reloading...")
+                        suggestionController.refreshBaseDictionary()
+                    }
+
+                    AppBroadcastActions.CORRECTION_USAGE_UPDATED -> {
+                        Log.d(TAG, "Correction usage updated, invalidating cache...")
+                        suggestionController.invalidateCorrectionUsageCache()
+                    }
+
+                    AppBroadcastActions.LEARNING_RESTORED -> {
+                        Log.i(TAG, "Learning restored, invalidating word usage cache...")
+                        suggestionController.invalidateWordUsageCache()
+                        suggestionController.invalidateMultiWordCache()
                     }
                 }
             }
         }
-        
-        val userDictFilter = IntentFilter(AppBroadcastActions.USER_DICTIONARY_UPDATED).apply {
+
+        val userDictFilter = IntentFilter().apply {
+            addAction(AppBroadcastActions.USER_DICTIONARY_UPDATED)
+            addAction(AppBroadcastActions.BASE_DICTIONARY_UPDATED)
             addAction(rocks.pkb.plektra.dictionaries.DictionaryRepositoryManager.ACTION_DICTIONARIES_CHANGED)
+            addAction(AppBroadcastActions.CORRECTION_USAGE_UPDATED)
+            addAction(AppBroadcastActions.LEARNING_RESTORED)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(userDictionaryReceiver, userDictFilter, ContextCompat.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(userDictionaryReceiver, userDictFilter)
-        }
-        
+
+
+        ContextCompat.registerReceiver(
+            this,
+            userDictionaryReceiver,
+            userDictFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+
         Log.d(TAG, "Broadcast receiver registered for user dictionary updates")
-        
         // Register broadcast receiver for additional IME subtypes updates
         additionalSubtypesReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -2628,6 +2692,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     ): Boolean {
         if (liveSpeechEditor != null) cancelSpeechRecognition()
         val ic = inputConnection ?: return false
+        if (PunctuationAfterSpace.beforeTextCommit(ic, text)) {
+            updateStatusBarText()
+            return true
+        }
 
         if (text == " ") {
             if (::textExpansionController.isInitialized &&
@@ -2671,9 +2739,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             suggestionController.onContextReset()
         }
         ic.commitText(text, 1)
-        if (!snapshot.shouldDisableSuggestions) {
-            suggestionController.onCharacterCommitted(text, ic)
-        }
+        suggestionController.onCharacterCommitted(text, ic)
         updateStatusBarText()
         if (::textExpansionController.isInitialized) textExpansionController.scheduleRefresh()
         return true
@@ -2688,6 +2754,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (liveSpeechEditor != null) cancelSpeechRecognition()
         val ic = inputConnection ?: return false
         if (text.length != 1) return false
+        if (PunctuationAfterSpace.beforeTextCommit(ic, text)) return true
         val boundary = rocks.pkb.plektra.core.Punctuation.normalizeApostrophe(text[0])
         if (boundary == '\'' || boundary !in rocks.pkb.plektra.core.Punctuation.BOUNDARY) {
             return false
@@ -2910,6 +2977,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        themeRotationScheduler?.close()
+        themeRotationScheduler = null
         disableSmoothCaretExperiment()
         if (::smoothCaretOverlayController.isInitialized) smoothCaretOverlayController.release()
         ClicksAccessibilityKeyBridge.unregister(this)
@@ -2941,6 +3010,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         // Cleanup ClipboardHistoryManager
         if (::suggestionController.isInitialized) {
+
+            LearningOperationGate.prepareForRestore = null
+
             suggestionController.destroy()
         }
         clipboardHistoryManager.setHistoryChangeListener(null)
@@ -3005,7 +3077,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         isInputViewActive = inputContextState.isEditable
         keyboardVisibilityController.onCandidatesViewStarted()
         updateStatusBarText()
-        traceImeVisibility("onStartCandidatesView restarting=$restarting")
     }
 
     override fun onFinishCandidatesView(finishingInput: Boolean) {
@@ -3031,7 +3102,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (::keyboardVisibilityController.isInitialized) {
             keyboardVisibilityController.onExplicitShowRequested()
         }
-        traceImeVisibility("onShowInputRequested accepted=$accepted flags=$flags")
         return !keyboardVisibilityController.usesCandidatesView()
     }
 
@@ -3466,6 +3536,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 "select_all" -> "All"
                 "expand_selection_left" -> "Sel ←"
                 "expand_selection_right" -> "Sel →"
+                "expand_selection_up" -> "Sel ↑"
+                "expand_selection_down" -> "Sel ↓"
                 "move_word_left" -> "← word"
                 "move_word_right" -> "word →"
                 "expand_selection_word_left" -> "Sel word ←"
@@ -3509,6 +3581,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 "select_all" -> R.drawable.select_all_24
                 "expand_selection_left" -> R.drawable.text_select_move_back_character_filled_24
                 "expand_selection_right" -> R.drawable.text_select_move_forward_character_filled_24
+                "expand_selection_up" -> R.drawable.keyboard_arrow_up_24
+                "expand_selection_down" -> R.drawable.keyboard_arrow_down_24
                 "move_word_left" -> R.drawable.text_select_move_back_word_24
                 "move_word_right" -> R.drawable.text_select_move_forward_word_24
                 "expand_selection_word_left" -> R.drawable.text_select_move_back_word_filled_24
@@ -3549,16 +3623,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         pendingKeyboardSurfaceTransition = null
         isInputViewActive = false
         if (::keyboardVisibilityController.isInitialized) keyboardVisibilityController.onInputUnbound()
-        traceImeVisibility("onUnbindInput")
         super.onUnbindInput()
     }
 
     override fun onBindInput() {
         super.onBindInput()
-        traceImeVisibility("onBindInput")
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        PunctuationAfterSpace.clear()
+        rocks.pkb.plektra.core.AutoSpaceTracker.clear()
+        if (!restarting) enterSendHeldShiftKeys.clear()
+        if (!restarting && ::suggestionController.isInitialized) suggestionController.finishTypingStatistics()
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         if (!restarting) {
@@ -3566,6 +3642,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             ++speechEditorSession
         }
         super.onStartInput(info, restarting)
+        if (themeRotationScheduler == null) {
+            themeRotationScheduler = rocks.pkb.plektra.DailyThemeRotationScheduler(this) { updateStatusBarText() }
+        }
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
             !restarting ||
@@ -3662,6 +3741,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             )
         }
 
+        themeRotationScheduler?.start()
         startClipboardCleanupTimer()
     }
 
@@ -3673,7 +3753,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         updateInputContextState(info)
         isInputViewActive = inputContextState.isEditable
-        traceImeVisibility("onStartInputView restarting=$restarting")
         initializeInputContext(restarting)
         suggestionController.onContextReset()
         
@@ -3736,6 +3815,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onFinishInput() {
+        themeRotationScheduler?.stop()
+        if (::suggestionController.isInitialized) suggestionController.finishTypingStatistics()
         cancelSpeechRecognition()
         ++speechEditorSession
         disableSmoothCaretExperiment()
@@ -3768,12 +3849,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         // Finishing a view does not finish the editor session (Back and backend transitions).
         isInputViewActive = !finishingInput && inputContextState.isEditable
-        traceImeVisibility("onFinishInputView finishing=$finishingInput")
         if (::candidatesBarController.isInitialized) {
             candidatesBarController.resetSuggestionActionMode()
         }
         // Retention cleanup continues while the IME service lives, including on the lock screen.
         if (finishingInput) {
+            suggestionController.finishTypingStatistics()
             multiTapController.cancelAll()
             resetModifierStates(preserveNavMode = true)
             suggestionController.onContextReset()
@@ -4585,6 +4666,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyCode_ == KeyEvent.KEYCODE_SHIFT_LEFT || keyCode_ == KeyEvent.KEYCODE_SHIFT_RIGHT) enterSendHeldShiftKeys.add(keyCode_)
         if (liveSpeechEditor != null && (event_?.unicodeChar?.let { it != 0 } == true ||
             keyCode_ in listOf(KeyEvent.KEYCODE_DEL, KeyEvent.KEYCODE_FORWARD_DEL, KeyEvent.KEYCODE_ENTER,
                 KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN))) {
@@ -5046,7 +5128,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             SettingsManager.isAltEnterLayoutSwitchEnabled(this) &&
             !languageCtrl && event.isMetaPressed.not() && event.isSymPressed.not() && !symPhysicallyPressed &&
             (keyCode == KeyEvent.KEYCODE_ENTER &&
-                    (event.isAltPressed || altPhysicallyPressed))
+                    (event.isAltPressed || altPhysicallyPressed)) &&
+            !isAltEnterSendConfigured(currentInputEditorInfo)
         ) {
             consumeAltEnterUntilKeyUp = true
             modifierStateController.clearAltState(resetPressedState = true)
@@ -5125,6 +5208,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val isAutoCorrectEnabled = SettingsManager.getAutoCorrectEnabled(this) && !state.shouldDisableAutoCorrect
         if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_DEL) {
             DeferredPunctuationSpaceTracker.clear()
+            if (keyCode == KeyEvent.KEYCODE_ENTER && ic != null) PunctuationAfterSpace.beforeTextCommit(ic, "\n")
         }
 
         clearAltOnBoundaryIfNeeded(keyCode) { updateStatusBarText() }
@@ -5174,6 +5258,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     event?.unicodeChar?.takeIf { it != 0 } != null -> event.unicodeChar.toChar().toString()
                     else -> ""
                 }
+                if (PunctuationAfterSpace.beforeTextCommit(ic, typedText)) return true
+                if (typedText.length == 1 && typedText[0] in SettingsManager.getSpaceAfterPunctuation(this) &&
+                    handleBoundaryTextBeforeCommit(typedText, ic)) return true
                 val insertedDeferredSpace =
                     DeferredPunctuationSpaceTracker.prepareForTextCommit(this, ic, typedText)
                 if (insertedDeferredSpace) {
@@ -5338,6 +5425,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyCode_ == KeyEvent.KEYCODE_SHIFT_LEFT || keyCode_ == KeyEvent.KEYCODE_SHIFT_RIGHT) enterSendHeldShiftKeys.remove(keyCode_)
         if (!replayingProtectedNumberKey) {
             when (val result = accidentalKeyPressFilter.onKeyUp(keyCode_, event_)) {
                 is AccidentalKeyPressFilter.KeyUpResult.Suppressed -> {
@@ -5895,11 +5983,81 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         when (direction) {
             NativeTrackpadSwipeDirection.UP -> {
-                val third = TrackpadCoordinateMapper.third(start.x, start.xRange)
+                val calibrationSession =
+                    SettingsManager.getTrackpadCalibrationSession(this)
+
+                if (calibrationSession != null) {
+                    val rangeWidth = start.xRange.max - start.xRange.min
+
+                    if (rangeWidth > 0f) {
+                        val normalizedX =
+                            ((start.x - start.xRange.min) / rangeWidth)
+                                .coerceIn(0f, 1f)
+
+                        val updatedSession =
+                            SettingsManager.addTrackpadCalibrationSample(
+                                context = this,
+                                normalizedX = normalizedX
+                            )
+
+                        Log.d(
+                            TRACKPAD_DEBUG_TAG,
+                            "Native calibration swipe accepted[$phase]: " +
+                                    "target=${calibrationSession.target}, " +
+                                    "startX=${start.x}, " +
+                                    "xRange=${start.xRange.min}..${start.xRange.max}, " +
+                                    "normalizedX=$normalizedX, " +
+                                    "sampleCount=${updatedSession?.currentSamples?.size ?: 0}"
+                        )
+
+                        KeyboardEventTracker.notifySyntheticGestureKeyEvent(
+                            provider = SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME,
+                            origin = start.origin,
+                            phase = phase,
+                            action = start.actionName,
+                            direction = direction.name.lowercase(),
+                            outcome =
+                                "accepted_calibration_${calibrationSession.target.name.lowercase()}",
+                            startX = start.x,
+                            startY = start.y,
+                            x = x,
+                            y = y,
+                            deltaX = deltaX,
+                            deltaY = deltaY,
+                            threshold = suggestionThreshold,
+                            deviceId = start.deviceId,
+                            source = start.source,
+                            eventTimeUptimeMs = eventTimeUptimeMs
+                        )
+
+                        return true
+                    }
+                }
+
+                val calibration =
+                    SettingsManager.getTrackpadSuggestionCalibration(this)
+
+                val normalizedX =
+                    TrackpadCoordinateMapper.normalized(start.x, start.xRange)
+
+                val third = if (
+                    calibration != null &&
+                    normalizedX != null
+                ) {
+                    when {
+                        normalizedX < calibration.leftCenterBoundary -> 0
+                        normalizedX < calibration.centerRightBoundary -> 1
+                        else -> 2
+                    }
+                } else {
+                    TrackpadCoordinateMapper.third(start.x, start.xRange)
+                }
+
                 Log.d(
                     TRACKPAD_DEBUG_TAG,
-                    "Native swipe accepted[$phase]: direction=UP startX=${start.x}, startY=${start.y}, x=$x, y=$y, dx=$deltaX, dy=$deltaY, duration=${durationMs}ms, velocity=$upVelocity, xRange=${start.xRange.min}..${start.xRange.max}, third=$third"
+                    "Native swipe accepted[$phase]: direction=UP startX=${start.x}, startY=${start.y}, x=$x, y=$y, dx=$deltaX, dy=$deltaY, duration=${durationMs}ms, velocity=$upVelocity, xRange=${start.xRange.min}..${start.xRange.max}, normalizedX=$normalizedX, calibrated=${calibration != null}, third=$third"
                 )
+
                 KeyboardEventTracker.notifySyntheticGestureKeyEvent(
                     provider = SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME,
                     origin = start.origin,
@@ -5918,6 +6076,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     source = start.source,
                     eventTimeUptimeMs = eventTimeUptimeMs
                 )
+
                 acceptSuggestionAtIndex(third)
             }
             NativeTrackpadSwipeDirection.LEFT -> {
@@ -6137,10 +6296,19 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
             ic.deleteSurroundingText(deleteBefore, deleteAfter)
             val textToCommit = if (shouldAppendSpace) "$replacement " else replacement
-            ic.commitText(textToCommit, 1)
+            val committed = ic.commitText(textToCommit, 1)
+
+            if (committed) {
+                suggestionController.learnCorrection(
+                    original = currentWord,
+                    replacement = replacement
+                )
+            }
+
             if (shiftOneShot) {
                 modifierStateController.consumeShiftOneShot()
             }
+
             DebugCaptureStore.recordAutoCorrectionCommit(
                 before = currentWord,
                 after = replacement,
@@ -6148,13 +6316,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 source = "UNKNOWN"
             )
 
-            if (shouldAppendSpace) {
-                rocks.pkb.plektra.core.AutoSpaceTracker.markAutoSpace()
+            if (committed && shouldAppendSpace) {
+                rocks.pkb.plektra.core.AutoSpaceTracker.markSuggestionAutoSpace(ic)
             }
 
-            // CRITICAL FIX: Reset tracker after accepting suggestion to prevent duplicate letters
-            // The cursor debounce can cause tracker to be out of sync when user types quickly after accepting
-            suggestionController.onContextReset()
+            // Swipes must notify the same learning/statistics path as suggestion taps.
+            // onSuggestionCommitted resets the current prefix and preserves next-word context.
+            if (committed) suggestionController.onSuggestionCommitted(replacement)
             NotificationHelper.triggerHapticFeedback(this)
             Log.d(TAG, "Suggestion '$suggestion' inserted successfully")
         }

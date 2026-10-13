@@ -25,11 +25,31 @@ data class SerializableDictionaryEntry(
     val source: Int // 0 = MAIN, 1 = USER
 )
 
+
 @Serializable
 data class SymSpellMeta(
     val maxEditDistance: Int,
     val prefixLength: Int
 )
+
+@Serializable
+data class CompactDictionaryEntryV2(
+    val w: String,
+    val n: String,
+    val f: Int
+)
+
+@Serializable
+data class DictionaryIndexV2(
+    val formatVersion: Int,
+    val normalizationVersion: Int,
+    val words: List<CompactDictionaryEntryV2>,
+    val normalizedIndex: Map<String, List<Int>>,
+    val prefixIndex: Map<String, List<Int>>,
+    val symDeletes: Map<String, List<Int>>,
+    val symMeta: SymSpellMeta
+)
+
 
 /**
  * Converts DictionaryEntry to SerializableDictionaryEntry.

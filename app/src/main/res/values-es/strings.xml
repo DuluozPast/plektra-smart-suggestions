@@ -152,7 +152,7 @@
     <string name="long_press_modifier_title">Modificador de Pulsación Larga</string>
     <string name="long_press_modifier_description">Elija qué hace la pulsación larga: Alt+tecla, Shift+tecla, variaciones de caracteres o asignaciones Sym</string>
     <string name="long_press_modifier_alt">Alt</string>
-    <string name="long_press_modifier_shift">Shift</string>
+    <string name="long_press_modifier_shift">Cambio</string>
     <string name="long_press_modifier_variations">Variaciones</string>
     <string name="long_press_modifier_sym">Sym</string>
     <string name="about_github">GitHub</string>
@@ -198,7 +198,7 @@
     <string name="nav_mode_note">Nota: Modificar las teclas del modo nav también afecta las combinaciones Ctrl+tecla en los campos de texto.</string>
     <string name="nav_mode_configure_key">Configurar %1$s</string>
     <string name="nav_mode_type">Tipo</string>
-    <string name="nav_mode_keycode">Keycode</string>
+    <string name="nav_mode_keycode">Código clave</string>
     <string name="nav_mode_action">Acción</string>
     <string name="nav_mode_none">Ninguno</string>
     <string name="nav_mode_use_default">Usar Predeterminado: %1$s</string>
@@ -288,7 +288,7 @@
     <string name="nav_mode_action_undo">Deshacer</string>
     <string name="nav_mode_action_select_all">SelTodo</string>
     <string name="nav_mode_action_expand_selection_left">←Sel</string>
-    <string name="nav_mode_action_expand_selection_right">→Sel</string>
+    <string name="nav_mode_action_expand_selection_right">→Selección</string>
     <string name="nav_mode_action_toggle_slim">Slim</string>
     <string name="nav_mode_keycode_up">↑</string>
     <string name="nav_mode_keycode_down">↓</string>
@@ -298,7 +298,7 @@
     <string name="nav_mode_keycode_page_up">RePág</string>
     <string name="nav_mode_keycode_page_down">AvPág</string>
     <string name="nav_mode_keycode_escape">Esc</string>
-    <string name="nav_mode_keycode_tab">Tab</string>
+    <string name="nav_mode_keycode_tab">Pestaña</string>
     <string name="nav_mode_keycode_forward_delete">Del→</string>
     <string name="nav_mode_key_unknown">?</string>
     <string name="tutorial_skip">Omitir</string>
@@ -357,7 +357,7 @@
     <string name="restore_failed">Restauración fallida: %1$s</string>
     <string name="swipe_incremental_threshold_description">Distancia requerida para mover el cursor una posición. Valores más bajos hacen que el cursor se mueva más rápido.</string>
     <string name="swipe_to_move_cursor">Desliza para mover el cursor</string>
-    <string name="dip_unit">DIP</string>
+    <string name="dip_unit">INMERSIÓN</string>
     <string name="clipboard_history_title">Historial del portapapeles</string>
     <string name="clipboard_clear_all">Borrar todo</string>
     <string name="clipboard_empty_state">No hay historial del portapapeles</string>
@@ -461,7 +461,7 @@
     <string name="status_bar_button_clipboard_description">Historial</string>
     <string name="status_bar_button_microphone">Micrófono</string>
     <string name="status_bar_button_microphone_description">Voz</string>
-    <string name="status_bar_button_emoji">Emoji</string>
+    <string name="status_bar_button_emoji">emojis</string>
     <string name="status_bar_button_emoji_description">Selector</string>
     <string name="status_bar_button_language">Idioma</string>
     <string name="status_bar_button_language_description">Cambiar</string>
@@ -521,12 +521,12 @@
     <string name="keyboard_layout_title">Diseño de teclado</string>
     <string name="keyboard_layout_description">Selecciona tu diseño de teclado. Las asignaciones de ALT, SYM y Ctrl permanecen basadas en la posición física de las teclas.</string>
     <string name="keyboard_layout_editor_title">Editor de diseño de teclado</string>
-    <string name="keyboard_layout_no_conversion">Standard</string>
+    <string name="keyboard_layout_no_conversion">Estándar</string>
     <string name="keyboard_layout_no_conversion_description">Diseño QWERTY estándar (sin conversión)</string>
     <string name="keyboard_layout_conversions_title">Conversiones de diseño</string>
     <string name="keyboard_layout_conversions_description">Convierte las teclas de letras para que coincidan con el diseño seleccionado</string>
     <string name="keyboard_layout_viewer_title">Mapa del teclado</string>
-    <string name="keyboard_layout_viewer_subtitle">Layout: %1$s</string>
+    <string name="keyboard_layout_viewer_subtitle">Diseño: %1$s</string>
     <string name="keyboard_layout_viewer_unavailable">No se puede cargar la asignación de este diseño.</string>
     <string name="keyboard_layout_viewer_empty">No se encontraron asignaciones de teclas para este diseño.</string>
     <string name="keyboard_layout_multitap_badge">multitoque</string>
@@ -538,12 +538,12 @@
     <string name="keyboard_layout_mode_auto_description">ACTIVADO: seguir la asignación predeterminada de subtipo/idioma.</string>
     <string name="keyboard_layout_mode_manual_description">DESACTIVADO: usar un diseño seleccionado manualmente para todos los idiomas.</string>
     <string name="keyboard_profile_override_title">Physical Keyboard Profile</string>
-    <string name="keyboard_profile_override_auto_description">Auto detect from device fingerprint (current: %1$s).</string>
-    <string name="keyboard_profile_override_manual_description">Manual override for device-specific key mappings.</string>
-    <string name="keyboard_profile_option_auto">Auto</string>
-    <string name="keyboard_profile_option_key2">BlackBerry Key2</string>
+    <string name="keyboard_profile_override_auto_description">Detección automática a partir de la huella digital del dispositivo (actual: %1$s).</string>
+    <string name="keyboard_profile_override_manual_description">Anulación manual para asignaciones de claves específicas del dispositivo.</string>
+    <string name="keyboard_profile_option_auto">Automático</string>
+    <string name="keyboard_profile_option_key2">Clave2 de BlackBerry</string>
     <string name="keyboard_profile_option_q25">BlackBerry Q25</string>
-    <string name="keyboard_profile_option_titan2">Unihertz Titan 2</string>
+    <string name="keyboard_profile_option_titan2">Unihercio Titán 2</string>
     <string name="power_shortcuts_title">Atajos rápidos</string>
     <string name="power_shortcuts_description">Pulsa SYM y luego una tecla para abrir atajos cuando no estés en un campo de texto</string>
     <string name="power_shortcuts_press_key">Pulsa una tecla de atajo para abrir</string>
@@ -562,9 +562,9 @@
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>
     <string name="emoji_picker_no_results">No emoji found</string>
-    <string name="variation_global_layout_override_title">Global Variation Mapping</string>
-    <string name="variation_global_layout_override_description">Force variation ordering from one layout across all layouts. Default is current IME layout (%1$s).</string>
-    <string name="variation_global_layout_override_none">None (use current layout)</string>
+    <string name="variation_global_layout_override_title">Mapeo de variación global</string>
+    <string name="variation_global_layout_override_description">fuerza el orden de variación desde un diseño en todos los diseños. El valor predeterminado es el diseño IME actual (%1$s).</string>
+    <string name="variation_global_layout_override_none">Ninguno (use el diseño actual)</string>
     <string name="settings_update_section_title">Plektra</string>
     <string name="settings_update_section_description">Check for Plektra Nightly updates.</string>
     <string name="settings_update_checking">Checking for Plektra Nightly updates…</string>
@@ -641,8 +641,8 @@
     <string name="alt_shift_layout_switch_description">Cambia idiomas/layouts con Alt+Shift.</string>
     <string name="toast_on_layout_switch_title">Toast al cambiar layout</string>
     <string name="toast_on_layout_switch_description">Muestra un toast al cambiar de idioma/layout.</string>
-    <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Elite (QWERTY)</string>
-    <string name="keyboard_profile_option_mp01">Minimal Phone (MP01)</string>
+    <string name="keyboard_profile_option_titan2elite_qwerty">Titán 2 Elite (QWERTY)</string>
+    <string name="keyboard_profile_option_mp01">Teléfono mínimo (MP01)</string>
     <string name="keyboard_currency_symbol_title">Símbolo de moneda</string>
     <string name="keyboard_currency_symbol_description">Símbolo insertado por teclas físicas dedicadas de moneda.</string>
     <string name="starter_launcher_shortcuts_title">Plektra-QuickLauncher</string>
@@ -715,7 +715,7 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="layout_aware_ctrl_shortcuts_disabled_description">Desactivado mientras la navegación con Ctrl mantenido está activa, porque Ctrl mantenido lo gestiona Nav Mode en lugar de la app.</string>
     <string name="layout_aware_ctrl_shortcuts_info_title">Atajos Ctrl y Nav Mode</string>
     <string name="layout_aware_ctrl_shortcuts_info_text">Hay dos rutas para Ctrl mantenido. Si la navegación con Ctrl mantenido está activada, Plektra gestiona Ctrl+tecla con las asignaciones de Nav Mode que se muestran abajo. Si está desactivada, Plektra pasa Ctrl+tecla a la app. Esta opción solo afecta a esa ruta de app: si está activada, Ctrl+letra se traduce primero mediante el layout activo de Plektra, para que los atajos puedan seguir las letras que escribes. Si está desactivada, las apps reciben las posiciones físicas originales de las teclas.</string>
-    <string name="nav_mode_native_ctrl">Native Ctrl</string>
+    <string name="nav_mode_native_ctrl">Ctrl nativo</string>
     <string name="app_enter_behaviour_title">Comportamiento de la tecla Intro</string>
     <string name="app_enter_behaviour_description">Configura el manejo de Intro y nueva línea por app</string>
     <string name="app_enter_behaviour_enable_title">Comportamiento de Intro por app</string>
@@ -853,7 +853,6 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="dynamic_variation_resize_to_content_description">Si está activado, las entradas dinámicas llenan la fila disponible según cuántas se muestren. Si está desactivado, conservan el tamaño de espacio del control deslizante y quedan alineadas a la izquierda.</string>
     <string name="keyboard_theme_tab_colors">Colores</string>
     <string name="keyboard_theme_tab_keys">Teclas</string>
-
     <string name="settings_search_hint">Buscar en los ajustes</string>
     <string name="settings_search_no_results">No hay ajustes coincidentes</string>
     <string name="settings_link_copy">Copiar enlace</string>
@@ -862,4 +861,26 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="settings_link_with_description">Con descripción</string>
     <string name="settings_link_copied_toast">Enlace copiado</string>
     <string name="settings_link_unavailable_toast">Este ajuste no está disponible</string>
+    <string name="trackpad_calibration_title">Calibración de gestos</string>
+    <string name="trackpad_calibration_target_left">de la izquierda</string>
+    <string name="trackpad_calibration_target_center">del centro</string>
+    <string name="trackpad_calibration_target_right">de la derecha</string>
+    <string name="trackpad_calibration_instruction">Realiza de forma natural el gesto que utilizarías para seleccionar la sugerencia %1$s.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 gestos</string>
+    <string name="trackpad_calibration_text_field_hint">Campo de calibración — Pastiera debe estar activo aquí</string>
+    <string name="trackpad_calibration_cancel">Cancelar</string>
+    <string name="trackpad_calibration_save">Guardar</string>
+    <string name="typing_statistics_title">Estadísticas de escritura</string>
+    <string name="typing_statistics_total_words">Número total de palabras introducidas</string>
+    <string name="typing_statistics_manual_words">Palabras introducidas manualmente</string>
+    <string name="typing_statistics_suggested_words">Palabras introducidas mediante sugerencias</string>
+    <string name="app_enter_behaviour_newline_shift_send">Intro: nueva línea; Mayús + Intro: enviar</string>
+    <string name="app_enter_behaviour_send_shift_side">Tecla Mayús para enviar</string>
+    <string name="app_enter_behaviour_shift_left">Mayús izquierda</string>
+    <string name="app_enter_behaviour_shift_right">Mayús derecha</string>
+    <string name="auto_space_punctuation_after_column">Añadir después</string>
+    <string name="auto_space_punctuation_before_column">Quitar antes</string>
+    <string name="auto_space_punctuation_character_column">Signo</string>
+    <string name="auto_space_punctuation_dialog_instruction">Elige los signos que eliminan un espacio automático antes o añaden un espacio inmediatamente después.</string>
+    <string name="auto_space_punctuation_help_text">Quitar antes afecta solo a espacios automáticos. Añadir después inserta un espacio inmediatamente. Pulsar Espacio después no lo duplica. La semirraya y el paréntesis de cierre se pueden elegir por separado.</string>
 </resources>

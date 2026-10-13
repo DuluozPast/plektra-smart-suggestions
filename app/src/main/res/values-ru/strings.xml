@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Plektra</string>
-    <string name="input_method_name">Plektra</string>
+    <string name="input_method_name">Пастьера</string>
     <string name="input_method_name_en">English</string>
     <string name="input_method_name_it">Italiano</string>
     <string name="input_method_name_fr">Français</string>
@@ -15,7 +15,7 @@
     <string name="back">Назад</string>
     <string name="settings_back_content_description">Назад</string>
     <string name="long_press_title">Долгое нажатие</string>
-    <string name="keyboard_timing_long_press_value">%1$dms</string>
+    <string name="keyboard_timing_long_press_value">%1$dмс</string>
     <string name="long_press_duration">Продолжительность долгого нажатия: %1$dms</string>
     <string name="long_press_description">Время ожидания перед тем, как долгое нажатие будет распознано. Меньшие значения делают долгое нажатие отзывчивее.</string>
     <string name="setting_applied_immediately">Настройка применяется моментально</string>
@@ -152,7 +152,7 @@
     <string name="long_press_modifier_title">Модификатор долгого нажатия</string>
     <string name="long_press_modifier_description">Выберите, что делает долгое нажатие: Alt+клавиша, Shift+клавиша, вариации символов или Sym-сопоставления</string>
     <string name="long_press_modifier_alt">Alt</string>
-    <string name="long_press_modifier_shift">Shift</string>
+    <string name="long_press_modifier_shift">сдвиг</string>
     <string name="long_press_modifier_variations">Вариации</string>
     <string name="long_press_modifier_sym">Sym</string>
     <string name="keyboard_layout_title">Раскладка клавиатуры</string>
@@ -172,7 +172,7 @@
     <string name="keyboard_layout_viewer_open">Показать сопоставление</string>
     <string name="keyboard_layout_settings_button">Настройки раскладки клавиатуры</string>
     <string name="about_github">GitHub</string>
-    <string name="about_build_info">Plektra IME - Palsoftware 2026</string>
+    <string name="about_build_info">Plektra IME — Palsoftware 2026</string>
     <string name="settings_device_keyboard_info">Устройство: %1$s; Клавиатура: %2$s</string>
     <string name="about_title">О программе</string>
     <string name="about_credits_error">Невозможно загрузить информацию о благодарностях.</string>
@@ -283,7 +283,7 @@
     <string name="app_picker_search_placeholder">Искать приложения...</string>
     <string name="settings_support_open_collective">Open Collective</string>
     <string name="settings_nav_mode_configure">Настроить раскладку режима навигации</string>
-    <string name="settings_update_section_title">Plektra</string>
+    <string name="settings_update_section_title">Плектра</string>
     <string name="settings_update_section_description">Check for Plektra Nightly updates.</string>
     <string name="settings_update_checking">Checking for Plektra Nightly updates…</string>
     <string name="settings_update_up_to_date">No newer Plektra Nightly found.</string>
@@ -303,7 +303,7 @@
     <string name="settings_accessibility_second_row_title">Озвучивать вторую строку (быстрые действия и вариации)</string>
     <string name="settings_accessibility_second_row_description">Если отключено, TalkBack пропускает нижнюю строку и оставляет подсказки слов отдельно.</string>
     <string name="settings_accessibility_suggestions_delay_title">Задержка озвучивания подсказок</string>
-    <string name="settings_accessibility_suggestions_delay_value">%1$d ms</string>
+    <string name="settings_accessibility_suggestions_delay_value">%1$d мс</string>
     <string name="settings_accessibility_delay_decrease">Уменьшить задержку на 50 миллисекунд</string>
     <string name="settings_accessibility_delay_increase">Увеличить задержку на 50 миллисекунд</string>
     <string name="settings_accessibility_delay_feedback">Задержка подсказок: %1$d ms</string>
@@ -349,10 +349,10 @@
     <string name="nav_mode_keycode_right">→</string>
     <string name="nav_mode_keycode_center">○</string>
     <string name="nav_mode_keycode_page_up">PgUp</string>
-    <string name="nav_mode_keycode_page_down">PgDn</string>
+    <string name="nav_mode_keycode_page_down">ПГДн</string>
     <string name="nav_mode_keycode_escape">Esc</string>
-    <string name="nav_mode_keycode_tab">Tab</string>
-    <string name="nav_mode_keycode_forward_delete">Del→</string>
+    <string name="nav_mode_keycode_tab">Вкладка</string>
+    <string name="nav_mode_keycode_forward_delete">Удалить→</string>
     <string name="nav_mode_key_unknown">?</string>
     <string name="tutorial_skip">Пропустить</string>
     <string name="tutorial_previous">Предыдущий</string>
@@ -408,7 +408,7 @@
     <string name="restore_completed">Восстановление завершено</string>
     <string name="backup_failed">Резервное копирование не удалось: %1$s</string>
     <string name="restore_failed">Восстановление не удалось: %1$s</string>
-    <string name="dip_unit">DIP</string>
+    <string name="dip_unit">ДИП</string>
     <string name="custom_input_styles_title">Языки ввода</string>
     <string name="custom_input_styles_description">Добавить дополнительные языки и раскладки клавиатуры, которые не привязаны к системной локали</string>
     <string name="custom_input_styles_add">Добавить стиль ввода</string>
@@ -580,19 +580,19 @@
     <string name="keyboard_layout_mode_auto_description">ВКЛ.: использовать сопоставления subtype/locale по умолчанию.</string>
     <string name="keyboard_layout_mode_manual_description">ВЫКЛ.: использовать одну выбранную вручную раскладку для всех языков.</string>
     <string name="keyboard_profile_override_title">Physical Keyboard Profile</string>
-    <string name="keyboard_profile_override_auto_description">Auto detect from device fingerprint (current: %1$s).</string>
-    <string name="keyboard_profile_override_manual_description">Manual override for device-specific key mappings.</string>
-    <string name="keyboard_profile_option_auto">Auto</string>
-    <string name="keyboard_profile_option_key2">BlackBerry Key2</string>
+    <string name="keyboard_profile_override_auto_description">автоматическое определение по отпечатку пальца устройства (текущий: %1$s).</string>
+    <string name="keyboard_profile_override_manual_description">ручное переопределение сопоставлений клавиш для конкретного устройства.</string>
+    <string name="keyboard_profile_option_auto">Авто</string>
+    <string name="keyboard_profile_option_key2">Ключ BlackBerry2</string>
     <string name="keyboard_profile_option_q25">BlackBerry Q25</string>
-    <string name="keyboard_profile_option_titan2">Unihertz Titan 2</string>
-    <string name="keyboard_profile_option_mp01">Minimal Phone (MP01)</string>
+    <string name="keyboard_profile_option_titan2">Унигерц Титан 2</string>
+    <string name="keyboard_profile_option_mp01">Минимальный телефон (MP01)</string>
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>
     <string name="emoji_picker_no_results">No emoji found</string>
-    <string name="variation_global_layout_override_title">Global Variation Mapping</string>
-    <string name="variation_global_layout_override_description">Force variation ordering from one layout across all layouts. Default is current IME layout (%1$s).</string>
-    <string name="variation_global_layout_override_none">None (use current layout)</string>
+    <string name="variation_global_layout_override_title">Глобальное картографирование вариаций</string>
+    <string name="variation_global_layout_override_description">принудительно упорядочить варианты из одного макета во всех макетах. По умолчанию используется текущий макет IME (%1$s).</string>
+    <string name="variation_global_layout_override_none">Нет (используйте текущий макет)</string>
     <string name="event_action_label">Действие: </string>
     <string name="event_keycode_label">KeyCode: </string>
     <string name="event_scancode_label">ScanCode: </string>
@@ -642,7 +642,7 @@
     <string name="alt_shift_layout_switch_description">Переключайте языки/раскладки с Alt+Shift.</string>
     <string name="toast_on_layout_switch_title">Toast при смене раскладки</string>
     <string name="toast_on_layout_switch_description">Показывать toast при переключении языка/раскладки.</string>
-    <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Elite (QWERTY)</string>
+    <string name="keyboard_profile_option_titan2elite_qwerty">Титан 2 Элит (QWERTY)</string>
     <string name="keyboard_currency_symbol_title">Символ валюты</string>
     <string name="keyboard_currency_symbol_description">Символ, вставляемый выделенными аппаратными клавишами валюты.</string>
     <string name="starter_launcher_shortcuts_title">Plektra-QuickLauncher</string>
@@ -715,7 +715,7 @@ Nav Mode использует физическое положение клави
     <string name="layout_aware_ctrl_shortcuts_disabled_description">Отключено, пока активна навигация с удержанием Ctrl, потому что удерживаемый Ctrl обрабатывается Nav Mode, а не приложением.</string>
     <string name="layout_aware_ctrl_shortcuts_info_title">Ctrl-ярлыки и Nav Mode</string>
     <string name="layout_aware_ctrl_shortcuts_info_text">Для удерживаемого Ctrl есть два пути. Если навигация с удержанием Ctrl включена, Plektra обрабатывает Ctrl+клавиша назначениями Nav Mode, показанными ниже. Если она выключена, Plektra передает Ctrl+клавиша приложению. Эта опция влияет только на путь приложения: когда она включена, Ctrl+буква сначала переводится через активную раскладку Plektra, чтобы ярлыки могли следовать вводимым буквам. Когда выключена, приложения получают исходные физические позиции клавиш.</string>
-    <string name="nav_mode_native_ctrl">Native Ctrl</string>
+    <string name="nav_mode_native_ctrl">встроенный Ctrl</string>
     <string name="app_enter_behaviour_title">Поведение клавиши Enter</string>
     <string name="app_enter_behaviour_description">Настройка Enter и переноса строки для отдельных приложений</string>
     <string name="app_enter_behaviour_enable_title">Поведение Enter для приложений</string>
@@ -763,7 +763,7 @@ Nav Mode использует физическое положение клави
     <string name="app_enter_behaviour_strategy_label">Стратегия отправки</string>
     <string name="app_enter_behaviour_strategy_auto">Авто / не проверено</string>
     <string name="app_enter_behaviour_strategy_editor_action">Действие редактора</string>
-    <string name="app_enter_behaviour_strategy_ctrl_enter">Ctrl+Enter</string>
+    <string name="app_enter_behaviour_strategy_ctrl_enter">Ctrl+Ввод</string>
     <string name="app_enter_behaviour_strategy_plain_enter">Обычный Enter</string>
     <string name="app_enter_behaviour_additional_send_shortcut_label">Дополнительный ярлык отправки</string>
     <string name="app_enter_behaviour_additional_send_shortcut_description">Применить дополнительный ярлык отправки к списку приложений ниже.</string>
@@ -853,7 +853,6 @@ Nav Mode использует физическое положение клави
     <string name="dynamic_variation_resize_to_content_description">Если включено, динамические элементы заполняют доступную строку в зависимости от их количества. Если выключено, они сохраняют размер слота из ползунка и остаются выровненными слева.</string>
     <string name="keyboard_theme_tab_colors">Цвета</string>
     <string name="keyboard_theme_tab_keys">Клавиши</string>
-
     <string name="settings_search_hint">Поиск по настройкам</string>
     <string name="settings_search_no_results">Нет подходящих настроек</string>
     <string name="settings_link_copy">Копировать ссылку</string>
@@ -862,4 +861,26 @@ Nav Mode использует физическое положение клави
     <string name="settings_link_with_description">С описанием</string>
     <string name="settings_link_copied_toast">Ссылка скопирована</string>
     <string name="settings_link_unavailable_toast">Этот параметр недоступен</string>
+    <string name="trackpad_calibration_title">Калибровка жестов</string>
+    <string name="trackpad_calibration_target_left">слева</string>
+    <string name="trackpad_calibration_target_center">по центру</string>
+    <string name="trackpad_calibration_target_right">справа</string>
+    <string name="trackpad_calibration_instruction">Естественным движением выполните жест, который вы бы использовали для выбора подсказки %1$s.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 жестов</string>
+    <string name="trackpad_calibration_text_field_hint">Поле калибровки — Pastiera должна быть активна здесь</string>
+    <string name="trackpad_calibration_cancel">Отмена</string>
+    <string name="trackpad_calibration_save">Сохранить</string>
+    <string name="typing_statistics_title">Статистика ввода</string>
+    <string name="typing_statistics_total_words">Общее количество введённых слов</string>
+    <string name="typing_statistics_manual_words">Слова, введённые вручную</string>
+    <string name="typing_statistics_suggested_words">Слова, введённые с помощью подсказок</string>
+    <string name="app_enter_behaviour_newline_shift_send">Enter: новая строка; Shift + Enter: отправить</string>
+    <string name="app_enter_behaviour_send_shift_side">Клавиша Shift для отправки</string>
+    <string name="app_enter_behaviour_shift_left">Левый Shift</string>
+    <string name="app_enter_behaviour_shift_right">Правый Shift</string>
+    <string name="auto_space_punctuation_after_column">Добавить после</string>
+    <string name="auto_space_punctuation_before_column">Убрать перед</string>
+    <string name="auto_space_punctuation_character_column">Знак</string>
+    <string name="auto_space_punctuation_dialog_instruction">Выберите знаки, перед которыми удаляется автоматический пробел или после которых пробел добавляется сразу.</string>
+    <string name="auto_space_punctuation_help_text">Удаление перед знаком касается только автоматических пробелов. Добавление после знака вставляет пробел сразу. Последующее нажатие Пробела не удваивает его. Короткое тире и закрывающая скобка выбираются отдельно.</string>
 </resources>

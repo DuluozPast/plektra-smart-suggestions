@@ -82,7 +82,7 @@ class VariationBarView(
     var onHamburgerMenuRequested: (() -> Unit)? = null
     var onMinimalUiToggleRequested: (() -> Unit)? = null
     var onSoftwareKeyboardModeToggleRequested: (() -> Unit)? = null
-    
+
     /**
      * Sets the microphone button active state (red pulsing background) during speech recognition.
      */
@@ -90,7 +90,7 @@ class VariationBarView(
         isMicrophoneActive = isActive
         buttonHost?.setMicrophoneActive(isActive)
     }
-    
+
     /**
      * Updates the microphone button visual feedback based on audio level.
      * Changes the red color intensity based on audio volume.
@@ -151,7 +151,7 @@ class VariationBarView(
     private var longPressExecuted: Boolean = false
     private var lastClipboardCount: Int? = null
     private var isTitan2Layout: Boolean = false
-    
+
     // New modular components
     private val statusBarAnimator = StatusBarAnimator()
     private val buttonHost = buttonRegistry?.let { StatusBarButtonHost(context, it) }
@@ -217,7 +217,7 @@ class VariationBarView(
                 }
             }
         }
-        
+
         // Container for left fixed buttons (clipboard)
         leftButtonsContainer = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -458,7 +458,7 @@ class VariationBarView(
         val hasSuggestions = canShowSuggestions && snapshot.suggestions.isNotEmpty()
         val useDynamicVariations = statusBarVariationsEnabled && !staticModeEnabled && hasDynamicVariations
         val allowStaticFallback = statusBarVariationsEnabled &&
-            (forceVariationAreaVisible || staticModeEnabled || snapshot.shouldDisableVariations)
+                (forceVariationAreaVisible || staticModeEnabled || snapshot.shouldDisableVariations)
 
         val effectiveVariations: List<String>
         val isStaticContent: Boolean
@@ -503,7 +503,7 @@ class VariationBarView(
         val roundedCorners = SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)
         val fallbackWidth = context.resources.displayMetrics.widthPixels
         val availableWidth = ((containerView.width.takeIf { it > 0 } ?: fallbackWidth) -
-            containerView.paddingLeft - containerView.paddingRight).coerceAtLeast(1)
+                containerView.paddingLeft - containerView.paddingRight).coerceAtLeast(1)
         val geometrySignature = listOf(
             availableWidth, verticalPaddingPx(), roundedCorners,
             SettingsManager.getDynamicVariationBarSlotCount(context),
@@ -511,8 +511,8 @@ class VariationBarView(
             SettingsManager.getStatusBarSlotsLeft(context), SettingsManager.getStatusBarSlotsRight(context)
         )
         val hasExistingRow = currentVariationsRow != null &&
-            currentVariationsRow?.parent == containerView &&
-            currentVariationsRow?.visibility == View.VISIBLE
+                currentVariationsRow?.parent == containerView &&
+                currentVariationsRow?.visibility == View.VISIBLE
 
         if (!variationsChanged &&
             !inputConnectionChanged &&
@@ -556,7 +556,7 @@ class VariationBarView(
         val totalButtonCount = leftButtonCount + rightButtonCount
         val hasLeftButtons = leftButtonCount > 0
         val hasRightButtons = rightButtonCount > 0
-        
+
         // Calculate fixed button size from the actual amount of visible content.
         // If variations are hidden, buttons divide the whole bar width.
         val reservesVariationArea = variationAreaVisible
@@ -584,17 +584,17 @@ class VariationBarView(
         val fixedButtonsTotalWidth = fixedButtonWidth * totalButtonCount + outerButtonsExtra
         // Space only between buttons within each group (no trailing margin).
         val fixedButtonsSpacing = spacingBetweenButtons * (
-            (leftButtonCount - 1).coerceAtLeast(0) + (rightButtonCount - 1).coerceAtLeast(0)
-        )
+                (leftButtonCount - 1).coerceAtLeast(0) + (rightButtonCount - 1).coerceAtLeast(0)
+                )
 
         val variationCount = rawDisplayedVariations.size
         val variationToLeftGap = if (variationAreaVisible && hasLeftButtons && variationCount > 0) spacingBetweenButtons else 0
         val variationToRightGap = if (variationAreaVisible && hasRightButtons && variationCount > 0) spacingBetweenButtons else 0
         val variationsAvailableWidth = availableWidth -
-            fixedButtonsTotalWidth -
-            fixedButtonsSpacing -
-            variationToLeftGap -
-            variationToRightGap
+                fixedButtonsTotalWidth -
+                fixedButtonsSpacing -
+                variationToLeftGap -
+                variationToRightGap
 
         val baseButtonWidth = if (reservesVariationArea && variationSlotsForSizing > 0) {
             max(1, (variationsAvailableWidth - spacingBetweenButtons * (variationSlotsForSizing - 1)) / variationSlotsForSizing)
@@ -647,7 +647,7 @@ class VariationBarView(
         lastVariationAreaVisible = variationAreaVisible
         lastThemeSignature = themeSignature
         lastGeometrySignature = geometrySignature
-        
+
         // Create a single callbacks object with all available callbacks.
         // Each button factory will extract only the callbacks it needs.
         val statusBarCallbacks = StatusBarCallbacks(
@@ -664,7 +664,7 @@ class VariationBarView(
             onRedoRequested = onRedoRequested,
             onHapticFeedback = { NotificationHelper.triggerHapticFeedback(context) }
         )
-        
+
         // Generic function to create and add any button type.
         // The factory handles all button-specific logic (callbacks, state, etc.)
         fun createAndAddButton(
@@ -697,7 +697,7 @@ class VariationBarView(
                 host.updateClipboardCount(snapshot.clipboardCount)
             }
         }
-        
+
         // Build left side buttons
         leftButtonsContainer?.removeAllViews()
         val leftButtons = enabledButtons.filter { it.position == StatusBarButtonPosition.LEFT }
@@ -708,8 +708,8 @@ class VariationBarView(
 
         val addCandidate = snapshot.addWordCandidate
         val addOnly = addCandidate != null &&
-            displayedVariations.size == 1 &&
-            displayedVariations.firstOrNull()?.equals(addCandidate, ignoreCase = true) == true
+                displayedVariations.size == 1 &&
+                displayedVariations.firstOrNull()?.equals(addCandidate, ignoreCase = true) == true
         for ((index, variation) in displayedVariations.withIndex()) {
             val isAddCandidate = addCandidate != null && variation.equals(addCandidate, ignoreCase = true)
             val isLast = index == displayedVariations.lastIndex
@@ -768,10 +768,10 @@ class VariationBarView(
             context.resources.displayMetrics
         )
 
-            overlayView.setOnTouchListener { _, motionEvent ->
-                if (isSymModeActive) {
-                    return@setOnTouchListener false
-                }
+        overlayView.setOnTouchListener { _, motionEvent ->
+            if (isSymModeActive) {
+                return@setOnTouchListener false
+            }
 
             when (motionEvent.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -785,7 +785,7 @@ class VariationBarView(
                     touchStartY = motionEvent.y
                     lastCursorMoveX = motionEvent.x
                     hideSwipeHintImmediate()
-                    
+
                     // Setup long press detection
                     cancelLongPress()
                     longPressExecuted = false
@@ -797,7 +797,7 @@ class VariationBarView(
                         }
                         longPressHandler?.postDelayed(longPressRunnable!!, 500) // 500ms for long press
                     }
-                    
+
                     Log.d(TAG, "Touch down on overlay at ($touchStartX, $touchStartY)")
                     true
                 }
@@ -992,7 +992,7 @@ class VariationBarView(
         hint.alpha = 0f
         hint.visibility = View.GONE
     }
-    
+
     /**
      * Shows or hides the speech recognition hint message in the hint view.
      * When showing, replaces the swipe hint text with speech recognition message.
@@ -1001,21 +1001,21 @@ class VariationBarView(
     fun showSpeechRecognitionHint(show: Boolean) {
         val hint = emptyHintView ?: return
         val overlayView = overlay ?: return
-        
+
         isShowingSpeechRecognitionHint = show
-        
+
         if (show) {
             // Ensure overlay is visible
             overlayView.visibility = View.VISIBLE
-            
+
             // Save original hint text if not already saved
             if (originalHintText == null) {
                 originalHintText = hint.text
             }
-            
+
             // Set speech recognition message
             hint.text = context.getString(R.string.speech_recognition_prompt)
-            
+
             // Show hint immediately (no delay) with animation
             hint.animate().cancel()
             hint.visibility = View.VISIBLE
@@ -1031,7 +1031,7 @@ class VariationBarView(
                 hint.text = originalHintText
                 originalHintText = null
             }
-            
+
             // Hide hint with animation
             hint.animate().cancel()
             hint.animate()
@@ -1091,7 +1091,7 @@ class VariationBarView(
             Log.e(TAG, "Error opening Settings", e)
         }
     }
-    
+
     private fun cancelLongPress() {
         longPressRunnable?.let { runnable ->
             longPressHandler?.removeCallbacks(runnable)
@@ -1112,6 +1112,7 @@ class VariationBarView(
         isLast: Boolean,
         spacingBetweenButtons: Int
     ): TextView {
+
         val dp4 = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             4f,
@@ -1127,13 +1128,14 @@ class VariationBarView(
             )
             typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
+
         val textWidth = paint.measureText(variation).toInt()
         val horizontalPadding = 0 // Testing with 0 padding
         val requiredWidth = textWidth + horizontalPadding
-        
-        // Keep status bar layout stable; long labels are clipped instead of resizing the row.
+
+// Keep status bar layout stable; long labels are clipped instead of resizing the row.
         val calculatedWidth = buttonWidth
-        
+
         val stateListDrawable = themeOverride?.let {
             VariationButtonStyles.createButtonDrawable(
                 heightPx = buttonHeight,

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Plektra</string>
-    <string name="input_method_name">Plektra</string>
+    <string name="input_method_name">bánh ngọt</string>
     <string name="input_method_name_en">English</string>
     <string name="input_method_name_it">Italiano</string>
     <string name="input_method_name_fr">Français</string>
@@ -31,8 +31,8 @@
     <string name="swipe_to_delete_title">Bật vuốt để xóa</string>
     <string name="delete_alternatives_title">Xóa</string>
     <string name="delete_alternatives_description">Các cách thay thế để xóa ký tự bên phải con trỏ</string>
-    <string name="shift_backspace_delete_title">Shift + Backspace</string>
-    <string name="alt_backspace_delete_title">Alt + Backspace</string>
+    <string name="shift_backspace_delete_title">Shift + Phím lùi</string>
+    <string name="alt_backspace_delete_title">Alt + Phím lùi</string>
     <string name="backspace_at_start_delete_title">Backspace ở đầu dòng</string>
     <string name="delete_alternatives_hint">Gợi ý: Có thể cấu hình Ctrl + phím trong cài đặt Chế độ Điều hướng</string>
     <string name="swipe_incremental_threshold_title">Độ nhạy thanh vuốt</string>
@@ -166,7 +166,7 @@
     <string name="long_press_modifier_title">Chức năng nhấn giữ</string>
     <string name="long_press_modifier_description">Chọn hành động của nhấn giữ: Alt+phím, Shift+phím, biến thể ký tự hoặc ánh xạ Sym</string>
     <string name="long_press_modifier_alt">Alt</string>
-    <string name="long_press_modifier_shift">Shift</string>
+    <string name="long_press_modifier_shift">Dịch chuyển</string>
     <string name="long_press_modifier_variations">Biến thể</string>
     <string name="long_press_modifier_sym">Sym</string>
     <string name="keyboard_layout_title">Bố cục bàn phím</string>
@@ -233,7 +233,7 @@
     <string name="auto_correct_search_description">Tìm kiếm</string>
     <string name="auto_correct_clear_search">Xóa tìm kiếm</string>
     <string name="auto_correct_no_corrections_found">Không tìm thấy mục sửa</string>
-    <string name="nav_mode_title">Nav Mode</string>
+    <string name="nav_mode_title">Chế độ điều hướng</string>
     <string name="nav_mode_enable_title">Bật Nav Mode</string>
     <string name="nav_mode_enable_description">Nhấn đúp Ctrl để kích hoạt chế độ điều hướng</string>
     <string name="nav_mode_key_mappings">Ánh xạ phím</string>
@@ -242,7 +242,7 @@
     <string name="nav_mode_warning_icon">⚠</string>
     <string name="nav_mode_configure_key">Cấu hình %1$s</string>
     <string name="nav_mode_type">Loại</string>
-    <string name="nav_mode_keycode">Keycode</string>
+    <string name="nav_mode_keycode">Mã khóa</string>
     <string name="nav_mode_action">Hành động</string>
     <string name="nav_mode_none">Không có</string>
     <string name="nav_mode_use_default">Dùng mặc định: %1$s</string>
@@ -311,7 +311,7 @@
     <string name="settings_accessibility_second_row_title">Đọc hàng thứ hai (thao tác nhanh và biến thể)</string>
     <string name="settings_accessibility_second_row_description">Khi tắt, TalkBack sẽ bỏ qua hàng dưới và giữ phần gợi ý từ tách biệt.</string>
     <string name="settings_accessibility_suggestions_delay_title">Độ trễ đọc gợi ý</string>
-    <string name="settings_accessibility_suggestions_delay_value">%1$d ms</string>
+    <string name="settings_accessibility_suggestions_delay_value">%1$d mili giây</string>
     <string name="settings_accessibility_delay_decrease">Giảm độ trễ 50 mili giây</string>
     <string name="settings_accessibility_delay_increase">Tăng độ trễ 50 mili giây</string>
     <string name="settings_accessibility_delay_feedback">Độ trễ gợi ý: %1$d ms</string>
@@ -368,7 +368,7 @@
     <string name="nav_mode_action_paste">Dán</string>
     <string name="nav_mode_action_cut">Cắt</string>
     <string name="nav_mode_action_undo">Hoàn tác</string>
-    <string name="nav_mode_action_select_all">SelAll</string>
+    <string name="nav_mode_action_select_all">Tự tất cả</string>
     <string name="nav_mode_action_expand_selection_left">←Sel</string>
     <string name="nav_mode_action_expand_selection_right">→Sel</string>
     <string name="nav_mode_action_toggle_slim">Slim</string>
@@ -377,11 +377,11 @@
     <string name="nav_mode_keycode_left">←</string>
     <string name="nav_mode_keycode_right">→</string>
     <string name="nav_mode_keycode_center">○</string>
-    <string name="nav_mode_keycode_page_up">PgUp</string>
-    <string name="nav_mode_keycode_page_down">PgDn</string>
+    <string name="nav_mode_keycode_page_up">PGUp</string>
+    <string name="nav_mode_keycode_page_down">PGDn</string>
     <string name="nav_mode_keycode_escape">Esc</string>
     <string name="nav_mode_keycode_tab">Tab</string>
-    <string name="nav_mode_keycode_forward_delete">Del→</string>
+    <string name="nav_mode_keycode_forward_delete">Xóa→</string>
     <string name="nav_mode_key_unknown">?</string>
     <string name="tutorial_skip">Bỏ qua</string>
     <string name="tutorial_previous">Trước</string>
@@ -439,7 +439,7 @@
     <string name="restore_completed">Khôi phục hoàn tất</string>
     <string name="backup_failed">Sao lưu thất bại: %1$s</string>
     <string name="restore_failed">Khôi phục thất bại: %1$s</string>
-    <string name="dip_unit">DIP</string>
+    <string name="dip_unit">NHÚNG</string>
     <string name="custom_input_styles_title">Ngôn ngữ nhập liệu</string>
     <string name="custom_input_styles_description">Thêm ngôn ngữ và bố cục bàn phím không gắn với locale hệ thống</string>
     <string name="custom_input_styles_add">Thêm kiểu nhập</string>
@@ -555,12 +555,12 @@
     <string name="status_bar_button_clipboard_description">Lịch sử bộ nhớ tạm</string>
     <string name="status_bar_button_microphone">Micro</string>
     <string name="status_bar_button_microphone_description">Nhập giọng nói</string>
-    <string name="status_bar_button_emoji">Emoji</string>
+    <string name="status_bar_button_emoji">Biểu tượng cảm xúc</string>
     <string name="status_bar_button_emoji_description">Bộ chọn emoji</string>
     <string name="status_bar_button_language">Ngôn ngữ</string>
     <string name="status_bar_button_language_description">Chuyển ngôn ngữ</string>
     <string name="status_bar_button_language_state_description">Ngôn ngữ %1$s, bố cục %2$s</string>
-    <string name="status_bar_button_hamburger">Menu</string>
+    <string name="status_bar_button_hamburger">Thực đơn</string>
     <string name="status_bar_button_hamburger_description">Hành động nhanh</string>
     <string name="status_bar_button_settings">Cài đặt</string>
     <string name="status_bar_button_settings_description">Mở cài đặt</string>
@@ -574,18 +574,18 @@
     <string name="keyboard_layout_mode_auto_description">BẬT: theo ánh xạ mặc định subtype/locale.</string>
     <string name="keyboard_layout_mode_manual_description">TẮT: dùng một bố cục chọn thủ công cho tất cả locale.</string>
     <string name="keyboard_profile_override_title">Physical Keyboard Profile</string>
-    <string name="keyboard_profile_override_auto_description">Auto detect from device fingerprint (current: %1$s).</string>
-    <string name="keyboard_profile_override_manual_description">Manual override for device-specific key mappings.</string>
-    <string name="keyboard_profile_option_auto">Auto</string>
+    <string name="keyboard_profile_override_auto_description">Tự động phát hiện từ dấu vân tay của thiết bị (hiện tại: %1$s).</string>
+    <string name="keyboard_profile_override_manual_description">Ghi đè thủ công đối với ánh xạ khóa dành riêng cho thiết bị.</string>
+    <string name="keyboard_profile_option_auto">Tự động</string>
     <string name="keyboard_profile_option_key2">BlackBerry Key2</string>
     <string name="keyboard_profile_option_q25">BlackBerry Q25</string>
     <string name="keyboard_profile_option_titan2">Unihertz Titan 2</string>
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>
     <string name="emoji_picker_no_results">No emoji found</string>
-    <string name="variation_global_layout_override_title">Global Variation Mapping</string>
-    <string name="variation_global_layout_override_description">Force variation ordering from one layout across all layouts. Default is current IME layout (%1$s).</string>
-    <string name="variation_global_layout_override_none">None (use current layout)</string>
+    <string name="variation_global_layout_override_title">Ánh xạ biến đổi toàn cầu</string>
+    <string name="variation_global_layout_override_description">Buộc sắp xếp biến thể từ một bố cục trên tất cả các bố cục. Mặc định là bố cục IME hiện tại (%1$s).</string>
+    <string name="variation_global_layout_override_none">Không có (sử dụng bố cục hiện tại)</string>
     <string name="event_action_label">Hành động: </string>
     <string name="event_keycode_label">KeyCode: </string>
     <string name="event_scancode_label">ScanCode: </string>
@@ -595,7 +595,7 @@
     <string name="status_bar_button_clipboard_state_empty">Empty</string>
     <string name="status_bar_button_clipboard_state_items">%1$d items</string>
     <string name="sym_key_content_description">%1$s, %2$s</string>
-    <string name="status_bar_button_minimal_ui_description">Toggle compact keyboard UI</string>
+    <string name="status_bar_button_minimal_ui_description">Chuyển đổi giao diện bàn phím nhỏ gọn</string>
     <string name="tutorial_page_software_keyboard_title">Chế độ bàn phím</string>
     <string name="tutorial_page_software_keyboard_description">Chọn bề mặt bàn phím Plektra nên dùng ở đây.</string>
     <string name="software_keyboard_mode_title">Chế độ bàn phím</string>
@@ -641,8 +641,8 @@
     <string name="alt_shift_layout_switch_description">Chuyển ngôn ngữ/bố cục bằng Alt+Shift.</string>
     <string name="toast_on_layout_switch_title">Toast khi chuyển bố cục</string>
     <string name="toast_on_layout_switch_description">Hiển thị toast khi chuyển ngôn ngữ/bố cục.</string>
-    <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Elite (QWERTY)</string>
-    <string name="keyboard_profile_option_mp01">Minimal Phone (MP01)</string>
+    <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Ưu tú (QWERTY)</string>
+    <string name="keyboard_profile_option_mp01">Điện thoại tối thiểu (MP01)</string>
     <string name="keyboard_currency_symbol_title">Ký hiệu tiền tệ</string>
     <string name="keyboard_currency_symbol_description">Ký hiệu được chèn bởi các phím tiền tệ phần cứng chuyên dụng.</string>
     <string name="starter_launcher_shortcuts_title">Plektra-QuickLauncher</string>
@@ -715,7 +715,7 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="layout_aware_ctrl_shortcuts_disabled_description">Bị tắt khi điều hướng giữ Ctrl đang hoạt động, vì Ctrl đang giữ được Nav Mode xử lý thay vì ứng dụng.</string>
     <string name="layout_aware_ctrl_shortcuts_info_title">Phím tắt Ctrl và Nav Mode</string>
     <string name="layout_aware_ctrl_shortcuts_info_text">Có hai đường đi cho Ctrl đang giữ. Nếu bật điều hướng giữ Ctrl, Plektra xử lý Ctrl+phím bằng các ánh xạ Nav Mode hiển thị bên dưới. Nếu tắt, Plektra chuyển Ctrl+phím cho ứng dụng. Tùy chọn này chỉ ảnh hưởng đường ứng dụng đó: khi bật, Ctrl+chữ được dịch qua bố cục Plektra đang hoạt động trước, để phím tắt có thể theo các chữ bạn gõ. Khi tắt, ứng dụng nhận vị trí phím vật lý ban đầu.</string>
-    <string name="nav_mode_native_ctrl">Native Ctrl</string>
+    <string name="nav_mode_native_ctrl">Ctrl gốc</string>
     <string name="app_enter_behaviour_title">Hành vi phím Enter</string>
     <string name="app_enter_behaviour_description">Cấu hình Enter và xuống dòng riêng cho từng ứng dụng</string>
     <string name="app_enter_behaviour_enable_title">Hành vi Enter theo ứng dụng</string>
@@ -853,7 +853,6 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="dynamic_variation_resize_to_content_description">Khi bật, các mục động lấp đầy hàng còn trống dựa trên số mục đang hiển thị. Khi tắt, chúng giữ kích thước ô từ thanh trượt và căn trái.</string>
     <string name="keyboard_theme_tab_colors">Màu sắc</string>
     <string name="keyboard_theme_tab_keys">Phím</string>
-
     <string name="settings_search_hint">Tìm trong cài đặt</string>
     <string name="settings_search_no_results">Không có cài đặt phù hợp</string>
     <string name="settings_link_copy">Sao chép liên kết</string>
@@ -862,4 +861,26 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="settings_link_with_description">Kèm mô tả</string>
     <string name="settings_link_copied_toast">Đã sao chép liên kết</string>
     <string name="settings_link_unavailable_toast">Cài đặt này không khả dụng</string>
+    <string name="trackpad_calibration_title">Hiệu chỉnh cử chỉ</string>
+    <string name="trackpad_calibration_target_left">bên trái</string>
+    <string name="trackpad_calibration_target_center">ở giữa</string>
+    <string name="trackpad_calibration_target_right">bên phải</string>
+    <string name="trackpad_calibration_instruction">Hãy thực hiện một cách tự nhiên cử chỉ mà bạn sẽ dùng để chọn gợi ý %1$s.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 cử chỉ</string>
+    <string name="trackpad_calibration_text_field_hint">Trường hiệu chỉnh — Pastiera phải được kích hoạt tại đây</string>
+    <string name="trackpad_calibration_cancel">Hủy</string>
+    <string name="trackpad_calibration_save">Lưu</string>
+    <string name="typing_statistics_title">Thống kê nhập liệu</string>
+    <string name="typing_statistics_total_words">Tổng số từ đã nhập</string>
+    <string name="typing_statistics_manual_words">Số từ nhập thủ công</string>
+    <string name="typing_statistics_suggested_words">Số từ nhập bằng gợi ý</string>
+    <string name="app_enter_behaviour_newline_shift_send">Enter: xuống dòng; Shift + Enter: gửi</string>
+    <string name="app_enter_behaviour_send_shift_side">Phím Shift để gửi</string>
+    <string name="app_enter_behaviour_shift_left">Shift trái</string>
+    <string name="app_enter_behaviour_shift_right">Shift phải</string>
+    <string name="auto_space_punctuation_after_column">Thêm sau</string>
+    <string name="auto_space_punctuation_before_column">Xóa trước</string>
+    <string name="auto_space_punctuation_character_column">Ký tự</string>
+    <string name="auto_space_punctuation_dialog_instruction">Chọn các dấu cần xóa khoảng trắng tự động ở trước hoặc thêm khoảng trắng ngay sau dấu.</string>
+    <string name="auto_space_punctuation_help_text">Xóa trước chỉ áp dụng cho khoảng trắng tự động. Thêm sau chèn khoảng trắng ngay lập tức. Nhấn phím cách tiếp theo không tạo khoảng trắng kép. Có thể chọn riêng dấu gạch ngang ngắn và dấu ngoặc đóng.</string>
 </resources>

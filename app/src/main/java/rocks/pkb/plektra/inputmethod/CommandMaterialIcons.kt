@@ -98,6 +98,8 @@ fun commandMaterialIcon(command: CommandTarget): ImageVector {
         command.id == "nav.action.select_all" -> Icons.Default.SelectAll
         command.id == "nav.action.expand_selection_left" -> Icons.AutoMirrored.Filled.KeyboardArrowLeft
         command.id == "nav.action.expand_selection_right" -> Icons.AutoMirrored.Filled.KeyboardArrowRight
+        command.id == "nav.action.expand_selection_up" -> Icons.Default.KeyboardArrowUp
+        command.id == "nav.action.expand_selection_down" -> Icons.Default.KeyboardArrowDown
         command.id == "nav.action.move_word_left" -> Icons.AutoMirrored.Filled.KeyboardArrowLeft
         command.id == "nav.action.move_word_right" -> Icons.AutoMirrored.Filled.KeyboardArrowRight
         command.id == "nav.action.expand_selection_word_left" -> Icons.AutoMirrored.Filled.KeyboardArrowLeft

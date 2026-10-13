@@ -8,8 +8,11 @@ import android.database.sqlite.SQLiteOpenHelper
 interface UserNGramRepository {
     fun learn(locale: String, prefix: String, nextWord: String, nowMs: Long = System.currentTimeMillis())
     fun predict(locale: String, prefix: String, limit: Int): List<UserNGramStore.Prediction>
+    fun getUsage(locale: String, prefix: String, nextWord: String): UserNGramStore.Prediction?
+    fun getTotalCount(locale: String, prefix: String): Int
     fun delete(locale: String, prefix: String, nextWord: String): Int
     fun deleteNextWord(locale: String, nextWord: String): Int
+    fun prune(nowMs: Long = System.currentTimeMillis(), staleAfterMs: Long, weakCountThreshold: Int, maxEntriesPerLocale: Int): Int
     fun clearAll()
 }
 
@@ -115,6 +118,68 @@ class UserNGramStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    override fun getUsage(
+        locale: String,
+        prefix: String,
+        nextWord: String
+    ): Prediction? {
+        return readableDatabase.query(
+            TABLE_BIGRAMS,
+            arrayOf(
+                COL_NEXT_WORD,
+                COL_COUNT,
+                COL_LAST_USED
+            ),
+            "$COL_LOCALE = ? AND $COL_PREFIX = ? AND $COL_NEXT_WORD = ? COLLATE NOCASE",
+            arrayOf(
+                locale,
+                prefix,
+                nextWord
+            ),
+            null,
+            null,
+            null,
+            "1"
+        ).use { cursor ->
+            if (!cursor.moveToFirst()) {
+                null
+            } else {
+                Prediction(
+                    word = cursor.getString(
+                        cursor.getColumnIndexOrThrow(COL_NEXT_WORD)
+                    ),
+                    count = cursor.getInt(
+                        cursor.getColumnIndexOrThrow(COL_COUNT)
+                    ),
+                    lastUsed = cursor.getLong(
+                        cursor.getColumnIndexOrThrow(COL_LAST_USED)
+                    )
+                )
+            }
+        }
+    }
+
+    override fun getTotalCount(
+        locale: String,
+        prefix: String
+    ): Int {
+        return readableDatabase.rawQuery(
+            """
+        SELECT COALESCE(SUM($COL_COUNT), 0)
+        FROM $TABLE_BIGRAMS
+        WHERE $COL_LOCALE = ?
+          AND $COL_PREFIX = ?
+        """.trimIndent(),
+            arrayOf(locale, prefix)
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                cursor.getInt(0)
+            } else {
+                0
+            }
+        }
+    }
+
     override fun delete(locale: String, prefix: String, nextWord: String): Int {
         return writableDatabase.delete(
             TABLE_BIGRAMS,
@@ -129,6 +194,101 @@ class UserNGramStore(context: Context) : SQLiteOpenHelper(
             "$COL_LOCALE = ? AND $COL_NEXT_WORD = ? COLLATE NOCASE",
             arrayOf(locale, nextWord)
         )
+    }
+
+    override fun prune(
+        nowMs: Long,
+        staleAfterMs: Long,
+        weakCountThreshold: Int,
+        maxEntriesPerLocale: Int
+    ): Int {
+        require(staleAfterMs >= 0L)
+        require(weakCountThreshold >= 0)
+        require(maxEntriesPerLocale > 0)
+
+        val cutoff = nowMs - staleAfterMs
+        val db = writableDatabase
+
+        var deletedCount = 0
+
+        db.beginTransaction()
+        try {
+            // 1. Remove weak transitions that have not been used recently.
+            deletedCount += db.delete(
+                TABLE_BIGRAMS,
+                "$COL_COUNT <= ? AND $COL_LAST_USED < ?",
+                arrayOf(
+                    weakCountThreshold.toString(),
+                    cutoff.toString()
+                )
+            )
+
+            // 2. Apply a hard safety cap independently to each locale.
+            val locales = mutableListOf<String>()
+
+            db.rawQuery(
+                "SELECT DISTINCT $COL_LOCALE FROM $TABLE_BIGRAMS",
+                null
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    locales += cursor.getString(0)
+                }
+            }
+
+            for (locale in locales) {
+                val entriesToDelete =
+                    mutableListOf<Pair<String, String>>()
+
+                db.query(
+                    TABLE_BIGRAMS,
+                    arrayOf(
+                        COL_PREFIX,
+                        COL_NEXT_WORD
+                    ),
+                    "$COL_LOCALE = ?",
+                    arrayOf(locale),
+                    null,
+                    null,
+                    "$COL_COUNT DESC, $COL_LAST_USED DESC, " +
+                            "$COL_PREFIX ASC, $COL_NEXT_WORD ASC"
+                ).use { cursor ->
+                    val prefixIndex =
+                        cursor.getColumnIndexOrThrow(COL_PREFIX)
+                    val nextWordIndex =
+                        cursor.getColumnIndexOrThrow(COL_NEXT_WORD)
+
+                    var position = 0
+
+                    while (cursor.moveToNext()) {
+                        if (position >= maxEntriesPerLocale) {
+                            entriesToDelete +=
+                                cursor.getString(prefixIndex) to
+                                        cursor.getString(nextWordIndex)
+                        }
+
+                        position++
+                    }
+                }
+
+                for ((prefix, nextWord) in entriesToDelete) {
+                    deletedCount += db.delete(
+                        TABLE_BIGRAMS,
+                        "$COL_LOCALE = ? AND $COL_PREFIX = ? AND $COL_NEXT_WORD = ?",
+                        arrayOf(
+                            locale,
+                            prefix,
+                            nextWord
+                        )
+                    )
+                }
+            }
+
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+
+        return deletedCount
     }
 
     override fun clearAll() {

@@ -15,7 +15,7 @@ import java.util.Locale
 object WordNormalization {
     private val combiningMarksRegex = "\\p{Mn}".toRegex()
     private val nonLettersRegex = "[^\\p{L}]".toRegex()
-    private val nonLettersWithApostrophesRegex = "[^\\p{L}']".toRegex()
+    private val nonLettersWithApostrophesRegex = "[^\\p{L}\\p{N}']".toRegex()
 
     fun normalizeApostrophes(input: String): String {
         return input

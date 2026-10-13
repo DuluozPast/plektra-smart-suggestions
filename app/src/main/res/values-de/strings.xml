@@ -47,13 +47,10 @@
     <string name="auto_space_punctuation_title">Satzzeichen-Abstände</string>
     <string name="auto_space_punctuation_selected">Ausgewählt:</string>
     <string name="auto_space_punctuation_none_selected">keine</string>
-    <string name="auto_space_punctuation_dialog_instruction">Lege pro Zeichen fest, ob Plektra sein eigenes Auto-Leerzeichen davor entfernt und vor folgendem Text verzögert ein Leerzeichen einfügt.</string>
     <string name="auto_space_punctuation_character_column">Zeichen</string>
     <string name="auto_space_punctuation_before_column">Davor entfernen</string>
-    <string name="auto_space_punctuation_after_column">Vor Folgetext</string>
     <string name="auto_space_punctuation_help_action">Satzzeichen-Abstände erklären</string>
     <string name="auto_space_punctuation_help_title">So funktionieren die Abstände</string>
-    <string name="auto_space_punctuation_help_text">„Davor entfernen“ entfernt nur ein automatisch von Plektra gesetztes Leerzeichen, keine manuelle Eingabe.\n\n„Vor Folgetext“ merkt den Abstand vor. Er wird erst beim nächsten Text eingefügt; bei Enter oder Senden bleibt kein Leerzeichen am Ende.</string>
     <string name="auto_space_punctuation_choose">Ausgewählt:</string>
     <string name="auto_space_punctuation_choose_off">Aus</string>
     <string name="auto_space_punctuation_reset">Zurücksetzen</string>
@@ -220,7 +217,7 @@
     <string name="long_press_modifier_title">Modifikator für langen Druck</string>
     <string name="long_press_modifier_description">Wählen Sie, ob langer Druck einen SYM-Layer oder Variationen öffnet oder Shift anwendet.</string>
     <string name="long_press_modifier_alt">Geräte-SYM-Layer (vormals Alt)</string>
-    <string name="long_press_modifier_shift">Shift</string>
+    <string name="long_press_modifier_shift">Schicht</string>
     <string name="long_press_modifier_variations">Variationen</string>
     <string name="long_press_modifier_sym">Erster Emoji- oder Symbol-Layer</string>
     <string name="long_press_modifier_sym_symbols">Symbol-Layer</string>
@@ -363,9 +360,9 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="nav_mode_note">Hinweis: Das Ändern der Nav-Modus-Tasten wirkt sich auch auf Ctrl+Taste-Kombinationen in Textfeldern aus.</string>
     <string name="nav_mode_configure_key">%1$s konfigurieren</string>
     <string name="nav_mode_type">Typ</string>
-    <string name="nav_mode_keycode">Keycode</string>
+    <string name="nav_mode_keycode">Schlüsselcode</string>
     <string name="nav_mode_action">Aktion</string>
-    <string name="nav_mode_native_ctrl">Native Ctrl</string>
+    <string name="nav_mode_native_ctrl">Native Strg</string>
     <string name="nav_mode_none">Keine</string>
     <string name="nav_mode_use_default">Standard verwenden: %1$s</string>
     <string name="nav_mode_save">Speichern</string>
@@ -435,7 +432,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="app_enter_behaviour_strategy_label">Sende-Strategie</string>
     <string name="app_enter_behaviour_strategy_auto">Auto / nicht getestet</string>
     <string name="app_enter_behaviour_strategy_editor_action">Editor-Action</string>
-    <string name="app_enter_behaviour_strategy_ctrl_enter">Ctrl+Enter</string>
+    <string name="app_enter_behaviour_strategy_ctrl_enter">Strg+Eingabetaste</string>
     <string name="app_enter_behaviour_strategy_plain_enter">Normales Enter</string>
     <string name="variation_instructions_title">Anweisungen</string>
     <string name="variation_instructions_description">Tippen Sie auf ein Variationsfeld, um ein Zeichen auszuwählen. Jeder Buchstabe kann bis zu 7 Variationszeichen haben.</string>
@@ -463,7 +460,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="static_variation_preset_numbers_description">Schnelle Zahlenreihe.</string>
     <string name="static_variation_preset_alternative">Alternative Symbole</string>
     <string name="static_variation_preset_alternative_description">Klammern und Sonderzeichen.</string>
-    <string name="static_variation_preset_dev_choice">Dev’s Choice</string>
+    <string name="static_variation_preset_dev_choice">Wahl des Entwicklers</string>
     <string name="static_variation_preset_dev_choice_description">Kuratierte Satzzeichenreihe.</string>
     <string name="static_variation_base_layer_title">Alternative obere Reihenbelegung</string>
     <string name="static_variation_base_layer_description">Schaltet die obere statische Reihe zwischen Standardsymbolen und einem alternativen Klammer-/Sonderzeichensatz um. Shift- und Geräte-SYM-Layer bleiben unabhängig.</string>
@@ -476,12 +473,12 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_profile_override_title">Profil der physischen Tastatur</string>
     <string name="keyboard_profile_override_auto_description">Automatisch über den Geräte-Fingerprint erkennen (aktuell: %1$s).</string>
     <string name="keyboard_profile_override_manual_description">Manuelle Überschreibung für gerätespezifische Tastenbelegungen.</string>
-    <string name="keyboard_profile_option_auto">Auto</string>
+    <string name="keyboard_profile_option_auto">Automatisch</string>
     <string name="keyboard_profile_option_key2">BlackBerry Key2</string>
     <string name="keyboard_profile_option_q25">BlackBerry Q25</string>
     <string name="keyboard_profile_option_titan2">Unihertz Titan 2</string>
     <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Elite (QWERTY)</string>
-    <string name="keyboard_profile_option_mp01">Minimal Phone (MP01)</string>
+    <string name="keyboard_profile_option_mp01">Minimales Telefon (MP01)</string>
     <string name="keyboard_currency_symbol_title">Währungssymbol</string>
     <string name="keyboard_currency_symbol_description">Symbol für dedizierte Währungstasten auf der Hardware-Tastatur.</string>
     <string name="hardware_keyboards_title">Fest verbaute Tastaturen</string>
@@ -489,8 +486,8 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="hardware_keyboard_detected_device_title">Erkanntes Gerät</string>
     <string name="hardware_keyboard_detected_device_summary">%1$s · %2$s</string>
     <string name="hardware_keyboard_device_bound">Gerätegebunden</string>
-    <string name="keyboard_profile_option_clicks_razr">Clicks for Razr | Razrberry</string>
-    <string name="keyboard_profile_option_clicks_pixel">Clicks for Pixel 9/9 Pro | Clixel</string>
+    <string name="keyboard_profile_option_clicks_razr">Klicks für Razr | Razrberry</string>
+    <string name="keyboard_profile_option_clicks_pixel">Klicks für Pixel 9/9 Pro | Clixel</string>
     <string name="keyboard_profile_option_clicks_power_converted">Clicks Power Keyboard (konvertiert)</string>
     <string name="hardware_keyboard_behavior_title">Gerätespezifisches Verhalten</string>
     <string name="hardware_keyboard_profile_titan2_description">Unihertz-spezifische Tastenbehandlung und Belegung.</string>
@@ -498,7 +495,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="hardware_keyboard_profile_select_label">Tastaturprofil</string>
     <string name="hardware_keyboard_custom_profiles_title">Eigene Profile</string>
     <string name="hardware_keyboard_custom_profiles_empty">Im Geräte-SYM-Layer-Editor (vormals Alt-Key-Editor) erstellte Profile erscheinen künftig hier.</string>
-    <string name="clicks_power_keyboard_title">Clicks Power Keyboard</string>
+    <string name="clicks_power_keyboard_title">Klickt auf Power-Tastatur</string>
     <string name="clicks_power_keyboard_summary">Tasten, Beleuchtung, Energiesparen, Laden und Automatik.</string>
     <string name="clicks_power_keyboard_stub_description">Geplante Steuerung des BLE Power Keyboard.</string>
     <string name="clicks_power_keyboard_description">Direkte BLE-Steuerung des Clicks Power Keyboard. Einstellungen werden im Keyboard gespeichert.</string>
@@ -532,13 +529,13 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="clicks_number_preset_end">Ende</string>
     <string name="clicks_number_preset_left_bracket">Linke eckige Klammer</string>
     <string name="clicks_number_preset_right_bracket">Rechte eckige Klammer</string>
-    <string name="clicks_sticky_alt_title">SYM Lock</string>
+    <string name="clicks_sticky_alt_title">SYM-Sperre</string>
     <string name="clicks_sticky_alt_description">Der Keyboard-Firmware erlauben, ihren SYM-Layer einzurasten.</string>
-    <string name="clicks_sticky_shift_title">Caps Lock</string>
+    <string name="clicks_sticky_shift_title">Feststelltaste</string>
     <string name="clicks_sticky_shift_description">Der Keyboard-Firmware erlauben, Shift einzurasten.</string>
-    <string name="clicks_soft_return_title">Soft Return</string>
+    <string name="clicks_soft_return_title">Sanfte Rückkehr</string>
     <string name="clicks_soft_return_description">Soft-Return-Verhalten der Keyboard-Firmware verwenden.</string>
-    <string name="clicks_cursor_mode_title">Cursor Mode</string>
+    <string name="clicks_cursor_mode_title">Cursormodus</string>
     <string name="clicks_cursor_mode_description">Cursor-Navigation der Keyboard-Firmware aktivieren.</string>
     <string name="clicks_recommended_settings_title">Empfohlene Einstellungen anwenden</string>
     <string name="clicks_recommended_settings_description">Native Tab- und Alt-Ausgaben wiederherstellen, die Mikrofontaste Plektras Diktiermodus zuweisen, roten Clicks-Button und Launcher-Taste direkt dem QuickLauncher zuweisen sowie Caps Lock und Cursor Mode deaktivieren.</string>
@@ -737,7 +734,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="app_picker_cancel">Abbrechen</string>
     <string name="app_picker_search_placeholder">Apps suchen…</string>
     <string name="settings_support_open_collective">Projekt unterstützen</string>
-    <string name="settings_support_open_collective_description">Open Collective</string>
+    <string name="settings_support_open_collective_description">Offenes Kollektiv</string>
     <string name="settings_support_creator_ko_fi">Den Creator auf Ko-fi unterstützen</string>
     <string name="settings_nav_mode_configure">Tastenzuordnungen für Navigationsmodus konfigurieren</string>
     <string name="auto_correct_ricette_plektra_name">Ricette Plektra</string>
@@ -765,7 +762,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="settings_accessibility_delay_decrease">Verzögerung um 50 Millisekunden verringern</string>
     <string name="settings_accessibility_delay_increase">Verzögerung um 50 Millisekunden erhöhen</string>
     <string name="settings_accessibility_delay_feedback">Vorschlagsverzögerung: %1$d ms</string>
-    <string name="settings_accessibility_bounce_keys_title">Bounce Keys</string>
+    <string name="settings_accessibility_bounce_keys_title">Bounce-Tasten</string>
     <string name="settings_accessibility_bounce_keys_description">Ignoriert versehentlich doppelt ausgelöste gleiche physische Tasten.</string>
     <string name="settings_accessibility_bounce_keys_delay_title">Mindestabstand gleicher Tasten: %1$d ms</string>
     <string name="settings_accessibility_bounce_keys_delay_description">Gleiche Tastendrücke unterhalb dieses Abstands werden ignoriert.</string>
@@ -776,9 +773,9 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="settings_accessibility_bounce_keys_text_control_title">Textsteuerung</string>
     <string name="settings_accessibility_bounce_keys_space_title">Leertaste</string>
     <string name="settings_accessibility_bounce_keys_space_description">Ignoriert versehentlich wiederholte Leerzeichen.</string>
-    <string name="settings_accessibility_bounce_keys_enter_title">Enter</string>
+    <string name="settings_accessibility_bounce_keys_enter_title">Geben Sie ein</string>
     <string name="settings_accessibility_bounce_keys_enter_description">Ignoriert versehentlich wiederholte Zeilenumbrüche oder Sendeaktionen.</string>
-    <string name="settings_accessibility_bounce_keys_backspace_title">Backspace</string>
+    <string name="settings_accessibility_bounce_keys_backspace_title">Rücktaste</string>
     <string name="settings_accessibility_bounce_keys_backspace_description">Ignoriert versehentlich wiederholtes Löschen.</string>
     <string name="settings_accessibility_overlapping_keys_title">Überlappende Tastendrücke ignorieren</string>
     <string name="settings_accessibility_overlapping_keys_description">Bei jeder physischen Tastatur eine zweite Nicht-Modifier-Taste ignorieren, bis die erste losgelassen wurde. Modifier-Tastenkombinationen funktionieren weiterhin.</string>
@@ -827,7 +824,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="nav_mode_action_expand_selection_word_left">←WortAusw</string>
     <string name="nav_mode_action_expand_selection_word_right">WortAusw→</string>
     <string name="nav_mode_action_toggle_slim">Slim</string>
-    <string name="nav_mode_action_media_play_pause">Play/Pause</string>
+    <string name="nav_mode_action_media_play_pause">Wiedergabe/Pause</string>
     <string name="nav_mode_action_media_previous">Medien zurück</string>
     <string name="nav_mode_action_media_next">Medien weiter</string>
     <string name="nav_mode_keycode_up">↑</string>
@@ -1163,8 +1160,8 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="delete_alternatives_title">Löschen</string>
     <string name="delete_alternatives_description">Alternative Methoden, um Zeichen rechts vom Cursor zu löschen</string>
     <string name="delete_alternatives_nav_mode_title">Nav-Modus-Einstellungen öffnen</string>
-    <string name="shift_backspace_delete_title">Shift + Backspace</string>
-    <string name="alt_backspace_delete_title">Alt + Backspace</string>
+    <string name="shift_backspace_delete_title">Umschalt + Rücktaste</string>
+    <string name="alt_backspace_delete_title">Alt + Rücktaste</string>
     <string name="backspace_at_start_delete_title">Backspace am Zeilenanfang</string>
     <string name="delete_alternatives_hint">Hinweis: Ctrl + Taste kann in den Nav-Modus-Einstellungen konfiguriert werden</string>
     <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 für Spracheingabe</string>
@@ -1286,7 +1283,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="tutorial_android16_ime_caption_missing_requirement">Fehlt: %1$s.</string>
     <string name="tutorial_android16_ime_caption_vendor_toast">Das ist ein herstellerspezifisches Unihertz-Verhalten. Die Verknüpfung funktioniert nur auf unterstützter Titan-2-Firmware, wenn Android die OEM-Gesteneinstellung bereitstellt.</string>
     <string name="tutorial_android16_ime_caption_fallback">Die Titan-2-Gesteneinstellung konnte nicht geöffnet werden. Öffne stattdessen die Android-Einstellungen.</string>
-
     <string name="app_icon_title">App-Symbol</string>
     <string name="main_background_title">Hintergrund der Hauptseite</string>
     <string name="main_background_description">Fließende Saiten oder Titan-2-Tastatur auswählen</string>
@@ -1348,7 +1344,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_theme_layout_override_current_input_style">Aktueller Eingabestil</string>
     <string name="keyboard_theme_layout_override_current_layout">Aktuelles Layout</string>
     <string name="keyboard_theme_layout_override_any_language">Alle Sprachen</string>
-    <string name="keyboard_theme_layout_override_theme">Theme</string>
+    <string name="keyboard_theme_layout_override_theme">Thema</string>
     <string name="software_keyboard_nearest_key_touch_title">Nächstgelegene Taste</string>
     <string name="software_keyboard_nearest_key_touch_description">Berührungen in der Lücke zwischen Tasten werden der wahrscheinlich nächsten Taste zugeordnet.</string>
     <string name="software_keyboard_long_press_layer_popup_title">Layer-Alternativen-Popup</string>
@@ -1370,7 +1366,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="app_enter_behaviour_additional_send_shortcut_label">Zusätzliche Senden-Tastenkombination</string>
     <string name="app_enter_behaviour_additional_send_shortcut_description">Eine zusätzliche Senden-Tastenkombination auf die unten angezeigte App-Liste anwenden.</string>
     <string name="app_enter_behaviour_additional_send_shortcut_none">Keine</string>
-    <string name="app_enter_behaviour_additional_send_shortcut_sym_enter">SYM + Enter</string>
+    <string name="app_enter_behaviour_additional_send_shortcut_sym_enter">SYM + Eingabetaste</string>
     <string name="app_enter_behaviour_sym_enter_conflict_title">SYM + Enter wird bereits vom QuickLauncher verwendet</string>
     <string name="app_enter_behaviour_sym_enter_conflict_description">Verschiebe den QuickLauncher-Auslöser auf eine andere Taste, bevor du SYM + Enter als zusätzliche Senden-Tastenkombination verwendest.</string>
     <string name="app_enter_behaviour_sym_enter_conflict_action">Auslöser ändern</string>
@@ -1397,8 +1393,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="tutorial_whats_new_bug_fixes_title">Fehlerbehebungen</string>
     <string name="tutorial_whats_new_docs_button">Plektra-Dokumentation öffnen</string>
     <string name="tutorial_whats_new_continue_hint">Fahre mit dem Tutorial fort, um die wichtigsten Einstellungen dieser Version durchzugehen.</string>
-
-    <!-- Settings search and shareable setting links -->
     <string name="settings_search_hint">Einstellungen durchsuchen</string>
     <string name="settings_search_no_results">Keine passenden Einstellungen</string>
     <string name="settings_link_copy">Link kopieren</string>
@@ -1407,8 +1401,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="settings_link_with_description">Mit Beschreibung</string>
     <string name="settings_link_copied_toast">Link kopiert</string>
     <string name="settings_link_unavailable_toast">Diese Einstellung ist nicht verfügbar</string>
-
-    <!-- Fehlende Übersetzungen für Toggles/LED-Strings des Tastaturthemen-Editors -->
     <string name="keyboard_theme_show_leds">LEDs anzeigen</string>
     <string name="keyboard_theme_distribute_spacing">Abstände verteilen</string>
     <string name="keyboard_theme_ortholinear">Ortholinear</string>
@@ -1418,9 +1410,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_theme_character_picker">Zeichenwahl bei Langdruck</string>
     <string name="keyboard_theme_wizard_leds">LED-Farben</string>
     <string name="keyboard_theme_wizard_leds_description">Wähle die Farben für inaktive, aktive und gesperrte Modifier-Anzeigen.</string>
-
-    <!-- Unsichtbare Such-Keywords pro Einstellungseintrag; werden nie angezeigt,
-         sondern nur von der Einstellungssuche genutzt. -->
     <string name="kw_main_keyboards_devices">Tastaturen, Geräte, Hardware, Bluetooth, physische Tastatur, Clicks</string>
     <string name="kw_main_modifiers">LED, LEDs, Leuchten, Anzeigen, Indikatoren, Umschalt, Strg, Alt, Sym</string>
     <string name="kw_main_custom_input_styles">Tastaturlayout, Layouts, Eingabestile, Sprachen, pro Sprache</string>
@@ -1468,7 +1457,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="titan2_elite_top_corner_title">Obere Buttonrundung</string>
     <string name="titan2_elite_top_corner_description">Verstärkt nur die obere Ecke zum Displayrand. Nach innen gerichtete Ecken und innere Buttons bleiben unverändert.</string>
     <string name="titan2_elite_max_icon_shrink_title">Maximale Icon-Verkleinerung: %1$d%%</string>
-    <string name="titan2_elite_max_icon_shrink_description">Verkleinert äußere Buttonsymbole automatisch nur bei Bedarf bis zu dieser Grenze. 0% schaltet die Verkleinerung aus; die Positionierung bleibt aktiv.</string>
     <string name="keyboard_bar_show_on_launcher">Leiste auf dem Launcher-Startbildschirm anzeigen</string>
     <string name="keyboard_bar_show_on_launcher_description">Leiste auch anzeigen, wenn Niagara auf dem Startbildschirm ein unsichtbares Eingabefeld verwendet.</string>
     <string name="keyboard_bar_suggestions">Vorschläge</string>
@@ -1514,8 +1502,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_bar_geometry_unavailable">Eckenanpassungen sind für das Geräteprofil Titan 2 Elite verfügbar.</string>
     <string name="keyboard_bar_variations_title">Varianten</string>
     <string name="keyboard_bar_corner_size">Eckengröße</string>
-
-    <!-- Cloud speech recognition -->
     <string name="speech_settings_title">Spracheingabe</string>
     <string name="speech_settings_summary">Android, OpenRouter oder OpenAI</string>
     <string name="speech_provider_title">Anbieter</string>
@@ -1585,7 +1571,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="clipboard_sensitive_retention_description">Passwörter und andere als sensibel markierte Inhalte werden separat gelöscht und können nicht angeheftet werden.</string>
     <string name="clipboard_sensitive_preview">•••••••• · Sensibler Inhalt – tippen zum Einfügen</string>
     <string name="clipboard_retention_24_hours">24 Stunden</string>
-
     <string name="speech_preview_title">Diktieranzeige</string>
     <string name="speech_preview_three_words">Drei Wortfelder</string>
     <string name="speech_preview_continuous">Durchgehende Zeile</string>
@@ -1611,4 +1596,25 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="alt_space_previous_language_description">Wechselt rückwärts durch sichtbare Eingabesprachen. Aktivieren schaltet Alt+Leertaste für den Quick Launcher aus; Aktivieren des Launcher-Kürzels schaltet diese Option aus.</string>
     <string name="ctrl_language_previous_title">Ctrl+Sprachbutton: vorherige Eingabesprache</string>
     <string name="ctrl_language_previous_description">Auf der Software-Tastatur Ctrl halten oder aktivieren und den Sprachbutton mit dem Tastatursymbol antippen, um rückwärts zu wechseln.</string>
+    <string name="auto_space_punctuation_dialog_instruction">Wähle die Zeichen, vor denen ein automatisches Leerzeichen entfernt oder nach denen sofort eines eingefügt wird.</string>
+    <string name="auto_space_punctuation_after_column">Danach einfügen</string>
+    <string name="auto_space_punctuation_help_text">Davor entfernen betrifft nur automatische Leerzeichen. Danach einfügen setzt sofort ein Leerzeichen. Eine weitere Betätigung der Leertaste verdoppelt es nicht. Gedankenstrich und schließende Klammer sind getrennt wählbar.</string>
+    <string name="titan2_elite_max_icon_shrink_description">Verkleinert äußere Buttonsymbole automatisch nur bei Bedarf bis zu dieser Grenze. 0% schaltet die Verkleinerung aus; die Positionierung bleibt aktiv.</string>
+    <string name="trackpad_calibration_title">Gestenkalibrierung</string>
+    <string name="trackpad_calibration_target_left">links</string>
+    <string name="trackpad_calibration_target_center">in der Mitte</string>
+    <string name="trackpad_calibration_target_right">rechts</string>
+    <string name="trackpad_calibration_instruction">Führen Sie ganz natürlich die Geste aus, mit der Sie den Vorschlag %1$s auswählen würden.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 Gesten</string>
+    <string name="trackpad_calibration_text_field_hint">Kalibrierungsfeld — Pastiera muss hier aktiv sein</string>
+    <string name="trackpad_calibration_cancel">Abbrechen</string>
+    <string name="trackpad_calibration_save">Speichern</string>
+    <string name="typing_statistics_title">Tippstatistik</string>
+    <string name="typing_statistics_total_words">Gesamtzahl eingegebener Wörter</string>
+    <string name="typing_statistics_manual_words">Manuell eingegebene Wörter</string>
+    <string name="typing_statistics_suggested_words">Durch Vorschläge eingegebene Wörter</string>
+    <string name="app_enter_behaviour_newline_shift_send">Eingabe: neue Zeile; Umschalt + Eingabe: senden</string>
+    <string name="app_enter_behaviour_send_shift_side">Umschalttaste zum Senden</string>
+    <string name="app_enter_behaviour_shift_left">Linke Umschalttaste</string>
+    <string name="app_enter_behaviour_shift_right">Rechte Umschalttaste</string>
 </resources>

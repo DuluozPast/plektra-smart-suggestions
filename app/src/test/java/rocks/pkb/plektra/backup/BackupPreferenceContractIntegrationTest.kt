@@ -39,7 +39,7 @@ class BackupPreferenceContractIntegrationTest {
 
     @Before
     fun setUp() {
-        context = RuntimeEnvironment.getApplication()
+        context = rocks.pkb.plektra.test.ShortPathContext.wrap(RuntimeEnvironment.getApplication())
         listOf(
             "plektra_prefs",
             "app_list_cache_prefs",
@@ -178,7 +178,10 @@ class BackupPreferenceContractIntegrationTest {
 
         val backupZip = File.createTempFile("preference_contract_", ".zip", context.cacheDir)
         val backupResult = BackupManager.createBackup(context, Uri.fromFile(backupZip))
-        assertTrue(backupResult is BackupResult.Success)
+        assertTrue(
+            "Backup failed unexpectedly: $backupResult",
+            backupResult is BackupResult.Success
+        )
 
         val zipEntries = readZipEntries(backupZip)
         assertTrue(zipEntries.containsKey("prefs/plektra_prefs.json"))
@@ -199,7 +202,16 @@ class BackupPreferenceContractIntegrationTest {
         SettingsManager.getPreferences(context).edit().clear().commit()
         File(context.filesDir, SettingsManager.TYPING_SOUND_CUSTOM_DIR).deleteRecursively()
         val restoreResult = RestoreManager.restore(context, Uri.fromFile(backupZip))
-        val restored = restoreResult as RestoreResult.Success
+
+        val restored = when (restoreResult) {
+            is RestoreResult.Success -> restoreResult
+            is RestoreResult.Failure -> {
+                throw AssertionError(
+                    "Restore failed unexpectedly: $restoreResult"
+                )
+            }
+        }
+
 
         assertTrue(restored.preferencesSummary.skippedKeys.isEmpty())
         assertEquals(

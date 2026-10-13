@@ -14,6 +14,7 @@ import rocks.pkb.plektra.commands.CommandSurface
 import rocks.pkb.plektra.data.mappings.KeyMappingLoader
 import rocks.pkb.plektra.inputmethod.NavModeHandler
 import rocks.pkb.plektra.inputmethod.NotificationHelper
+import rocks.pkb.plektra.inputmethod.TextSelectionHelper
 
 /**
  * Encapsulates nav-mode specific state and routing logic (Ctrl latch double-tap,
@@ -310,6 +311,25 @@ class NavModeController(
             return dispatchMediaKey(mediaKeyCode)
         }
 
+        when (action) {
+            "expand_selection_left" ->
+                return TextSelectionHelper.expandSelectionLeft(inputConnection)
+
+            "expand_selection_right" ->
+                return TextSelectionHelper.expandSelectionRight(inputConnection)
+
+            "expand_selection_up" ->
+                return TextSelectionHelper.expandSelectionUp(inputConnection)
+
+            "expand_selection_down" ->
+                return TextSelectionHelper.expandSelectionDown(inputConnection)
+
+            "expand_selection_word_left" ->
+                return TextSelectionHelper.expandSelectionWordLeft(inputConnection)
+
+            "expand_selection_word_right" ->
+                return TextSelectionHelper.expandSelectionWordRight(inputConnection)
+        }
         val actionId = when (action) {
             "copy" -> android.R.id.copy
             "paste" -> android.R.id.paste

@@ -215,6 +215,15 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance" />
 
+        <!-- Activity for trackpad gesture calibration -->
+        <activity
+            android:name=".TrackpadCalibrationActivity"
+            android:exported="false"
+            android:label="Calibration des gestes"
+            android:theme="@style/Theme.Plektra"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance" />
+
         <!-- Servizio di immissione per tastiera fisica -->
         <service
             android:name=".inputmethod.PhysicalKeyboardInputMethodService"
@@ -303,3 +312,4 @@
     </application>
 
 </manifest>
+

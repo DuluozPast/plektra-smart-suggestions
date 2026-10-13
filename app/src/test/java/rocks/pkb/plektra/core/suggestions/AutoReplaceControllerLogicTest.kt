@@ -31,9 +31,11 @@ class AutoReplaceControllerLogicTest {
         assertEquals("l'", split1!!.prefix)
         assertEquals("amico", split1.root)
 
-        // Zu kurz (root < 3)
+// Kurze Wurzel ist bei unterstützter Elision gültig
         val split2 = AutoReplaceController.splitApostropheWord("l'a")
-        assertNull("Root zu kurz, sollte null sein", split2)
+        assertNotNull("l'a sollte als gültige Elision erkannt werden", split2)
+        assertEquals("l'", split2!!.prefix)
+        assertEquals("a", split2.root)
 
         // Kein Apostroph
         val split3 = AutoReplaceController.splitApostropheWord("hallo")
@@ -470,6 +472,15 @@ class AutoReplaceControllerLogicTest {
         val tracker = CurrentWordTracker(onWordChanged = {}, onWordReset = {})
         tracker.setWord("derriere")
         val inputConnection = FakeInputConnection(context, "derriere")
+
+        println("DEBUG known derriere = ${repository.isKnownWord("derriere")}")
+        println("DEBUG known derrière = ${repository.isKnownWord("derrière")}")
+        println("DEBUG normalized candidates = ${repository.topByNormalized("derriere", 10)}")
+        println(
+            "DEBUG accent variant = ${
+                AutoReplaceController.isAccentOnlyVariant("derriere", "derrière")
+            }"
+        )
 
         val result = controller.handleBoundary(
             keyCode = KeyEvent.KEYCODE_SPACE,

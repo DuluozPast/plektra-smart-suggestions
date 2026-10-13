@@ -1126,7 +1126,7 @@ private fun QuickLauncherDisplayedEntriesSection(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Choose which sources appear in Plektra search.",
+                        text = stringResource(R.string.menu_literal_e04cb58fa7),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1169,7 +1169,7 @@ private fun QuickLauncherDisplayedEntriesSection(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Customize entries")
+                Text(stringResource(R.string.menu_literal_427f4828bf))
             }
         }
     }
@@ -1266,12 +1266,12 @@ private fun QuickLauncherCommandCustomizationDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Customize entries",
+                            text = stringResource(R.string.menu_literal_427f4828bf),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Favorites, hidden entries, and search aliases",
+                            text = stringResource(R.string.menu_literal_45497aca6a),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1286,7 +1286,7 @@ private fun QuickLauncherCommandCustomizationDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = MaterialTheme.shapes.extraLarge,
-                    placeholder = { Text("Search entries") },
+                    placeholder = { Text(stringResource(R.string.menu_literal_18da98afba)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Filled.Search,
@@ -1309,12 +1309,12 @@ private fun QuickLauncherCommandCustomizationDialog(
                     FilterChip(
                         selected = selectedSource == null,
                         onClick = { selectedSource = null },
-                        label = { Text("All") }
+                        label = { Text(stringResource(R.string.menu_literal_6a72085653)) }
                     )
                     FilterChip(
                         selected = favoritesOnly,
                         onClick = { favoritesOnly = !favoritesOnly },
-                        label = { Text("Favorites") },
+                        label = { Text(stringResource(R.string.menu_literal_07b3e447db)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.Star,
@@ -1338,7 +1338,7 @@ private fun QuickLauncherCommandCustomizationDialog(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No commands available for the selected sources.")
+                        Text(stringResource(R.string.menu_literal_ee56912791))
                     }
                 } else if (entries.isEmpty()) {
                     Box(
@@ -1347,7 +1347,7 @@ private fun QuickLauncherCommandCustomizationDialog(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No entries match \"$query\".")
+                        Text(stringResource(R.string.menu_literal_94982e0edb, query))
                     }
                 } else {
                     LazyVerticalGrid(
@@ -1570,7 +1570,7 @@ private fun CommandCustomizationRow(
                     onValueChange = onCustomSearchChanged,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Search alias") }
+                    label = { Text(stringResource(R.string.menu_literal_cf2b922293)) }
                 )
             }
         }
@@ -1687,7 +1687,7 @@ private fun QuickLauncherFavoriteAppearanceSection(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "Entry appearance",
+                text = stringResource(R.string.menu_literal_ff5f2b8a78),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -1820,7 +1820,7 @@ private fun ColorSwatchButton(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             DynamicColorWheelSwatch()
-                            Text("Dynamic")
+                            Text(stringResource(R.string.menu_literal_ceb739dfaa))
                         }
                     },
                     onClick = {
@@ -1841,7 +1841,7 @@ private fun ColorSwatchButton(
                                 shape = MaterialTheme.shapes.extraSmall,
                                 color = Color(swatch)
                             ) {}
-                            Text("#${swatch.toUInt().toString(16).uppercase().takeLast(6)}")
+                            Text(stringResource(R.string.menu_literal_4a18f239a5, swatch.toUInt().toString(16).uppercase().takeLast(6)))
                         }
                     },
                     onClick = {

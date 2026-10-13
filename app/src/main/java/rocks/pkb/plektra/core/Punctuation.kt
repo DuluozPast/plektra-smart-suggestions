@@ -7,11 +7,11 @@ object Punctuation {
     const val NARROW_NO_BREAK_SPACE: Char = '\u202F'
 
     // Boundary punctuation (no apostrophes).
-    const val BOUNDARY: String = ".,;:!?()[]{}\\/\""
+    const val BOUNDARY: String = ".,;:!?()[]{}\\/\"–"
 
     // Auto-space punctuation (no apostrophes). All candidates are opt-in by
     // default so ASCII smileys and quotes stay easy to type.
-    const val AUTO_SPACE_CANDIDATES: String = ".,;:!?\\/\")]}"
+    const val AUTO_SPACE_CANDIDATES: String = ".,;:!?\\/\")]}–"
     const val DEFAULT_AUTO_SPACE: String = ""
     const val AUTO_SPACE: String = DEFAULT_AUTO_SPACE
 
@@ -26,12 +26,31 @@ object Punctuation {
 
     fun isWordBoundary(ch: Char, prev: Char? = null, next: Char? = null): Boolean {
         val normalized = normalizeApostrophe(ch)
+
         if (normalized.isWhitespace()) return true
         if (normalized in BOUNDARY) return true
+
+        // Apostrophes are part of a word when they follow a letter or digit.
         if (normalized == '\'') {
-            val prevIsWord = prev?.let { normalizeApostrophe(it) }?.isLetterOrDigit() == true
+            val prevIsWord =
+                prev?.let { normalizeApostrophe(it) }?.isLetterOrDigit() == true
+
             return !prevIsWord
         }
+
+        // A hyphen is part of a compound word when it follows a letter or digit
+        // and is followed by another word character, or when it is at the cursor
+        // while the compound word is still being typed.
+        if (normalized == '-') {
+            val prevIsWord =
+                prev?.let { normalizeApostrophe(it) }?.isLetterOrDigit() == true
+
+            val nextIsWord =
+                next?.let { normalizeApostrophe(it) }?.isLetterOrDigit() == true
+
+            return !(prevIsWord && (nextIsWord || next == null))
+        }
+
         return !normalized.isLetterOrDigit()
     }
 

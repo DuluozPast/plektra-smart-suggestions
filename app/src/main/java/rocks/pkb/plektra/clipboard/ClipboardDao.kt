@@ -210,6 +210,12 @@ class ClipboardDao private constructor(private val db: ClipboardDatabase) {
                 $COLUMN_SENSITIVE TINYINT NOT NULL DEFAULT 0
             )
         """
+        internal fun resetForTests() {
+            synchronized(this) {
+                instance?.listener = null
+                instance = null
+            }
+        }
 
         @Volatile
         private var instance: ClipboardDao? = null

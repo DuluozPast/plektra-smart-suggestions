@@ -21,14 +21,14 @@ class NotesAndDictionaryBackupTest {
     private lateinit var context: Context
 
     @Before fun setup() {
-        context = RuntimeEnvironment.getApplication()
+        context = rocks.pkb.plektra.test.ShortPathContext.wrap(RuntimeEnvironment.getApplication())
         listOf("notes", "showcase_notes", "plektra_prefs").forEach {
             context.getSharedPreferences(it, Context.MODE_PRIVATE).edit().clear().commit()
         }
         File(context.filesDir, DictionaryPackageBackup.DIRECTORY).deleteRecursively()
     }
 
-    @Test fun notesAndProfileRoundtripExcludesSyntheticCaptureAndReportsMissingPack() = runBlocking {
+    @Test fun notesAndProfileRoundtripExcludesSyntheticCaptureAndUsesRetainedBundledPacks() = runBlocking {
         val notes = context.getSharedPreferences("notes", Context.MODE_PRIVATE)
         val collection = JSONArray().put(JSONObject().put("id", "first").put("title", "Heading")
             .put("body", "# Markdown\nText").put("cursor", 3).put("headingFocused", false))
@@ -51,7 +51,8 @@ class NotesAndDictionaryBackupTest {
         assertEquals("second", notes.getString("active_note", null))
         assertEquals("fr:qwerty", prefs.getString("custom_input_styles", null))
         assertTrue(prefs.getBoolean("suggestions_bold", false))
-        assertTrue(restored.fileSummary.missingDictionaries.containsAll(listOf("fr", "es")))
+        assertFalse(restored.fileSummary.missingDictionaries.contains("fr"))
+        assertFalse(restored.fileSummary.missingDictionaries.contains("es"))
         assertEquals("Private capture", context.getSharedPreferences("showcase_notes", Context.MODE_PRIVATE).getString("body", null))
     }
 

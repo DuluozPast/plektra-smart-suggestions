@@ -57,6 +57,8 @@ class ClipboardHistoryPrivacyTest {
         accessPolicy.accessible = true
         historyManager.clearHistory()
         historyManager.onDestroy()
+        ClipboardDao.resetForTests()
+        ClipboardDatabase.resetForTests()
         clipboardManager.clearPrimaryClip()
         SettingsManager.setClipboardHistoryEnabled(context, true)
         SettingsManager.setClipboardRetentionTime(context, 0)
@@ -83,13 +85,11 @@ class ClipboardHistoryPrivacyTest {
 
     @Test
     fun clipboardChangesWhileLockedAreNotCaptured() {
-        copyToSystemClipboard("visible-secret")
-        historyManager.onPrimaryClipChanged()
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("test", "visible-secret"))
         assertEquals(1, historyManager.getHistorySize())
 
         setAccessible(false)
         copyToSystemClipboard("locked-secret")
-        historyManager.onPrimaryClipChanged()
 
         assertEquals(0, historyManager.getHistorySize())
         assertNull(historyManager.getHistoryEntry(0))
@@ -207,7 +207,6 @@ class ClipboardHistoryPrivacyTest {
     @Test
     fun allHistoryActionsAreBlockedWhileLocked() {
         copyToSystemClipboard("protected-secret")
-        historyManager.onPrimaryClipChanged()
         val entry = requireNotNull(historyManager.getHistoryEntry(0))
         val inputConnection = RecordingInputConnection(context)
 
@@ -260,7 +259,6 @@ class ClipboardHistoryPrivacyTest {
     @Test
     fun inlineHistoryReplacesSensitiveRowsWithLockedMessage() {
         copyToSystemClipboard("view-secret")
-        historyManager.onPrimaryClipChanged()
         val activity = Robolectric.buildActivity(Activity::class.java).setup().visible().get()
         val view = ClipboardHistoryView(activity, historyManager)
         activity.setContentView(view)

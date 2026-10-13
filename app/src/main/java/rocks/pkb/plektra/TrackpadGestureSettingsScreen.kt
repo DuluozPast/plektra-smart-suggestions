@@ -4,16 +4,59 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Swipe
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,50 +71,50 @@ import kotlinx.coroutines.delay
 
 /**
  * Settings screen for trackpad gesture suggestions.
- */
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun TrackpadGestureSettingsScreen(
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit
-) {
-    val context = LocalContext.current
-    var trackpadGesturesEnabled by remember {
-        mutableStateOf(SettingsManager.getTrackpadGesturesEnabled(context))
-    }
-    var trackpadGestureAddWordEnabled by remember {
-        mutableStateOf(SettingsManager.getTrackpadGestureAddWordEnabled(context))
-    }
-    var trackpadGestureAddWordFullWidthEnabled by remember {
-        mutableStateOf(SettingsManager.getTrackpadGestureAddWordFullWidthEnabled(context))
-    }
-    var suggestionSwipeThreshold by remember {
-        mutableStateOf(SettingsManager.getTrackpadSuggestionSwipeThreshold(context))
-    }
-    var deleteSwipeThreshold by remember {
-        mutableStateOf(SettingsManager.getTrackpadDeleteSwipeThreshold(context))
-    }
-    var showTutorialDialog by remember { mutableStateOf(false) }
-    var showSensitivitySettings by remember { mutableStateOf(settingsChild(context, "trackpad") == "sensitivity") }
-    var shizukuStatus by remember { mutableStateOf(ShizukuStatus.NotConnected) }
-    var trackpadProvider by remember { mutableStateOf(SettingsManager.getTrackpadProvider(context)) }
-    var providerMenuExpanded by remember { mutableStateOf(false) }
-    var shizukuDevice by remember { mutableStateOf(SettingsManager.getTrackpadShizukuDevice(context)) }
-    var shizukuDeviceMenuExpanded by remember { mutableStateOf(false) }
-    var shizukuDevices by remember { mutableStateOf<List<TrackpadInputDevice>>(emptyList()) }
-    var shizukuDeviceDiscoveryFailed by remember { mutableStateOf(false) }
-    var swipeToDelete by remember { mutableStateOf(SettingsManager.getSwipeToDelete(context)) }
-    var swipeToDeleteProvider by remember { mutableStateOf(SettingsManager.getSwipeToDeleteProvider(context)) }
-    var swipeToDeleteProviderMenuExpanded by remember { mutableStateOf(false) }
-    val highlightedSettingId = LocalSettingHighlightId.current
-    val trackpadProviderOptions = listOf(
-        SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME to stringResource(R.string.trackpad_provider_native_ime),
-        SettingsManager.TRACKPAD_PROVIDER_SHIZUKU to stringResource(R.string.trackpad_provider_shizuku)
-    )
-    val swipeToDeleteProviderOptions = listOf(
-        SettingsManager.SWIPE_TO_DELETE_PROVIDER_NATIVE_IME to stringResource(R.string.swipe_to_delete_provider_native_ime),
-        SettingsManager.SWIPE_TO_DELETE_PROVIDER_TITAN2_KEYCODE to stringResource(R.string.swipe_to_delete_provider_titan2_keycode)
-    )
+     */
+    @Composable
+    @OptIn(ExperimentalMaterial3Api::class)
+    fun TrackpadGestureSettingsScreen(
+        modifier: Modifier = Modifier,
+        onBack: () -> Unit
+    ) {
+        val context = LocalContext.current
+        var trackpadGesturesEnabled by remember {
+            mutableStateOf(SettingsManager.getTrackpadGesturesEnabled(context))
+        }
+        var trackpadGestureAddWordEnabled by remember {
+            mutableStateOf(SettingsManager.getTrackpadGestureAddWordEnabled(context))
+        }
+        var trackpadGestureAddWordFullWidthEnabled by remember {
+            mutableStateOf(SettingsManager.getTrackpadGestureAddWordFullWidthEnabled(context))
+        }
+        var suggestionSwipeThreshold by remember {
+            mutableStateOf(SettingsManager.getTrackpadSuggestionSwipeThreshold(context))
+        }
+        var deleteSwipeThreshold by remember {
+            mutableStateOf(SettingsManager.getTrackpadDeleteSwipeThreshold(context))
+        }
+        var showTutorialDialog by remember { mutableStateOf(false) }
+        var showSensitivitySettings by remember { mutableStateOf(settingsChild(context, "trackpad") == "sensitivity") }
+        var shizukuStatus by remember { mutableStateOf(ShizukuStatus.NotConnected) }
+        var trackpadProvider by remember { mutableStateOf(SettingsManager.getTrackpadProvider(context)) }
+        var providerMenuExpanded by remember { mutableStateOf(false) }
+        var shizukuDevice by remember { mutableStateOf(SettingsManager.getTrackpadShizukuDevice(context)) }
+        var shizukuDeviceMenuExpanded by remember { mutableStateOf(false) }
+        var shizukuDevices by remember { mutableStateOf<List<TrackpadInputDevice>>(emptyList()) }
+        var shizukuDeviceDiscoveryFailed by remember { mutableStateOf(false) }
+        var swipeToDelete by remember { mutableStateOf(SettingsManager.getSwipeToDelete(context)) }
+        var swipeToDeleteProvider by remember { mutableStateOf(SettingsManager.getSwipeToDeleteProvider(context)) }
+        var swipeToDeleteProviderMenuExpanded by remember { mutableStateOf(false) }
+        val highlightedSettingId = LocalSettingHighlightId.current
+        val trackpadProviderOptions = listOf(
+            SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME to stringResource(R.string.trackpad_provider_native_ime),
+            SettingsManager.TRACKPAD_PROVIDER_SHIZUKU to stringResource(R.string.trackpad_provider_shizuku)
+        )
+        val swipeToDeleteProviderOptions = listOf(
+            SettingsManager.SWIPE_TO_DELETE_PROVIDER_NATIVE_IME to stringResource(R.string.swipe_to_delete_provider_native_ime),
+            SettingsManager.SWIPE_TO_DELETE_PROVIDER_TITAN2_KEYCODE to stringResource(R.string.swipe_to_delete_provider_titan2_keycode)
+        )
 
 
     LaunchedEffect(highlightedSettingId) {
@@ -620,10 +663,66 @@ fun TrackpadGestureSettingsScreen(
                         )
                     }
                     Text(
-                        text = "${suggestionSwipeThreshold.toInt()} / ${deleteSwipeThreshold.toInt()}",
+                        text = stringResource(R.string.menu_literal_f8e3e10015, suggestionSwipeThreshold.toInt(), deleteSwipeThreshold.toInt()),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .clickable {
+                        SettingsManager.startTrackpadCalibrationSession(context)
+
+                        context.startActivity(
+                            Intent(
+                                context,
+                                TrackpadCalibrationActivity::class.java
+                            )
+                        )
+                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Swipe,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.trackpad_calibration_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = if (
+                                SettingsManager.getTrackpadSuggestionCalibration(context) != null
+                            ) {
+                                "Calibration personnalisée active"
+                            } else {
+                                "Adapter les zones gauche, milieu et droite"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2
+                        )
+                    }
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,

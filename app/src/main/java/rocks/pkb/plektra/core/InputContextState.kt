@@ -46,6 +46,11 @@ data class InputContextState(
      */
     val shouldDisableAutoCapitalize: Boolean
         get() = restrictedReason != null
+
+    /** *Literal entry fields always preserve case, even if smart capitalization is allowed in other restricted fields.* */
+    fun disablesAutoCapitalize(allowRestrictedFields: Boolean): Boolean =
+        restrictedReason == RestrictedReason.LITERAL_ENTRY || isPasswordField ||
+            (shouldDisableAutoCapitalize && !allowRestrictedFields)
     
     /**
      * Disable double-space-to-period conversion.
@@ -104,7 +109,8 @@ data class InputContextState(
         PASSWORD,
         URI,
         EMAIL,
-        FILTER
+        FILTER,
+        LITERAL_ENTRY
     }
 
     companion object {
@@ -211,6 +217,9 @@ data class InputContextState(
 
             // Check URI first (more specific) before password variations
             val restrictedReason = when {
+                info.privateImeOptions?.split(',')?.contains("pastiera.literal_entry") == true ->
+                    RestrictedReason.LITERAL_ENTRY
+
                 inputClass == InputType.TYPE_CLASS_TEXT && inputVariation == InputType.TYPE_TEXT_VARIATION_URI ->
                     RestrictedReason.URI
 

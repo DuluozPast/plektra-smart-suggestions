@@ -1,12 +1,13 @@
 package rocks.pkb.plektra.commands
 
 import android.content.Context
+import rocks.pkb.plektra.R
 
 class NavCommandSource : CommandSource {
     override val id = CommandSourceId.NavActions
 
     override fun getCommands(context: Context): List<CommandTarget> {
-        return keycodeCommands() + actionCommands()
+        return keycodeCommands() + actionCommands(context)
     }
 
     private fun keycodeCommands(): List<CommandTarget> {
@@ -28,7 +29,7 @@ class NavCommandSource : CommandSource {
         }
     }
 
-    private fun actionCommands(): List<CommandTarget> {
+    private fun actionCommands(context: Context): List<CommandTarget> {
         return listOf(
             "copy" to "Copy",
             "paste" to "Paste",
@@ -37,6 +38,8 @@ class NavCommandSource : CommandSource {
             "select_all" to "Select all",
             "expand_selection_left" to "Select left",
             "expand_selection_right" to "Select right",
+            "expand_selection_up" to context.getString(R.string.nav_mode_action_expand_selection_up),
+            "expand_selection_down" to context.getString(R.string.nav_mode_action_expand_selection_down),
             "move_word_left" to "Word left",
             "move_word_right" to "Word right",
             "expand_selection_word_left" to "Select word left",

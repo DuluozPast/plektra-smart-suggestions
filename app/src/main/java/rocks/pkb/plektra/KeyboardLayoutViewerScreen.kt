@@ -208,7 +208,7 @@ private fun KeyMappingRow(
             }
 
             Text(
-                text = "${model.lowercase}/${model.uppercase}",
+                text = stringResource(R.string.menu_literal_8bb2054b6d, model.lowercase, model.uppercase),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.widthIn(min = 72.dp)

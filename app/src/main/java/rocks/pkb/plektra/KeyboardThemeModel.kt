@@ -1,7 +1,21 @@
 package rocks.pkb.plektra
 
+import android.content.Context
 import rocks.pkb.plektra.inputmethod.aospkeyboard.AospKeyboardView
 import rocks.pkb.plektra.inputmethod.ui.KeyboardThemeColors
+
+internal const val SUGGESTIONS_BOLD_PREF_KEY = "suggestions_bold"
+
+internal fun Context.isSuggestionsBoldEnabled(): Boolean =
+    getSharedPreferences("pastiera_prefs", Context.MODE_PRIVATE)
+        .getBoolean(SUGGESTIONS_BOLD_PREF_KEY, false)
+
+internal fun Context.setSuggestionsBoldEnabled(enabled: Boolean) {
+    getSharedPreferences("pastiera_prefs", Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean(SUGGESTIONS_BOLD_PREF_KEY, enabled)
+        .apply()
+}
 
 internal data class KeyboardThemePreset(
     val name: String,

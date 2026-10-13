@@ -1,3 +1,13 @@
+# Plektra Smart Suggestions — contribution branch
+
+This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.
+
+Read the [complete English change summary](docs/integration-upgrades/README.md) and [targeted test results](docs/integration-upgrades/targeted-test-results.json). Based on nightly `v26.10-nightly.11.184948Z`; later upstream main commits are not included. Phone validation remains pending.
+
+The local stableDebug test APK uses `rocks.pkb.plektra.custom.integrationtest` and can coexist with Pastiera Multimots Test. Transfer learned data through backup/import. No private signing key or personal backup is included.
+
+---
+
 <p align="center"><img src="docs/branding/plektra-open-color.svg" alt="Plektra" width="160"></p>
 
 # Plektra

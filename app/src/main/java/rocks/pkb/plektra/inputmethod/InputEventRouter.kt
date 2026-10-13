@@ -43,6 +43,20 @@ class InputEventRouter(
     var suggestionController: rocks.pkb.plektra.core.suggestions.SuggestionController? = null
     var onCommitText: (() -> Unit)? = null
 
+    /** Keep Alt-inserted compound connectors on the word path. */
+    fun handleCommittedAltCharacter(char: Char, inputConnection: InputConnection?) {
+        val normalized = rocks.pkb.plektra.core.Punctuation.normalizeApostrophe(char)
+        val before = if (normalized == '-') inputConnection?.getTextBeforeCursor(2, 0)?.toString().orEmpty() else ""
+        val inWordHyphen = normalized == '-' && before.endsWith("-") &&
+            before.dropLast(1).lastOrNull()?.isLetterOrDigit() == true
+        when {
+            normalized == '\'' -> handleInWordApostrophe(inputConnection, pendingApostrophe = false)
+            normalized.isLetterOrDigit() || inWordHyphen -> suggestionController?.onCharacterCommitted(
+                normalized.toString(), inputConnection, replacesPreviousCharacter = !inWordHyphen)
+            normalized !in rocks.pkb.plektra.core.Punctuation.BOUNDARY -> suggestionController?.onContextReset()
+        }
+    }
+
     private fun isSuggestionDebugLoggingEnabled(): Boolean =
         SettingsManager.isSuggestionDebugLoggingEnabled(context)
 
@@ -337,13 +351,14 @@ class InputEventRouter(
         if (keyCode == KeyEvent.KEYCODE_CTRL_LEFT || keyCode == KeyEvent.KEYCODE_CTRL_RIGHT) {
             // Check if Alt is physically pressed (not latch) - if so, trigger speech recognition (if enabled)
             // Only trigger if both keys are physically pressed simultaneously, not if one is in latch
-            if (event?.isAltPressed == true && 
+            if (event?.isAltPressed == true &&
                 !params.ctrlPressed &&
-                SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) {
+                SettingsManager.getAltCtrlSpeechShortcutEnabled(context)
+            ) {
                 callbacks.startSpeechRecognition()
                 return EditableFieldRoutingResult.Consume
             }
-            
+
             if (!params.ctrlPressed) {
                 val result = controllers.modifierStateController.handleCtrlKeyDown(
                     keyCode,
@@ -361,9 +376,9 @@ class InputEventRouter(
                     callbacks.updateStatusBar()
                 }
             }
+
             return EditableFieldRoutingResult.CallSuper
         }
-
         if (keyCode == KeyEvent.KEYCODE_ALT_LEFT || keyCode == KeyEvent.KEYCODE_ALT_RIGHT) {
             // Check if Ctrl is physically pressed (not latch) - if so, trigger speech recognition (if enabled)
             // Only trigger if both keys are physically pressed simultaneously, not if one is in latch
@@ -758,27 +773,39 @@ class InputEventRouter(
             }
         }
 
-        // Fallback: if we reach this point and the key actually produced
-        // a letter character, commit it with tracking so that the
-        // suggestion pipeline can still work even when the key is not
-        // covered by the current layout mappings.
-        if (ic != null && event != null && event.unicodeChar != 0) {
-            val ch = event.unicodeChar.toChar()
-            if (ch.isLetter()) {
-                if (isSuggestionDebugLoggingEnabled()) {
-                    Log.d("PlektraIME", "fallback commit: '$ch'")
-                }
-                commitTextWithTracking(ic, ch.toString())
-                Handler(Looper.getMainLooper()).postDelayed({
-                    callbacks.updateStatusBar()
-                }, params.cursorUpdateDelayMs)
-                return EditableFieldRoutingResult.Consume
-            }
-        }
+// Fallback: commit letters and in-word hyphens with tracking so that
+// the suggestion pipeline keeps the complete compound word.
+// A hyphen is considered part of a word only when it follows a letter or digit.
+if (ic != null && event != null && event.unicodeChar != 0) {
+    val ch = event.unicodeChar.toChar()
 
-        return EditableFieldRoutingResult.CallSuper
+    val previousChar = try {
+        ic.getTextBeforeCursor(1, 0)?.lastOrNull()
+    } catch (_: Exception) {
+        null
     }
 
+    val isInWordHyphen =
+        ch == '-' &&
+                previousChar?.isLetterOrDigit() == true
+
+    if (ch.isLetter() || isInWordHyphen) {
+        if (isSuggestionDebugLoggingEnabled()) {
+            Log.d("PastieraIME", "fallback commit with tracking: '$ch'")
+        }
+
+        commitTextWithTracking(ic, ch.toString())
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            callbacks.updateStatusBar()
+        }, params.cursorUpdateDelayMs)
+
+        return EditableFieldRoutingResult.Consume
+    }
+}
+
+return EditableFieldRoutingResult.CallSuper
+}
     fun handleConfiguredForwardDeleteAlternatives(
         context: android.content.Context,
         keyCode: Int,
@@ -866,6 +893,8 @@ class InputEventRouter(
             typedChar in boundarySet &&
             typedChar != '\''
 
+        if (keyCode == KeyEvent.KEYCODE_DEL) suggestionController?.onTypingStatisticsBackspace()
+
         // Keep suggestions alive for in-word apostrophes (e.g., "we'" → "we'll").
         if (isWordApostrophe && !shouldDisableSuggestions) {
             handleInWordApostrophe(inputConnection, pendingApostrophe = true)
@@ -919,6 +948,7 @@ class InputEventRouter(
                 onStatusBarUpdate = updateStatusBar
             )
         ) {
+            suggestionController?.onContextReset()
             return true
         }
 
@@ -957,6 +987,8 @@ class InputEventRouter(
         ) {
             return true
         }
+
+        if (isBoundaryKey || isPunctuation) suggestionController?.onTypingStatisticsBoundary()
 
         // Handle auto-capitalization after period (if enabled)
         textInputController.handleAutoCapAfterPeriod(
@@ -1113,9 +1145,16 @@ class InputEventRouter(
     ): Boolean {
         val input = inputConnection ?: return false
         if (text.length != 1) return false
+        if (rocks.pkb.plektra.core.PunctuationAfterSpace.beforeTextCommit(input, text)) return true
         val boundaryChar = rocks.pkb.plektra.core.Punctuation.normalizeApostrophe(text[0])
         if (boundaryChar == '\'' || boundaryChar !in rocks.pkb.plektra.core.Punctuation.BOUNDARY) {
             return false
+        }
+
+        suggestionController?.onTypingStatisticsBoundary()
+
+        fun finishPunctuationSpacing() {
+            rocks.pkb.plektra.core.PunctuationAfterSpace.afterCommit(context, input, boundaryChar)
         }
 
         if (
@@ -1134,15 +1173,7 @@ class InputEventRouter(
             )
         ) {
             suggestionController?.onContextReset()
-            return true
-        }
-
-        if (
-            SettingsManager.shouldApplyFrenchPunctuationSpacing(context) &&
-            rocks.pkb.plektra.core.Punctuation.commitFrenchSpacedPunctuation(input, boundaryChar)
-        ) {
-            suggestionController?.onContextReset()
-            updateStatusBar()
+            finishPunctuationSpacing()
             return true
         }
 
@@ -1154,10 +1185,19 @@ class InputEventRouter(
                 inputConnection = input,
                 boundaryCharOverride = boundaryChar
             )
+            finishPunctuationSpacing()
             updateStatusBar()
             return true
         }
 
+        if (boundaryChar in SettingsManager.getSpaceAfterPunctuation(context)) {
+            val frenchCommitted = SettingsManager.shouldApplyFrenchPunctuationSpacing(context) &&
+                rocks.pkb.plektra.core.Punctuation.commitFrenchSpacedPunctuation(input, boundaryChar)
+            if (!frenchCommitted && !input.commitText(boundaryChar.toString(), 1)) return false
+            finishPunctuationSpacing()
+            updateStatusBar()
+            return true
+        }
         return false
     }
 
@@ -1254,7 +1294,16 @@ class InputEventRouter(
 
         // Consume Alt+Space to avoid Android's symbol picker and just insert a space.
         if (keyCode == KeyEvent.KEYCODE_SPACE) {
-            ic.commitText(" ", 1)
+            // A latched Alt does not turn a space into an untracked editor commit.
+            // Finish the word through the same learning/replacement path as plain Space.
+            if (!rocks.pkb.plektra.core.PunctuationAfterSpace.beforeTextCommit(ic, " ")) {
+                val controller = suggestionController
+                if (controller != null) {
+                    controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, ic, boundaryCharOverride = ' ')
+                } else {
+                    ic.commitText(" ", 1)
+                }
+            }
             updateStatusBar()
             return true
         }
@@ -1397,6 +1446,30 @@ class InputEventRouter(
                             TextSelectionHelper.expandSelectionRight(ic)
                             return true
                         }
+
+                        "expand_selection_up" -> {
+                            KeyboardEventTracker.notifyKeyEvent(
+                                keyCode,
+                                event,
+                                "KEY_DOWN",
+                                origin = "ime_router",
+                                outputKeyCode = null,
+                                outputKeyCodeName = "expand_selection_up"
+                            )
+                            return TextSelectionHelper.expandSelectionUp(ic)
+                        }
+                        "expand_selection_down" -> {
+                            KeyboardEventTracker.notifyKeyEvent(
+                                keyCode,
+                                event,
+                                "KEY_DOWN",
+                                origin = "ime_router",
+                                outputKeyCode = null,
+                                outputKeyCodeName = "expand_selection_down"
+                            )
+                            return TextSelectionHelper.expandSelectionDown(ic)
+                        }
+
                         "move_word_left" -> {
                             KeyboardEventTracker.notifyKeyEvent(
                                 keyCode,

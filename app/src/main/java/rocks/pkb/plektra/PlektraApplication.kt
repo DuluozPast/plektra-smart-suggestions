@@ -44,6 +44,7 @@ class PlektraApplication : Application() {
 
     private fun initializeUnlockedApplication() {
         if (unlockedInitialized) return
+        IntegrationUpgradeMigration.migrate(this)
         unlockedInitialized = true
         val preferences = SettingsManager.getPreferences(this)
         val config = DirectBootKeyboardConfig(this)

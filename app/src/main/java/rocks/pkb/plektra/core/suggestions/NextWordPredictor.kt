@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import rocks.pkb.plektra.backup.LearningOperationGate
 
 class NextWordPredictor(
     private val store: UserNGramRepository,
@@ -43,6 +44,37 @@ class NextWordPredictor(
         return predictForPrefix(locale, SENTENCE_START_PREFIX, limit)
     }
 
+    internal fun getUsage(
+        locale: Locale,
+        previousWord: String?,
+        nextWord: String?
+    ): UserNGramStore.Prediction? {
+        val prefix = normalizedKey(previousWord, locale) ?: return null
+        val displayNextWord = cleanDisplayWord(nextWord) ?: return null
+        val localeTag = locale.toLanguageTag()
+
+        val stored = store.getUsage(
+            localeTag,
+            prefix,
+            displayNextWord
+        )
+
+        val pending = pendingLearning
+            .predict(localeTag, prefix)
+            .firstOrNull {
+                it.word.equals(displayNextWord, ignoreCase = true)
+            }
+
+        return when {
+            stored == null -> pending
+            pending == null -> stored
+            else -> stored.copy(
+                count = stored.count + pending.count,
+                lastUsed = maxOf(stored.lastUsed, pending.lastUsed)
+            )
+        }
+    }
+
     fun forget(locale: Locale, previousWord: String?, nextWord: String?): Boolean {
         val prefix = normalizedKey(previousWord, locale) ?: return false
         val displayNextWord = cleanDisplayWord(nextWord) ?: return false
@@ -65,8 +97,12 @@ class NextWordPredictor(
         return store.deleteNextWord(localeTag, displayNextWord) > 0 || removedPending
     }
 
+
     private fun learnNormalized(localeTag: String, prefix: String, displayNextWord: String) {
+        if (LearningOperationGate.isLearningSuspended) return
+
         val nowMs = System.currentTimeMillis()
+
         if (learningQueue == null) {
             store.learn(localeTag, prefix, displayNextWord, nowMs)
             return
@@ -107,7 +143,44 @@ class NextWordPredictor(
             }
     }
 
+    internal fun getTotalCount(
+        locale: Locale,
+        previousWord: String?
+    ): Int {
+        val prefix = normalizedKey(previousWord, locale) ?: return 0
+        val localeTag = locale.toLanguageTag()
+
+        val storedCount = store.getTotalCount(
+            localeTag,
+            prefix
+        )
+
+        val pendingCount = pendingLearning
+            .predict(localeTag, prefix)
+            .sumOf { it.count }
+
+        return storedCount + pendingCount
+    }
+
+    internal fun prune(
+        nowMs: Long = System.currentTimeMillis(),
+        staleAfterMs: Long,
+        weakCountThreshold: Int,
+        maxEntriesPerLocale: Int
+    ): Int {
+        if (LearningOperationGate.isLearningSuspended) return 0
+        flushLearningForTests()
+
+        return store.prune(
+            nowMs = nowMs,
+            staleAfterMs = staleAfterMs,
+            weakCountThreshold = weakCountThreshold,
+            maxEntriesPerLocale = maxEntriesPerLocale
+        )
+    }
+
     internal fun clearAll() {
+        if (LearningOperationGate.isLearningSuspended) return
         flushLearningForTests()
         pendingLearning.clear()
         store.clearAll()
@@ -117,6 +190,10 @@ class NextWordPredictor(
         runBlocking {
             learningQueue?.flush()
         }
+    }
+
+    internal suspend fun flushPendingLearning() {
+        learningQueue?.flush()
     }
 
     fun destroy() {

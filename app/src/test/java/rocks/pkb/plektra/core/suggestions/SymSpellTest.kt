@@ -151,5 +151,43 @@ class SymSpellTest {
         assertTrue(results.any { it.term == "io" })
         assertTrue(results.any { it.term == "il" })
     }
+    @Test
+    fun removeWordRemovesDirectAndApproximateSuggestions() {
+        val symSpell = SymSpell(
+            maxEditDistance = 2,
+            prefixLength = 7
+        )
+
+        symSpell.addWord("monpetitloup", 100)
+        symSpell.addWord("monpetitlapin", 80)
+
+        assertTrue(
+            symSpell.lookup("monpetitloup", 10)
+                .any { it.term == "monpetitloup" }
+        )
+
+        assertTrue(
+            symSpell.lookup("monpetitlou", 10)
+                .any { it.term == "monpetitloup" }
+        )
+
+        assertTrue(symSpell.removeWord("monpetitloup"))
+
+        assertTrue(
+            symSpell.lookup("monpetitloup", 10)
+                .none { it.term == "monpetitloup" }
+        )
+
+        assertTrue(
+            symSpell.lookup("monpetitlou", 10)
+                .none { it.term == "monpetitloup" }
+        )
+
+        assertTrue(
+            symSpell.lookup("monpetitlapin", 10)
+                .any { it.term == "monpetitlapin" }
+        )
+    }
+
 }
 

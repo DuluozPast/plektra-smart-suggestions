@@ -35,6 +35,27 @@ class SymSpell(
         }
     }
 
+    fun removeWord(term: String): Boolean {
+        if (term.isEmpty()) return false
+
+        val removed = dictionary.remove(term) != null
+        if (!removed) return false
+
+        val key = term.take(prefixLength)
+
+        generateDeletes(key, maxEditDistance) { delete ->
+            val bucket = deletes[delete] ?: return@generateDeletes
+
+            bucket.removeAll { it == term }
+
+            if (bucket.isEmpty()) {
+                deletes.remove(delete)
+            }
+        }
+
+        return true
+    }
+
     /**
      * Populate from precomputed deletes and term frequencies.
      * Expects deletes keyed by normalized delete string -> list of terms.
@@ -162,4 +183,5 @@ class SymSpell(
         }
         return if (prev[b.length] <= maxDistance) prev[b.length] else -1
     }
+
 }

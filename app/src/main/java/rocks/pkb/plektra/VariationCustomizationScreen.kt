@@ -918,7 +918,7 @@ private fun VariationRow(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "Add slot"
+                            contentDescription = stringResource(R.string.menu_literal_9fcff3ed02)
                         )
                     }
                     IconButton(
@@ -928,7 +928,7 @@ private fun VariationRow(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.DeleteOutline,
-                            contentDescription = "Remove rightmost slot"
+                            contentDescription = stringResource(R.string.menu_literal_42992dc15f)
                         )
                     }
                 }

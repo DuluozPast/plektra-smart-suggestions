@@ -18,6 +18,7 @@ import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
 import rocks.pkb.plektra.core.suggestions.DictionaryIndex
+import rocks.pkb.plektra.core.suggestions.UserDictionaryStore
 
 private const val TAG = "DictionaryRepositoryManager"
 private const val MANIFEST_URL = "https://pkb.rocks/plektra-dict/dicts-manifest.json"
@@ -41,7 +42,9 @@ data class DictionaryItem(
     @SerialName("updatedAt") val updatedAt: String,
     @SerialName("name") val name: String,
     @SerialName("shortDescription") val shortDescription: String,
-    @SerialName("languageTag") val languageTag: String
+    @SerialName("languageTag") val languageTag: String,
+    @SerialName("variant") val variant: String = "basic",
+    @SerialName("wordCount") val wordCount: Int? = null
 )
 
 sealed class DownloadResult {
@@ -153,18 +156,31 @@ object DictionaryRepositoryManager {
             }
             
             // Validate dictionary format
-            tempFile.inputStream().use { input ->
+            val dictionaryIndex = tempFile.inputStream().use { input ->
                 validateDictionaryStream(input)
             }
             
             // Move to final location
-            val destDir = File(context.filesDir, "dictionaries_serialized/custom").apply { mkdirs() }
-            val destFile = File(destDir, item.filename)
+            /*
+             * Extended dictionaries have their own filename in the remote repository
+             * (for example "fr_extended.dict"), but the runtime loader expects custom
+             * base dictionaries to use the standard "<language>_base.dict" filename.
+             */
+            val destDir = File(
+                context.filesDir,
+                "dictionaries_serialized/custom"
+            ).apply { mkdirs() }
+
+            val languageCode = extractLanguageCode(item.filename)
+            val installedFilename = item.filename
+            val destFile = File(destDir, installedFilename)
+            val activeDictionaryPrefs =
+                context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
             
             if (destFile.exists()) {
                 destFile.delete()
             }
-            
+
             if (!tempFile.renameTo(destFile)) {
                 // Fallback: copy if rename fails
                 tempFile.inputStream().use { input ->
@@ -174,6 +190,34 @@ object DictionaryRepositoryManager {
                 }
                 tempFile.delete()
             }
+
+            activeDictionaryPrefs.edit()
+                .putString(languageCode, installedFilename)
+                .apply()
+
+            val locale = java.util.Locale.forLanguageTag(item.languageTag)
+
+            val removedDuplicates = UserDictionaryStore().removeWordsAlreadyInBase(
+                context = context,
+                baseNormalizedWords = dictionaryIndex.normalizedIndex.keys,
+                locale = locale
+            )
+
+            Log.i(
+                TAG,
+                "Successfully downloaded and installed ${item.filename}. " +
+                        "Removed $removedDuplicates duplicate personal dictionary entries."
+            )
+            /*
+             * Notify the running IME that the active base dictionary has changed.
+             * The receiver will invalidate its repository cache and load this dictionary.
+             */
+            context.sendBroadcast(
+                android.content.Intent(
+                    rocks.pkb.plektra.AppBroadcastActions.BASE_DICTIONARY_UPDATED
+                ).setPackage(context.packageName)
+            )
+
             
             notifyDictionariesChanged(context)
             Log.i(TAG, "Successfully downloaded and installed ${item.filename}")
@@ -206,10 +250,11 @@ object DictionaryRepositoryManager {
      * Validates that the stream contains a valid dictionary format.
      */
     @OptIn(ExperimentalSerializationApi::class)
-    internal fun validateDictionaryStream(input: InputStream) {
+    internal fun validateDictionaryStream(input: InputStream): DictionaryIndex {
         val bytes = input.readBytes()
         val isJson = bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
-        if (isJson) {
+
+        return if (isJson) {
             val json = Json { ignoreUnknownKeys = true }
             json.decodeFromString<DictionaryIndex>(bytes.decodeToString())
         } else {
@@ -231,9 +276,15 @@ object DictionaryRepositoryManager {
     }
     
     /**
-     * Extracts language code from filename (e.g., "en_base.dict" -> "en").
+     * Extracts the language code from a Basic or Extended dictionary filename.
+     *
+     * Examples:
+     * en_base.dict     -> en
+     * en_extended.dict -> en
      */
     fun extractLanguageCode(filename: String): String {
-        return filename.removeSuffix("_base.dict").removeSuffix(".dict")
+        return filename
+            .removeSuffix(".dict")
+            .substringBefore("_")
     }
 }

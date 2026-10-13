@@ -3,7 +3,6 @@ package rocks.pkb.plektra.core.suggestions
 import kotlin.math.min
 import java.text.Normalizer
 import java.util.Locale
-import android.util.Log
 
 data class SuggestionResult(
     val candidate: String,
@@ -22,11 +21,19 @@ enum class SuggestionKind {
 class SuggestionEngine(
     private val repository: DictionaryRepository,
     private val locale: Locale = Locale.ITALIAN,
-    private val debugLogging: Boolean = false
+    private val debugLogging: Boolean = false,
+    private val usageCountProvider: (Locale, String) -> Int = { _, _ -> 0 },
+    private val exactUsageCountProvider: (Locale, String) -> Int = { _, _ -> 0 },
+    private val correctionUsageCountProvider: (Locale, String, String) -> Int =
+        { _, _, _ -> 0 }
+
 ) {
 
     private val accentCache: MutableMap<String, String> = mutableMapOf()
     private val tag = "SuggestionEngine"
+    private companion object {
+        const val PERSONAL_PREFIX_PROMOTION_THRESHOLD = 3
+    }
     private val wordNormalizeCache: MutableMap<String, String> = mutableMapOf()
     private val accentChars = setOf('à', 'è', 'é', 'ì', 'ò', 'ó', 'ù', 'À', 'È', 'É', 'Ì', 'Ò', 'Ó', 'Ù')
 
@@ -196,7 +203,7 @@ class SuggestionEngine(
 
         // Check if characters are swapped
         return input[firstDiffIndex].lowercaseChar() == suggestion[secondDiffIndex].lowercaseChar() &&
-               input[secondDiffIndex].lowercaseChar() == suggestion[firstDiffIndex].lowercaseChar()
+                input[secondDiffIndex].lowercaseChar() == suggestion[firstDiffIndex].lowercaseChar()
     }
 
     /**
@@ -261,7 +268,7 @@ class SuggestionEngine(
         val normalizedCandidate = normalizeApostrophes(candidate)
         val hasApostrophe = normalizedCandidate.contains('\'')
         val matchesPrefix = normalizedCandidate.length >= prefix.length &&
-            normalizedCandidate.substring(0, prefix.length).equals(prefix, ignoreCase = true)
+                normalizedCandidate.substring(0, prefix.length).equals(prefix, ignoreCase = true)
 
         val rootPart = when {
             matchesPrefix -> candidate.substring(prefix.length)
@@ -290,7 +297,7 @@ class SuggestionEngine(
         val isPrefixOk = prefixRaw.isNotEmpty() &&
                 isSupportedApostrophePrefix(prefixRaw) &&
                 prefixRaw.all { it.isLetter() }
-        val isRootOk = root.length >= 3 && root.all { it.isLetter() }
+        val isRootOk = root.isNotEmpty() && root.all { it.isLetter() }
         return if (isPrefixOk && isRootOk) ApostropheSplit(prefix, root) else null
     }
 
@@ -325,7 +332,9 @@ class SuggestionEngine(
                 limit = (limit * 2).coerceAtMost(12),
                 includeAccentMatching = includeAccentMatching,
                 useKeyboardProximity = useKeyboardProximity,
-                useEditTypeRanking = useEditTypeRanking
+                useEditTypeRanking = useEditTypeRanking,
+                correctionOriginalWord = currentWord,
+                correctionPrefix = apostropheSplit.prefix
             )
             val filtered = rootResults
                 .filter { it.distance <= 1 } // stay conservative on apostrophated forms
@@ -353,11 +362,14 @@ class SuggestionEngine(
         limit: Int,
         includeAccentMatching: Boolean,
         useKeyboardProximity: Boolean,
-        useEditTypeRanking: Boolean
+        useEditTypeRanking: Boolean,
+        correctionOriginalWord: String = currentWord,
+        correctionPrefix: String = ""
     ): List<SuggestionResult> {
         val normalizedWord = normalize(currentWord)
         val normalizedWordBare = normalizedWord.replace("'", "")
         val inputLen = normalizedWord.length
+        val inputIsKnownWord = repository.isKnownWord(currentWord)
         // Require at least 1 character to start suggesting.
         if (inputLen < 1) return emptyList()
         // Force prefix completions: take frequent words that start with the input (distance 0)
@@ -372,13 +384,35 @@ class SuggestionEngine(
         } else {
             150 // Medium threshold for longer inputs
         }
-        val completions = repository.lookupByPrefixMerged(normalizedWord, maxSize = 200)
+        val prefixCandidates =
+            repository.lookupByPrefixMerged(normalizedWord, maxSize = 200)
+
+        val completions = prefixCandidates
             .filter {
                 val norm = normalizeCached(it.word)
-                val meetsFrequency = isPreferredUserEntry(it.source) || repository.effectiveFrequency(it) >= minFrequencyForPrefixSuggestion
-                // Only show words that are longer (actual completions) and meet frequency threshold
-                // Exception: USER dictionary words are always included regardless of frequency
-                norm.startsWith(normalizedWord) && it.word.length > currentWord.length && meetsFrequency
+
+                // Personal usage must be able to rescue a word that would otherwise
+                // be filtered out by the corpus-frequency threshold.
+                //
+                // This is especially important for short prefixes:
+                // a word frequently used by the user (e.g. "sûr" for "su")
+                // should progressively become eligible as a suggestion even if its
+                // dictionary frequency is below the generic short-prefix threshold.
+                val personalUsageCount =
+                    usageCountProvider(locale, it.word).coerceAtLeast(0)
+
+                val personallyEstablished =
+                    personalUsageCount >= PERSONAL_PREFIX_PROMOTION_THRESHOLD
+
+                val meetsFrequency =
+                    isPreferredUserEntry(it.source) ||
+                            repository.effectiveFrequency(it) >= minFrequencyForPrefixSuggestion ||
+                            personallyEstablished
+
+                // Only show actual completions.
+                norm.startsWith(normalizedWord) &&
+                        it.word.length > currentWord.length &&
+                        meetsFrequency
             }
 
         // SymSpell lookup on normalized input (skip for single-char to avoid noise)
@@ -407,8 +441,8 @@ class SuggestionEngine(
             elisionPrefixEntries.filter { entry ->
                 val word = entry.word
                 word.length in 2..3 &&
-                    word.getOrNull(0)?.equals(leadingChar, ignoreCase = true) == true &&
-                    word.getOrNull(1) == '\''
+                        word.getOrNull(0)?.equals(leadingChar, ignoreCase = true) == true &&
+                        word.getOrNull(1) == '\''
             }
         } else emptyList()
         val seen = HashSet<String>(limit * 3)
@@ -465,17 +499,15 @@ class SuggestionEngine(
             // Filter out rare words for prefix suggestions (completions)
             // Exception: Don't filter when overrideCandidates is provided (e.g., user dictionary words)
             val isPrefix = term.startsWith(normalizedWord) && term.length > normalizedWord.length
-            val minFrequency = if (inputLen <= 2) {
-                150 // Threshold for short inputs
-            } else if (inputLen == 3) {
-                100 // Threshold for 3-char inputs
-            } else if (inputLen == 4) {
-                80 // Threshold for 4-char inputs
-            } else {
-                60 // Threshold for longer inputs
-            }
-            if (isPrefix && frequency < minFrequency && overrideCandidates == null) {
-                return // Skip rare prefix completions
+            // If the user has already typed a valid dictionary word,
+            // do not offer edit-distance corrections for that complete word.
+            // Real prefix completions remain allowed.
+            if (
+                inputIsKnownWord &&
+                distance > 0 &&
+                !isPrefix
+            ) {
+                return
             }
 
             // Apply keyboard proximity filtering when enabled
@@ -490,7 +522,7 @@ class SuggestionEngine(
             val isSingleCharInput = inputLen == 1
             val candidateList: List<DictionaryEntry> = overrideCandidates ?: when {
                 isSingleCharInput -> repository.topByNormalized(term, limit = 5)
-                distance == 0 -> repository.topByNormalized(term, limit = 3)
+                distance == 0 -> repository.topByNormalized(term, limit = 8)
                 else -> listOfNotNull(repository.bestEntryForNormalized(term))
             }
             if (candidateList.isEmpty()) return
@@ -502,7 +534,10 @@ class SuggestionEngine(
                 // Never suggest the exact same word (exact match, case-sensitive)
                 // This allows suggesting accented variants (e.g., "perche" → "perché")
                 // and capitalization variants (e.g., "mario" → "Mario")
-                if (entry.word == currentWord) {
+                val isExactTypedWord = entry.word == currentWord
+
+
+                if (isExactTypedWord) {
                     return@forEach
                 }
 
@@ -521,7 +556,13 @@ class SuggestionEngine(
                     } else {
                         60
                     }
-                    if (entry.frequency < minFreqForCandidate) {
+                    val personalUsageCount =
+                        usageCountProvider(locale, entry.word).coerceAtLeast(0)
+
+                    val personallyEstablished =
+                        personalUsageCount >= PERSONAL_PREFIX_PROMOTION_THRESHOLD
+
+                    if (entry.frequency < minFreqForCandidate && !personallyEstablished) {
                         return@forEach
                     }
                 }
@@ -561,9 +602,16 @@ class SuggestionEngine(
                     else -> 0.0
                 }
                 val frequencyScore = (effectiveFreq / 1_600.0)
-                val sourceBoost = if (isPreferredUserEntry(entry.source)) 5.0 else 1.0
+                val userDictionaryBonus =
+                    if (isPreferredUserEntry(entry.source)) 1.0 else 0.0
                 val accentBonus = if (isSingleCharInput && candidateLen == 1 && hasAccent) 0.8 else 0.0
-                val accentSameLengthBonus = if (!isSingleCharInput && candidateLen == currentWord.length && hasAccent) 0.4 else 0.0
+                val accentSameLengthBonus =
+                    if (
+                        !isSingleCharInput &&
+                        candidateLen == currentWord.length &&
+                        hasAccent &&
+                        currentWord.length >= 3
+                    ) 0.4 else 0.0
                 val baseLetterMalus = if (isSingleCharInput && candidateLen == 1 && !hasAccent && isSameBaseLetter) -2.0 else 0.0
                 val elisionBonus = when {
                     // Strongly boost single-letter inputs that can expand to "<letter>'"
@@ -591,7 +639,18 @@ class SuggestionEngine(
                     hasSymbol -> -0.6
                     else -> 0.0
                 }
-                val completionLengthPenalty = if (isCompletion && currentWord.length >= 4 && (candidateLen - currentWord.length) >= 3) -0.35 else 0.0
+                val completionExtraLength =
+                    (candidateLen - currentWord.length).coerceAtLeast(0)
+
+                val completionLengthPenalty =
+                    if (isCompletion && currentWord.length >= 4) {
+                        when {
+                            completionExtraLength <= 2 -> 0.0
+                            else -> -0.15 * (completionExtraLength - 2)
+                        }
+                    } else {
+                        0.0
+                    }
                 val sameRootBonus = if (distance == 1 && bareCandidate == normalizedWordBare) 0.25 else 0.0
 
                 // Apply edit type ranking when enabled
@@ -622,25 +681,60 @@ class SuggestionEngine(
                     }
                 }
 
-                val score = (
+                // Personal usage is an independent, bounded ranking signal.
+// It must not alter corpus frequency or be amplified by the user-dictionary boost.
+                val usageCount = usageCountProvider(locale, entry.word).coerceAtLeast(0)
+                val exactUsageCount = exactUsageCountProvider(locale, entry.word).coerceAtLeast(0)
+
+                val personalUsageBonus = kotlin.math.min(
+                    1.0,
+                    kotlin.math.ln(1.0 + exactUsageCount) * 0.25
+                )
+
+                val correctionCandidate =
+                    if (correctionPrefix.isNotEmpty()) {
+                        correctionPrefix + entry.word
+                    } else {
+                        entry.word
+                    }
+
+                val correctionUsageCount =
+                    correctionUsageCountProvider(
+                        locale,
+                        correctionOriginalWord,
+                        correctionCandidate
+                    ).coerceAtLeast(0)
+
+                val learnedCorrectionBonus = kotlin.math.min(
+                    1.5,
+                    kotlin.math.ln(1.0 + correctionUsageCount) * 0.75
+                )
+
+                val score =
                     distanceScore +
-                        frequencyScore +
-                        prefixBonus +
-                        editTypeBonus +
-                        accentBonus +
-                        accentSameLengthBonus +
-                        baseLetterMalus +
-                        elisionBonus +
-                        lengthPenalty +
-                        lengthSimilarityBonus +
-                        numericMalus +
-                        completionLengthPenalty +
-                        sameRootBonus
-                    ) * sourceBoost
+                            frequencyScore +
+                            prefixBonus +
+                            editTypeBonus +
+                            accentBonus +
+                            accentSameLengthBonus +
+                            baseLetterMalus +
+                            elisionBonus +
+                            lengthPenalty +
+                            lengthSimilarityBonus +
+                            numericMalus +
+                            completionLengthPenalty +
+                            sameRootBonus +
+                            userDictionaryBonus +
+                            personalUsageBonus +
+                            learnedCorrectionBonus
+
+
+                val displayCandidate = entry.word
+
                 val key = entry.word.lowercase(locale)
                 if (!seen.add(key)) return@forEach
                 val suggestion = SuggestionResult(
-                    candidate = entry.word,
+                    candidate = displayCandidate,
                     distance = distance,
                     score = score,
                     source = entry.source
@@ -687,14 +781,25 @@ class SuggestionEngine(
         for (item in allSymResults) {
             consider(item.term, item.distance, item.frequency)
         }
-
         return top
     }
 
-    internal fun editDistance(input: String, candidate: String, maxDistance: Int): Int =
-        boundedLevenshtein(normalize(input), normalize(candidate), maxDistance)
-
-    private fun boundedLevenshtein(a: String, b: String, maxDistance: Int): Int {
+    /**
+     * Returns the actual edit distance between two words using the same
+     * normalization as the suggestion engine.
+     */
+    internal fun editDistance(
+        input: String,
+        candidate: String,
+        maxDistance: Int
+    ): Int {
+        return boundedLevenshtein(
+            normalize(input),
+            normalize(candidate),
+            maxDistance
+        )
+    }
+    internal fun boundedLevenshtein(a: String, b: String, maxDistance: Int): Int {
         // Optimal String Alignment distance (Damerau-Levenshtein with adjacent transpositions cost=1)
         if (kotlin.math.abs(a.length - b.length) > maxDistance) return -1
         val prev = IntArray(b.length + 1) { it }

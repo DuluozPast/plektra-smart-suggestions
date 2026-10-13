@@ -8,6 +8,7 @@ import android.net.Uri
 import android.util.Log
 import rocks.pkb.plektra.BuildConfig
 import rocks.pkb.plektra.SettingsManager
+import rocks.pkb.plektra.statistics.TypingStatisticsStore
 import rocks.pkb.plektra.data.layout.LayoutFileStore
 import rocks.pkb.plektra.inputmethod.DeviceSpecific
 import kotlinx.coroutines.Dispatchers
@@ -19,13 +20,21 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import rocks.pkb.plektra.core.suggestions.CorrectionUsageStore
 
 object BackupManager {
     private const val TAG = "BackupManager"
 
-    suspend fun createBackup(context: Context, targetUri: Uri): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun createBackup(context: Context, targetUri: Uri): BackupResult {
+        Log.i("PastieraBackupTest", "createBackup() called")
+
+        return LearningOperationGate.withExclusiveOperation {
+            withContext(Dispatchers.IO) {
         val workingDir = File(context.cacheDir, "backup_${System.currentTimeMillis()}").apply { mkdirs() }
         try {
+            // Include accepted learning before snapshots; the gate blocks new learning.
+            LearningOperationGate.awaitPendingLearning()
+            TypingStatisticsStore.get(context).flush()
             val customTypingSoundActive =
                 SettingsManager.getTypingSoundMode(context) == SettingsManager.TYPING_SOUND_MODE_CUSTOM
             val hasTypingSoundPack = if (customTypingSoundActive) {
@@ -45,6 +54,7 @@ object BackupManager {
             }
             val prefsDir = File(workingDir, "prefs").apply { mkdirs() }
             val filesDir = File(workingDir, "files").apply { mkdirs() }
+            val correctionsDir = File(workingDir, "corrections").apply { mkdirs() }
 
             val prefComponents = PreferencesBackupHelper.dumpSharedPreferences(
                 context,
@@ -56,7 +66,20 @@ object BackupManager {
                 filesDir,
                 includeTypingSoundPack = hasTypingSoundPack
             )
-            val components = (prefComponents + fileComponents).sorted()
+            val correctionComponents =
+                CorrectionUsageBackupHelper.dumpCorrections(
+                    context = context,
+                    destinationDir = correctionsDir
+                )
+            val learningComponents = LearningBackupHelper.export(
+                context, File(workingDir, "learning")
+            )
+            val components = (
+                    prefComponents +
+                            fileComponents +
+                            correctionComponents +
+                            learningComponents
+                    ).sorted()
 
             val metadata = BackupMetadata(
                 versionCode = BuildConfig.VERSION_CODE,
@@ -78,7 +101,9 @@ object BackupManager {
         } finally {
             workingDir.deleteRecursively()
         }
-    }
+            }
+        }
+}
 }
 
 sealed class BackupResult {
@@ -332,6 +357,138 @@ object PreferencesBackupHelper {
     }
 }
 
+object CorrectionUsageBackupHelper {
+
+    private const val FILE_NAME = "correction_usage.json"
+
+    fun dumpCorrections(
+        context: Context,
+        destinationDir: File
+    ): List<String> {
+        val usages = CorrectionUsageStore(context).use { store ->
+            store.getAllUsages()
+        }
+
+        if (usages.isEmpty()) {
+            return emptyList()
+        }
+
+        val entries = org.json.JSONArray()
+
+        usages.forEach { usage ->
+            entries.put(
+                JSONObject().apply {
+                    put("locale", usage.localeTag)
+                    put("original", usage.original)
+                    put("correction", usage.correction)
+                    put("count", usage.count)
+                    put("lastUsed", usage.lastUsed)
+                }
+            )
+        }
+
+        val root = JSONObject().apply {
+            put("version", 1)
+            put("entries", entries)
+        }
+
+        destinationDir.mkdirs()
+
+        val outputFile = File(destinationDir, FILE_NAME)
+        outputFile.writeText(root.toString(2))
+
+        return listOf("corrections/$FILE_NAME")
+    }
+
+    fun restoreCorrections(
+        context: Context,
+        sourceDir: File
+    ): Boolean {
+        val sourceFile = File(sourceDir, FILE_NAME)
+
+        // Older backups do not contain learned corrections.
+        if (!sourceFile.exists()) {
+            return false
+        }
+
+        val root = JSONObject(sourceFile.readText())
+
+        val version = root.optInt("version", -1)
+        require(version == 1) {
+            "Unsupported correction usage backup version: $version"
+        }
+
+        val entries = root.optJSONArray("entries")
+            ?: throw IllegalArgumentException(
+                "Correction usage backup has no entries array"
+            )
+
+        data class RestoredCorrection(
+            val localeTag: String,
+            val original: String,
+            val correction: String,
+            val count: Int,
+            val lastUsed: Long
+        )
+
+        val validated = mutableListOf<RestoredCorrection>()
+
+        for (index in 0 until entries.length()) {
+            val entry = entries.optJSONObject(index)
+                ?: throw IllegalArgumentException(
+                    "Invalid correction usage entry at index $index"
+                )
+
+            val localeTag = entry.optString("locale", "")
+            val original = entry.optString("original", "")
+            val correction = entry.optString("correction", "")
+            val count = entry.optInt("count", -1)
+            val lastUsed = entry.optLong("lastUsed", -1L)
+
+            require(localeTag.isNotBlank()) {
+                "Correction usage entry has no locale at index $index"
+            }
+            require(original.isNotBlank()) {
+                "Correction usage entry has no original at index $index"
+            }
+            require(correction.isNotBlank()) {
+                "Correction usage entry has no correction at index $index"
+            }
+            require(count > 0) {
+                "Correction usage entry has invalid count at index $index"
+            }
+            require(lastUsed >= 0L) {
+                "Correction usage entry has invalid lastUsed at index $index"
+            }
+
+            validated += RestoredCorrection(
+                localeTag = localeTag,
+                original = original,
+                correction = correction,
+                count = count,
+                lastUsed = lastUsed
+            )
+        }
+
+        CorrectionUsageStore(context).use { store ->
+            store.clearAll()
+
+            validated.forEach { usage ->
+                store.restoreUsage(
+                    localeTag = usage.localeTag,
+                    original = usage.original,
+                    correction = usage.correction,
+                    count = usage.count,
+                    lastUsed = usage.lastUsed
+                )
+            }
+        }
+
+        return true
+    }
+
+}
+
 object FileBackupHelper {
     private const val TAG = "FileBackupHelper"
     private val allowedFiles = setOf(
@@ -383,6 +540,8 @@ object FileBackupHelper {
         if (!base.exists()) {
             return emptyList()
         }
+
+
 
         val components = mutableListOf<String>()
         base.walkTopDown()
@@ -444,7 +603,7 @@ object FileBackupHelper {
                         target.copyTo(backupFile, overwrite = true)
                         backups.add(target to backupFile)
                     }
-                    
+
                     // Special handling for variations.json: merge with defaults instead of overwriting
                     if (relative.equals("variations.json", ignoreCase = true)) {
                         mergeVariationsFile(context, source, target)
@@ -591,10 +750,10 @@ object FileBackupHelper {
     private fun isTypingSoundPackPath(relative: String): Boolean {
         val parts = relative.split('/')
         return parts.size == 4 &&
-            parts[0] == SettingsManager.TYPING_SOUND_CUSTOM_DIR &&
-            parts[1] == SettingsManager.TYPING_SOUND_CUSTOM_PACK_DIR &&
-            parts[2] in SettingsManager.TYPING_SOUND_GROUPS &&
-            parts[3].substringAfterLast('.', "").lowercase() in SettingsManager.TYPING_SOUND_AUDIO_EXTENSIONS
+                parts[0] == SettingsManager.TYPING_SOUND_CUSTOM_DIR &&
+                parts[1] == SettingsManager.TYPING_SOUND_CUSTOM_PACK_DIR &&
+                parts[2] in SettingsManager.TYPING_SOUND_GROUPS &&
+                parts[3].substringAfterLast('.', "").lowercase() in SettingsManager.TYPING_SOUND_AUDIO_EXTENSIONS
     }
 
     private fun isJsonValid(file: File): Boolean {
@@ -629,18 +788,18 @@ object FileBackupHelper {
         try {
             // Load current/default JSON (from file or assets)
             val currentJson = loadCurrentVariationsJson(context)
-            
+
             // Load backup JSON
             val backupJsonString = backupFile.readText()
             val backupJson = JSONObject(backupJsonString)
-            
+
             // Create merged JSON starting with current/default
             val mergedJson = if (currentJson != null) {
                 JSONObject(currentJson.toString())
             } else {
                 JSONObject()
             }
-            
+
             // Merge backup values into merged JSON
             // This preserves user customizations from backup while keeping defaults for missing keys
             val backupKeys = backupJson.keys()
@@ -649,7 +808,7 @@ object FileBackupHelper {
                 val backupValue = backupJson.get(key)
                 mergedJson.put(key, backupValue)
             }
-            
+
             // Write merged JSON to target file
             targetFile.writeText(mergedJson.toString(2))
             Log.d(TAG, "Merged variations.json from backup, preserving default keys")
@@ -659,7 +818,7 @@ object FileBackupHelper {
             backupFile.copyTo(targetFile, overwrite = true)
         }
     }
-    
+
     /**
      * Loads current variations.json from file or assets (default).
      */
@@ -689,29 +848,29 @@ internal object TypingSoundAudioValidator {
         val probe = readProbe(file) ?: return false
         val hasExpectedContainer = when (file.extension.lowercase()) {
             "ogg" -> probe.startsWithAscii("OggS") && (
-                probe.containsAscii("vorbis") ||
-                    probe.containsAscii("OpusHead") ||
-                    probe.containsBytes(
-                        byteArrayOf(
-                            0x7f,
-                            'F'.code.toByte(),
-                            'L'.code.toByte(),
-                            'A'.code.toByte(),
-                            'C'.code.toByte()
-                        )
+                    probe.containsAscii("vorbis") ||
+                            probe.containsAscii("OpusHead") ||
+                            probe.containsBytes(
+                                byteArrayOf(
+                                    0x7f,
+                                    'F'.code.toByte(),
+                                    'L'.code.toByte(),
+                                    'A'.code.toByte(),
+                                    'C'.code.toByte()
+                                )
+                            )
                     )
-                )
             "wav" ->
                 probe.startsWithAscii("RIFF") &&
-                    probe.hasAsciiAt("WAVE", 8) &&
-                    probe.containsAscii("fmt ")
+                        probe.hasAsciiAt("WAVE", 8) &&
+                        probe.containsAscii("fmt ")
             "mp3" -> probe.containsMpegAudioFrame()
             "m4a" -> probe.hasAsciiAt("ftyp", 4) && (
-                probe.containsAscii("M4A ") ||
-                    probe.containsAscii("isom") ||
-                    probe.containsAscii("mp42") ||
-                    probe.containsAscii("mp41")
-                )
+                    probe.containsAscii("M4A ") ||
+                            probe.containsAscii("isom") ||
+                            probe.containsAscii("mp42") ||
+                            probe.containsAscii("mp41")
+                    )
             else -> false
         }
         return hasExpectedContainer && hasDecodableAudioSample(file)
@@ -786,3 +945,4 @@ internal object TypingSoundAudioValidator {
         return false
     }
 }
+

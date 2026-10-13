@@ -3,12 +3,23 @@ package rocks.pkb.plektra.core.suggestions
 import java.util.Locale
 import kotlin.math.pow
 
-class FakeDictionaryRepository : DictionaryRepository {
+class FakeDictionaryRepository(
+    private val baseLocale: Locale = Locale.ITALIAN
+) : DictionaryRepository {
+
     override var isReady: Boolean = false
     override var isLoadStarted: Boolean = false
     
     private val entries = mutableListOf<DictionaryEntry>()
-    private val baseLocale = Locale.ITALIAN
+
+    var autoLearnedAddCount: Int = 0
+        private set
+
+    var storedUserIndexCount: Int = 0
+        private set
+
+    var storedUserRemoveCount: Int = 0
+        private set
 
     fun addTestEntry(word: String, frequency: Int, source: SuggestionSource = SuggestionSource.MAIN) {
         entries.add(DictionaryEntry(word, frequency, source))
@@ -25,6 +36,40 @@ class FakeDictionaryRepository : DictionaryRepository {
 
     override fun addUserEntryQuick(word: String) {
         addTestEntry(word, 1, SuggestionSource.USER)
+    }
+
+    override fun removeAutoLearnedUserEntry(word: String): Boolean {
+        val removed = entries.removeAll {
+            it.word.equals(word, ignoreCase = true) &&
+                    it.source == SuggestionSource.USER
+        }
+        return removed
+    }
+
+    override fun isAutoLearnedUserEntry(word: String): Boolean {
+        return entries.any {
+            it.word.equals(word, ignoreCase = true) &&
+                    it.source == SuggestionSource.USER
+        }
+    }
+
+    override fun addAutoLearnedUserEntryQuick(word: String) {
+        autoLearnedAddCount++
+        addTestEntry(word, 1, SuggestionSource.USER)
+    }
+
+    override fun indexStoredUserEntryQuick(word: String) {
+        storedUserIndexCount++
+        addTestEntry(word, 1, SuggestionSource.USER)
+    }
+
+    override fun removeStoredUserEntryQuick(word: String) {
+        storedUserRemoveCount++
+
+        entries.removeAll { entry ->
+            entry.source == SuggestionSource.USER &&
+                    entry.word.equals(word, ignoreCase = true)
+        }
     }
 
     override fun removeUserEntry(word: String) {
@@ -82,11 +127,12 @@ class FakeDictionaryRepository : DictionaryRepository {
             .take(limit)
     }
 
-    override fun topCommonEntries(limit: Int): List<DictionaryEntry> {
+    override fun topCommonEntries(limit: Int, includeUserEntries: Boolean): List<DictionaryEntry> {
         return entries
             .filter {
                 it.word.length > 1 &&
                     it.source != SuggestionSource.DEFAULT_USER &&
+                    (includeUserEntries || it.source != SuggestionSource.USER) &&
                     it.word.any { ch -> ch.isLetter() }
             }
             .sortedWith(

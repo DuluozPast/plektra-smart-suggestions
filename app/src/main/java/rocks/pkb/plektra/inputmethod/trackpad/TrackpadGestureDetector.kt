@@ -212,9 +212,18 @@ class TrackpadGestureDetector(
         // Calculate velocity (pixels per millisecond)
         val velocity = if (durationMs > 0) deltaY / durationMs else 0.0
 
+        val passesDistance =
+            deltaY > swipeUpThreshold
+
+        val passesDirection =
+            deltaY > 0 && absDeltaX < deltaY / 4
+
+        val passesVelocity =
+            velocity >= minVelocityThreshold
+
         // Require primarily vertical swipe: deltaY must be at least 5x larger than horizontal drift
         // AND velocity must exceed minimum threshold
-        if (deltaY > swipeUpThreshold && absDeltaX < deltaY / 4 && velocity >= minVelocityThreshold) {
+        if (passesDistance && passesDirection && passesVelocity) {
             val third = TrackpadCoordinateMapper.third(startX.toFloat(), trackpadXRange)
 
             Log.d(

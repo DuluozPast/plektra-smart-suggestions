@@ -844,6 +844,8 @@ private fun virtualPreviewCtrlIconRes(mapping: KeyMappingLoader.CtrlMapping): In
             "select_all" -> R.drawable.select_all_24
             "expand_selection_left" -> R.drawable.text_select_move_back_character_filled_24
             "expand_selection_right" -> R.drawable.text_select_move_forward_character_filled_24
+                "expand_selection_up" -> R.drawable.keyboard_arrow_up_24
+                "expand_selection_down" -> R.drawable.keyboard_arrow_down_24
             "move_word_left" -> R.drawable.text_select_move_back_word_24
             "move_word_right" -> R.drawable.text_select_move_forward_word_24
             "expand_selection_word_left" -> R.drawable.text_select_move_back_word_filled_24

@@ -703,7 +703,7 @@ private fun CustomInputStyleItem(
                         color = MaterialTheme.colorScheme.error)
                 }
                 Text(
-                    text = "${style.locale} - ${style.layout}",
+                    text = stringResource(R.string.menu_literal_21e0b4dc82, style.locale, style.layout),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -75,6 +75,7 @@ object SettingsManager {
     private const val KEY_AUTO_CORRECT_ENABLED = "auto_correct_enabled"
     private const val KEY_AUTO_CORRECT_ENABLED_LANGUAGES = "auto_correct_enabled_languages"
     private const val KEY_SUGGESTIONS_ENABLED = "suggestions_enabled"
+    private const val KEY_MULTI_WORD_SUGGESTIONS_ENABLED = "multi_word_suggestions_enabled"
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold"
     private const val KEY_SNIPPETS_ENABLED = "snippets_enabled"
     private const val KEY_SNIPPETS_PREFIX = "snippets_prefix"
@@ -165,6 +166,28 @@ object SettingsManager {
     private const val KEY_TRACKPAD_DELETE_SWIPE_THRESHOLD = "trackpad_delete_swipe_threshold"
     private const val KEY_TRACKPAD_PROVIDER = "trackpad_provider" // shizuku | native_ime
     private const val KEY_TRACKPAD_SHIZUKU_DEVICE = "trackpad_shizuku_device"
+    private const val KEY_TRACKPAD_CALIBRATION_ENABLED =
+        "trackpad_calibration_enabled"
+
+    private const val KEY_TRACKPAD_CALIBRATION_LEFT_CENTER_BOUNDARY =
+        "trackpad_calibration_left_center_boundary"
+
+    private const val KEY_TRACKPAD_CALIBRATION_CENTER_RIGHT_BOUNDARY =
+        "trackpad_calibration_center_right_boundary"
+    private const val KEY_TRACKPAD_CALIBRATION_SESSION_ACTIVE =
+        "trackpad_calibration_session_active"
+
+    private const val KEY_TRACKPAD_CALIBRATION_SESSION_TARGET =
+        "trackpad_calibration_session_target"
+
+    private const val KEY_TRACKPAD_CALIBRATION_SESSION_LEFT_SAMPLES =
+        "trackpad_calibration_session_left_samples"
+
+    private const val KEY_TRACKPAD_CALIBRATION_SESSION_CENTER_SAMPLES =
+        "trackpad_calibration_session_center_samples"
+
+    private const val KEY_TRACKPAD_CALIBRATION_SESSION_RIGHT_SAMPLES =
+        "trackpad_calibration_session_right_samples"
     private const val KEY_SHIFT_BACKSPACE_DELETE = "shift_backspace_delete" // Shift + Backspace performs forward delete
     private const val KEY_ALT_BACKSPACE_DELETE = "alt_backspace_delete" // Alt + Backspace performs forward delete
     private const val KEY_BACKSPACE_AT_START_DELETE = "backspace_at_start_delete" // Backspace at line start performs forward delete
@@ -210,6 +233,8 @@ object SettingsManager {
     private const val KEY_KEYBOARD_THEME_DARK_SOFTWARE = "keyboard_theme_dark_software"
     private const val KEY_KEYBOARD_THEME_LAYOUT_OVERRIDES_HARDWARE = "keyboard_theme_layout_overrides_hardware"
     private const val KEY_KEYBOARD_THEME_LAYOUT_OVERRIDES_SOFTWARE = "keyboard_theme_layout_overrides_software"
+    /** *Optional daily rotation of selected saved themes; fixed assignment remains the default.* */
+    const val KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY = "daily"
     const val KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED = "fixed"
     const val KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM = "follow_system"
     const val KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE_MIN = 1f
@@ -263,20 +288,30 @@ object SettingsManager {
 
     const val ENTER_BEHAVIOR_PRESET_APP_DEFAULT = "app_default"
     const val ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE = "enter_send_shift_newline"
+    /** *Optional preset: Enter inserts a newline; Alt + Enter uses the configured send strategy.* */
+    const val ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND = "enter_newline_alt_send"
     const val ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND = "enter_newline_ctrl_send"
+    const val ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND = "enter_newline_shift_send"
     const val ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ONLY = "enter_newline_only"
     const val ENTER_BEHAVIOR_PRESET_CUSTOM = "custom"
 
     const val ENTER_BEHAVIOR_APP_DEFAULT = "app_default"
     const val ENTER_BEHAVIOR_ENTER_NEWLINE = "enter_newline"
     const val ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE = "enter_send_shift_newline"
+    /** *Optional preset: Enter inserts a newline; Alt + Enter uses the configured send strategy.* */
+    const val ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND = "enter_newline_alt_send"
     const val ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND = "enter_newline_ctrl_send"
+    const val ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND = "enter_newline_shift_send"
+    const val ENTER_SEND_SHIFT_LEFT = "left"
+    const val ENTER_SEND_SHIFT_RIGHT = "right"
 
     const val ENTER_SEND_STRATEGY_AUTO = "auto"
     const val ENTER_SEND_STRATEGY_EDITOR_ACTION = "editor_action"
     const val ENTER_SEND_STRATEGY_CTRL_ENTER = "ctrl_enter"
     const val ENTER_SEND_STRATEGY_PLAIN_ENTER = "plain_enter"
     const val ENTER_ADDITIONAL_SEND_SHORTCUT_NONE = "none"
+    /** *Optional Alt + Enter shortcut; never enabled implicitly.* */
+    const val ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER = "alt_enter"
     const val ENTER_ADDITIONAL_SEND_SHORTCUT_SYM_ENTER = "sym_enter"
     
     // Default slot assignments
@@ -349,6 +384,7 @@ object SettingsManager {
     private const val DEFAULT_LAYOUT_AWARE_CTRL_SHORTCUTS = false
     private const val DEFAULT_AUTO_CORRECT_ENABLED = true
     private const val DEFAULT_SUGGESTIONS_ENABLED = true
+    private const val DEFAULT_MULTI_WORD_SUGGESTIONS_ENABLED = false
     private const val DEFAULT_SNIPPETS_ENABLED = false
     private const val DEFAULT_SNIPPETS_PREFIX = "!"
     private const val DEFAULT_ACCENT_MATCHING_ENABLED = true
@@ -856,7 +892,8 @@ object SettingsManager {
         }
 
     fun isKeyboardThemePreferenceKey(key: String?): Boolean {
-        return key == KEY_KEYBOARD_THEME_HARDWARE || key == KEY_KEYBOARD_THEME_SOFTWARE
+        return key != KEY_KEYBOARD_THEME_DRAFTS && key != KEY_KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE &&
+            key?.startsWith("keyboard_theme_") == true
     }
 
     fun isModifierIndicatorPreferenceKey(key: String?): Boolean {
@@ -933,16 +970,16 @@ object SettingsManager {
             keyboardThemeAssignmentModeKeyForTarget(target),
             fallback
         )
-        return if (stored == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
-            KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM
+        return if (stored == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM || stored == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+            stored!!
         } else {
             KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED
         }
     }
 
     fun setKeyboardThemeAssignmentMode(context: Context, target: KeyboardThemeTarget, mode: String) {
-        val normalized = if (mode == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
-            KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM
+        val normalized = if (mode == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM || mode == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+            mode
         } else {
             KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED
         }
@@ -995,6 +1032,9 @@ object SettingsManager {
         layout: String?
     ): KeyboardThemeSettings {
         findKeyboardThemeLayoutOverride(context, target, locale, layout)?.let { return it.theme }
+        if (getKeyboardThemeAssignmentMode(context, target) == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+            DailyThemeRotation.theme(context, target)?.let { return it }
+        }
         return if (getKeyboardThemeAssignmentMode(context, target) == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
             getKeyboardThemeSystemSlot(context, target, dark = isSystemDarkTheme(context))
         } else {
@@ -3036,6 +3076,28 @@ object SettingsManager {
     fun setSuggestionsEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit()
             .putBoolean(KEY_SUGGESTIONS_ENABLED, enabled)
+            .apply()
+    }
+    /**
+     * Returns whether multi-word phrase suggestions are enabled.
+     *
+     * Disabled by default for new users.
+     */
+    fun getMultiWordSuggestionsEnabled(context: Context): Boolean {
+        return getPreferences(context).getBoolean(
+            KEY_MULTI_WORD_SUGGESTIONS_ENABLED,
+            DEFAULT_MULTI_WORD_SUGGESTIONS_ENABLED
+        )
+    }
+
+    /**
+     * Enables or disables multi-word phrase suggestions.
+     *
+     * Changing this setting does not delete previously learned phrase data.
+     */
+    fun setMultiWordSuggestionsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit()
+            .putBoolean(KEY_MULTI_WORD_SUGGESTIONS_ENABLED, enabled)
             .apply()
     }
 
@@ -5443,6 +5505,11 @@ object SettingsManager {
     fun getMaxTrackpadSwipeThreshold(): Float = MAX_TRACKPAD_SWIPE_THRESHOLD
     fun getDefaultTrackpadSwipeThreshold(): Float = DEFAULT_TRACKPAD_SWIPE_THRESHOLD
 
+    data class TrackpadSuggestionCalibration(
+        val leftCenterBoundary: Float,
+        val centerRightBoundary: Float
+    )
+
     fun getTrackpadSuggestionSwipeThreshold(context: Context): Float {
         val prefs = getPreferences(context)
         return prefs.getFloat(
@@ -5451,8 +5518,234 @@ object SettingsManager {
         ).coerceIn(MIN_TRACKPAD_SWIPE_THRESHOLD, MAX_TRACKPAD_SWIPE_THRESHOLD)
     }
 
-    fun setTrackpadSuggestionSwipeThreshold(context: Context, threshold: Float) {
-        val clamped = threshold.coerceIn(MIN_TRACKPAD_SWIPE_THRESHOLD, MAX_TRACKPAD_SWIPE_THRESHOLD)
+    fun getTrackpadSuggestionCalibration(
+        context: Context
+    ): TrackpadSuggestionCalibration? {
+        val prefs = getPreferences(context)
+
+        if (!prefs.getBoolean(KEY_TRACKPAD_CALIBRATION_ENABLED, false)) {
+            return null
+        }
+
+        val leftCenterBoundary = prefs.getFloat(
+            KEY_TRACKPAD_CALIBRATION_LEFT_CENTER_BOUNDARY,
+            1f / 3f
+        )
+
+        val centerRightBoundary = prefs.getFloat(
+            KEY_TRACKPAD_CALIBRATION_CENTER_RIGHT_BOUNDARY,
+            2f / 3f
+        )
+
+        if (
+            leftCenterBoundary !in 0f..1f ||
+            centerRightBoundary !in 0f..1f ||
+            leftCenterBoundary >= centerRightBoundary
+        ) {
+            return null
+        }
+
+        return TrackpadSuggestionCalibration(
+            leftCenterBoundary = leftCenterBoundary,
+            centerRightBoundary = centerRightBoundary
+        )
+    }
+
+    fun setTrackpadSuggestionCalibration(
+        context: Context,
+        leftCenterBoundary: Float,
+        centerRightBoundary: Float
+    ) {
+        require(leftCenterBoundary in 0f..1f)
+        require(centerRightBoundary in 0f..1f)
+        require(leftCenterBoundary < centerRightBoundary)
+
+        getPreferences(context).edit()
+            .putFloat(
+                KEY_TRACKPAD_CALIBRATION_LEFT_CENTER_BOUNDARY,
+                leftCenterBoundary
+            )
+            .putFloat(
+                KEY_TRACKPAD_CALIBRATION_CENTER_RIGHT_BOUNDARY,
+                centerRightBoundary
+            )
+            .putBoolean(
+                KEY_TRACKPAD_CALIBRATION_ENABLED,
+                true
+            )
+            .commit()
+    }
+
+    fun clearTrackpadSuggestionCalibration(context: Context) {
+        getPreferences(context).edit()
+            .remove(KEY_TRACKPAD_CALIBRATION_LEFT_CENTER_BOUNDARY)
+            .remove(KEY_TRACKPAD_CALIBRATION_CENTER_RIGHT_BOUNDARY)
+            .putBoolean(KEY_TRACKPAD_CALIBRATION_ENABLED, false)
+            .commit()
+    }
+
+    enum class TrackpadCalibrationTarget {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+
+    data class TrackpadCalibrationSession(
+        val target: TrackpadCalibrationTarget,
+        val leftSamples: List<Float>,
+        val centerSamples: List<Float>,
+        val rightSamples: List<Float>
+    ) {
+        val currentSamples: List<Float>
+            get() = when (target) {
+                TrackpadCalibrationTarget.LEFT -> leftSamples
+                TrackpadCalibrationTarget.CENTER -> centerSamples
+                TrackpadCalibrationTarget.RIGHT -> rightSamples
+            }
+    }
+
+    fun startTrackpadCalibrationSession(context: Context) {
+        getPreferences(context).edit()
+            .putBoolean(KEY_TRACKPAD_CALIBRATION_SESSION_ACTIVE, true)
+            .putString(
+                KEY_TRACKPAD_CALIBRATION_SESSION_TARGET,
+                TrackpadCalibrationTarget.LEFT.name
+            )
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_LEFT_SAMPLES)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_CENTER_SAMPLES)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_RIGHT_SAMPLES)
+            .commit()
+    }
+
+    fun getTrackpadCalibrationSession(
+        context: Context
+    ): TrackpadCalibrationSession? {
+        val prefs = getPreferences(context)
+
+        if (!prefs.getBoolean(KEY_TRACKPAD_CALIBRATION_SESSION_ACTIVE, false)) {
+            return null
+        }
+
+        val target = runCatching {
+            TrackpadCalibrationTarget.valueOf(
+                prefs.getString(
+                    KEY_TRACKPAD_CALIBRATION_SESSION_TARGET,
+                    TrackpadCalibrationTarget.LEFT.name
+                ) ?: TrackpadCalibrationTarget.LEFT.name
+            )
+        }.getOrDefault(TrackpadCalibrationTarget.LEFT)
+
+        return TrackpadCalibrationSession(
+            target = target,
+            leftSamples = decodeTrackpadCalibrationSamples(
+                prefs.getString(
+                    KEY_TRACKPAD_CALIBRATION_SESSION_LEFT_SAMPLES,
+                    null
+                )
+            ),
+            centerSamples = decodeTrackpadCalibrationSamples(
+                prefs.getString(
+                    KEY_TRACKPAD_CALIBRATION_SESSION_CENTER_SAMPLES,
+                    null
+                )
+            ),
+            rightSamples = decodeTrackpadCalibrationSamples(
+                prefs.getString(
+                    KEY_TRACKPAD_CALIBRATION_SESSION_RIGHT_SAMPLES,
+                    null
+                )
+            )
+        )
+    }
+
+    fun addTrackpadCalibrationSample(
+        context: Context,
+        normalizedX: Float
+    ): TrackpadCalibrationSession? {
+        if (!normalizedX.isFinite()) return getTrackpadCalibrationSession(context)
+
+        val session = getTrackpadCalibrationSession(context) ?: return null
+        val sample = normalizedX.coerceIn(0f, 1f)
+
+        val updatedSamples = session.currentSamples + sample
+
+        val key = when (session.target) {
+            TrackpadCalibrationTarget.LEFT ->
+                KEY_TRACKPAD_CALIBRATION_SESSION_LEFT_SAMPLES
+
+            TrackpadCalibrationTarget.CENTER ->
+                KEY_TRACKPAD_CALIBRATION_SESSION_CENTER_SAMPLES
+
+            TrackpadCalibrationTarget.RIGHT ->
+                KEY_TRACKPAD_CALIBRATION_SESSION_RIGHT_SAMPLES
+        }
+
+        getPreferences(context).edit()
+            .putString(
+                key,
+                encodeTrackpadCalibrationSamples(updatedSamples)
+            )
+            .commit()
+
+        return getTrackpadCalibrationSession(context)
+    }
+
+    fun setTrackpadCalibrationTarget(
+        context: Context,
+        target: TrackpadCalibrationTarget
+    ) {
+        val prefs = getPreferences(context)
+
+        if (!prefs.getBoolean(KEY_TRACKPAD_CALIBRATION_SESSION_ACTIVE, false)) {
+            return
+        }
+
+        prefs.edit()
+            .putString(
+                KEY_TRACKPAD_CALIBRATION_SESSION_TARGET,
+                target.name
+            )
+            .commit()
+    }
+
+    fun cancelTrackpadCalibrationSession(context: Context) {
+        getPreferences(context).edit()
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_ACTIVE)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_TARGET)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_LEFT_SAMPLES)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_CENTER_SAMPLES)
+            .remove(KEY_TRACKPAD_CALIBRATION_SESSION_RIGHT_SAMPLES)
+            .commit()
+    }
+
+    private fun encodeTrackpadCalibrationSamples(
+        samples: List<Float>
+    ): String {
+        return samples.joinToString(",") { it.toString() }
+    }
+
+    private fun decodeTrackpadCalibrationSamples(
+        encoded: String?
+    ): List<Float> {
+        if (encoded.isNullOrBlank()) {
+            return emptyList()
+        }
+
+        return encoded
+            .split(",")
+            .mapNotNull { it.toFloatOrNull() }
+            .filter { it.isFinite() && it in 0f..1f }
+    }
+
+    fun setTrackpadSuggestionSwipeThreshold(
+        context: Context,
+        threshold: Float
+    ) {
+        val clamped = threshold.coerceIn(
+            MIN_TRACKPAD_SWIPE_THRESHOLD,
+            MAX_TRACKPAD_SWIPE_THRESHOLD
+        )
+
         getPreferences(context).edit()
             .putFloat(KEY_TRACKPAD_SUGGESTION_SWIPE_THRESHOLD, clamped)
             .commit()
@@ -6249,6 +6542,15 @@ object SettingsManager {
         val additionalSendShortcut: String = ENTER_ADDITIONAL_SEND_SHORTCUT_NONE
     )
 
+    fun getAppEnterSendShiftSide(context: Context): String =
+        if (getPreferences(context).getString("app_enter_send_shift_side", ENTER_SEND_SHIFT_LEFT) == ENTER_SEND_SHIFT_RIGHT)
+            ENTER_SEND_SHIFT_RIGHT else ENTER_SEND_SHIFT_LEFT
+
+    fun setAppEnterSendShiftSide(context: Context, side: String) {
+        getPreferences(context).edit().putString("app_enter_send_shift_side",
+            if (side == ENTER_SEND_SHIFT_RIGHT) ENTER_SEND_SHIFT_RIGHT else ENTER_SEND_SHIFT_LEFT).apply()
+    }
+
     fun getAppEnterBehaviorEnabled(context: Context): Boolean {
         return getPreferences(context).getBoolean(KEY_APP_ENTER_BEHAVIOR_ENABLED, true)
     }
@@ -6342,7 +6644,9 @@ object SettingsManager {
         return when (preset) {
             ENTER_BEHAVIOR_PRESET_APP_DEFAULT,
             ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE,
+            ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND,
             ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND,
+            ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND,
             ENTER_BEHAVIOR_PRESET_CUSTOM -> preset
             else -> ENTER_BEHAVIOR_PRESET_APP_DEFAULT
         }
@@ -6353,7 +6657,9 @@ object SettingsManager {
             ENTER_BEHAVIOR_APP_DEFAULT,
             ENTER_BEHAVIOR_ENTER_NEWLINE,
             ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE,
-            ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND -> behavior
+            ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND,
+            ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND,
+            ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND -> behavior
             else -> ENTER_BEHAVIOR_APP_DEFAULT
         }
     }
@@ -6371,6 +6677,7 @@ object SettingsManager {
     private fun normalizeEnterAdditionalSendShortcut(shortcut: String): String {
         return when (shortcut) {
             ENTER_ADDITIONAL_SEND_SHORTCUT_NONE,
+            ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER,
             ENTER_ADDITIONAL_SEND_SHORTCUT_SYM_ENTER -> shortcut
             else -> ENTER_ADDITIONAL_SEND_SHORTCUT_NONE
         }

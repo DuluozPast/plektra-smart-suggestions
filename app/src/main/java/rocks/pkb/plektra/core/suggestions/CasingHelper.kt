@@ -53,6 +53,7 @@ object CasingHelper {
         // rispetta il casing del dizionario così com'è.
         val candidateHasUpper = candidate.any { it.isUpperCase() }
         val candidateLettersUpperCount = candidate.count { it.isUpperCase() }
+
         if (!forceLeadingCapital && candidateHasUpper && candidateLettersUpperCount < 2) {
             return candidate
         }

@@ -690,7 +690,7 @@ private fun MarkdownImage(
     } else {
         // Fallback: show alt text if image can't be loaded
         Text(
-            text = "[Image: $altText]",
+            text = stringResource(R.string.menu_literal_ec9ff5d3b7, altText),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             fontStyle = FontStyle.Italic

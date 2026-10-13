@@ -205,7 +205,7 @@ fun KeyboardLayoutSettingsScreen(
                         )
                     }
                     Text(
-                        text = "${stringResource(R.string.keyboard_layout_title)} - ${getLocaleDisplayNameForTitle(locale)}",
+                        text = stringResource(R.string.menu_literal_3efc91921d, stringResource(R.string.keyboard_layout_title), getLocaleDisplayNameForTitle(locale)),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier

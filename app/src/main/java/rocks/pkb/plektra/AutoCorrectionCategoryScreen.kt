@@ -3,6 +3,7 @@ package rocks.pkb.plektra
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,10 +33,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import rocks.pkb.plektra.R
+import rocks.pkb.plektra.dictionaries.InstalledDictionariesScreen
 import android.content.Intent
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlinx.coroutines.launch
 
 /**
  * Auto-correction category screen.
@@ -56,6 +59,9 @@ fun AutoCorrectionCategoryScreen(
     var suggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getSuggestionsEnabled(context))
     }
+    var multiWordSuggestionsEnabled by remember {
+        mutableStateOf(SettingsManager.getMultiWordSuggestionsEnabled(context))
+    }
     var accentMatchingEnabled by remember {
         mutableStateOf(SettingsManager.getAccentMatchingEnabled(context))
     }
@@ -73,11 +79,28 @@ fun AutoCorrectionCategoryScreen(
     }
     val currentDestination = when (val page = settingsChild(context, "autocorrection")) {
         "Settings" -> AutoCorrectionDestination.Settings
+        "Dictionaries" -> AutoCorrectionDestination.Dictionaries
+        "BaseDictionary" -> AutoCorrectionDestination.BaseDictionary
         "UserDictionary" -> AutoCorrectionDestination.UserDictionary
-        else -> if (page?.startsWith("Edit:") == true) AutoCorrectionDestination.Edit(page.removePrefix("Edit:")) else AutoCorrectionDestination.Main
+        else -> if (page?.startsWith("Edit:") == true) {
+            AutoCorrectionDestination.Edit(page.removePrefix("Edit:"))
+        } else {
+            AutoCorrectionDestination.Main
+        }
     }
     fun navigateTo(destination: AutoCorrectionDestination) {
-        openSettingsChild(context, "autocorrection", when (destination) { AutoCorrectionDestination.Main -> "Main"; AutoCorrectionDestination.Settings -> "Settings"; AutoCorrectionDestination.UserDictionary -> "UserDictionary"; is AutoCorrectionDestination.Edit -> "Edit:${destination.languageCode}" })
+        openSettingsChild(
+            context,
+            "autocorrection",
+            when (destination) {
+                AutoCorrectionDestination.Main -> "Main"
+                AutoCorrectionDestination.Settings -> "Settings"
+                AutoCorrectionDestination.Dictionaries -> "Dictionaries"
+                AutoCorrectionDestination.BaseDictionary -> "BaseDictionary"
+                AutoCorrectionDestination.UserDictionary -> "UserDictionary"
+                is AutoCorrectionDestination.Edit -> "Edit:${destination.languageCode}"
+            }
+        )
     }
     fun navigateBack() { context.settingsActivity().finish() }
 
@@ -316,7 +339,7 @@ fun AutoCorrectionCategoryScreen(
                                 .fillMaxWidth()
                                 .height(80.dp)
                                 .settingRow(SettingLinkIds.AUTO_CORRECTION_USER_DICTIONARY) {
-                                    navigateTo(AutoCorrectionDestination.UserDictionary)
+                                    navigateTo(AutoCorrectionDestination.Dictionaries)
                                 }
                         ) {
                                 Row(
@@ -334,13 +357,13 @@ fun AutoCorrectionCategoryScreen(
                                     )
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-	                                        text = stringResource(R.string.auto_correct_manage_user_dict_title),
+                                            text = stringResource(R.string.dictionaries_title),
 	                                        style = MaterialTheme.typography.titleMedium,
 	                                        fontWeight = FontWeight.Medium,
 	                                        maxLines = 1
 	                                    )
 	                                    Text(
-	                                        text = stringResource(R.string.auto_correct_manage_user_dict_description),
+                                            text = stringResource(R.string.dictionaries_description),
 	                                        style = MaterialTheme.typography.bodySmall,
 	                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
 	                                        maxLines = 2
@@ -413,6 +436,49 @@ fun AutoCorrectionCategoryScreen(
                                 })
                             }
                         ) { Text(stringResource(R.string.status_bar_buttons_title)) }
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.TextFields,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.multi_word_suggestions),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.multi_word_suggestions_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2
+                                    )
+                                }
+                                Switch(
+                                    checked = multiWordSuggestionsEnabled,
+                                    onCheckedChange = { enabled ->
+                                        multiWordSuggestionsEnabled = enabled
+                                        SettingsManager.setMultiWordSuggestionsEnabled(context, enabled)
+                                    },
+                                    enabled = experimentalSuggestionsEnabled && suggestionsEnabled
+                                )
+                            }
+                        }
 
                         Surface(
                             modifier = Modifier
@@ -562,22 +628,193 @@ fun AutoCorrectionCategoryScreen(
                 )
             }
 
+            AutoCorrectionDestination.Dictionaries -> {
+                // Central dictionary management screen.
+                // Keeps base dictionary management separate from personal user entries.
+                DictionariesScreen(
+                    modifier = modifier,
+                    onBack = { navigateTo(AutoCorrectionDestination.Main) },
+                    onBaseDictionary = {
+                        navigateTo(AutoCorrectionDestination.BaseDictionary)
+                    },
+                    onPersonalDictionary = {
+                        navigateTo(AutoCorrectionDestination.UserDictionary)
+                    }
+                )
+            }
+
+            AutoCorrectionDestination.BaseDictionary -> {
+                InstalledDictionariesScreen(
+                    modifier = modifier,
+                    onBack = {
+                        navigateTo(AutoCorrectionDestination.Dictionaries)
+                    }
+                )
+            }
             AutoCorrectionDestination.UserDictionary -> {
                 UserDictionaryScreen(
                     modifier = modifier,
-                    onBack = { navigateBack() }
+                    onBack = {
+                        navigateTo(AutoCorrectionDestination.Dictionaries)
+                    }
                 )
             }
         }
-
 }
+
 
 private sealed class AutoCorrectionDestination {
     object Main : AutoCorrectionDestination()
     object Settings : AutoCorrectionDestination()
+
+    // Entry point for base and personal dictionary management.
+    object Dictionaries : AutoCorrectionDestination()
+
+    // Reuses Pastiera's existing installed/downloadable dictionary manager.
+    object BaseDictionary : AutoCorrectionDestination()
+
     data class Edit(val languageCode: String) : AutoCorrectionDestination()
     object UserDictionary : AutoCorrectionDestination()
 }
+    /**
+     * Central screen for dictionary management.
+     *
+     * Separates downloadable base dictionaries from user-managed personal entries
+     * so both dictionary sources can evolve independently.
+     */
+    @Composable
+    private fun DictionariesScreen(
+        modifier: Modifier = Modifier,
+        onBack: () -> Unit,
+        onBaseDictionary: () -> Unit,
+        onPersonalDictionary: () -> Unit
+    ) {
+        Scaffold(
+            topBar = {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars),
+                    tonalElevation = 1.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(
+                                    R.string.settings_back_content_description
+                                )
+                            )
+                        }
+
+                        Text(
+                            text = stringResource(R.string.dictionaries_title),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+            ) {
+                // Base dictionaries are managed separately because they can be
+                // replaced by larger downloadable dictionary packages.
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .clickable(onClick = onBaseDictionary)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Language,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.base_dictionary_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = stringResource(R.string.base_dictionary_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Personal dictionary keeps words explicitly added or learned by the user.
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .clickable(onClick = onPersonalDictionary)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(
+                                    R.string.auto_correct_manage_user_dict_title
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
 
 private enum class UserDictSource { DEFAULT, USER }
 
@@ -597,6 +834,8 @@ private fun UserDictionaryScreen(
     var dialogWord by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var searchActive by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     val filteredEntries = remember(entries, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -607,6 +846,7 @@ private fun UserDictionaryScreen(
         }
     }
     val hasEntries = entries.isNotEmpty()
+    val personalWordCount = entries.count { it.source == UserDictSource.USER }
 
     fun refreshEntries() {
         // Ensure cache is populated from persistent storage before snapshots/removals.
@@ -672,19 +912,30 @@ private fun UserDictionaryScreen(
                                 contentDescription = stringResource(R.string.settings_back_content_description)
                             )
                         }
-                        Text(
-                            text = stringResource(R.string.user_dict_title),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.SemiBold,
+                        Column(
                             modifier = Modifier
                                 .padding(start = 8.dp)
                                 .weight(1f)
-                        )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.user_dict_title),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(R.string.menu_literal_347367cd45, personalWordCount),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         IconButton(
                             onClick = {
                                 if (searchActive) {
                                     searchActive = false
                                     searchQuery = ""
+                                    coroutineScope.launch {
+                                        listState.scrollToItem(0)
+                                    }
                                 } else {
                                     searchActive = true
                                 }
@@ -739,6 +990,7 @@ private fun UserDictionaryScreen(
         }
     ) { paddingValues ->
         LazyColumn(
+            state = listState,
             modifier = modifier
                 .fillMaxWidth()
                 .padding(paddingValues)
@@ -757,7 +1009,10 @@ private fun UserDictionaryScreen(
                     )
                 }
             } else {
-                items(filteredEntries) { entry ->
+                items(
+                    items = filteredEntries,
+                    key = { entry -> "${entry.source}:${entry.word}" }
+                ) { entry ->
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         tonalElevation = 1.dp
@@ -848,6 +1103,7 @@ private fun UserDictWordDialog(
         text = {
             OutlinedTextField(
                 value = word,
+                keyboardOptions = LiteralEntryKeyboardOptions,
                 onValueChange = onWordChange,
                 label = { Text(title) },
                 singleLine = true,

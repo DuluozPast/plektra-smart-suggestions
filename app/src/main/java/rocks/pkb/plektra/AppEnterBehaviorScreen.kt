@@ -111,12 +111,12 @@ fun AppEnterBehaviorScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState())
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars),
+                .fillMaxWidth(),
             tonalElevation = 1.dp
         ) {
             Row(
@@ -188,6 +188,11 @@ fun AppEnterBehaviorScreen(
                 SettingsManager.setAppEnterBehaviorOverrides(context, updated)
             }
         )
+
+        if (preset == SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND ||
+            overrides.any { it.behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND }) {
+            EnterSendShiftSideSelector()
+        }
 
         EnterAdditionalSendShortcutSelector(
             shortcut = selectedAdditionalSendShortcut,
@@ -786,8 +791,12 @@ private fun getEnterPresetLabel(preset: String): String {
     return when (preset) {
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE ->
             stringResource(R.string.app_enter_behaviour_preset_send_shift_newline)
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND ->
+            stringResource(R.string.app_enter_behaviour_newline_alt_send)
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND ->
             stringResource(R.string.app_enter_behaviour_preset_newline_ctrl_send)
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND ->
+            stringResource(R.string.app_enter_behaviour_newline_shift_send)
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ONLY ->
             stringResource(R.string.app_enter_behaviour_preset_newline_only)
         SettingsManager.ENTER_BEHAVIOR_PRESET_CUSTOM ->
@@ -803,25 +812,33 @@ private fun getEnterBehaviorLabel(behavior: String): String {
             stringResource(R.string.app_enter_behaviour_option_enter_newline)
         SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
             stringResource(R.string.app_enter_behaviour_option_send_shift_newline)
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND ->
+            stringResource(R.string.app_enter_behaviour_newline_shift_send)
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND ->
+            stringResource(R.string.app_enter_behaviour_newline_alt_send)
         SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
             stringResource(R.string.app_enter_behaviour_option_newline_ctrl_send)
         else -> stringResource(R.string.app_enter_behaviour_option_app_default)
     }
 }
 
-private fun enterPresetOptions(): List<String> {
+internal fun enterPresetOptions(): List<String> {
     return listOf(
         SettingsManager.ENTER_BEHAVIOR_PRESET_APP_DEFAULT,
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE,
-        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND,
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND,
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND
     )
 }
 
-private fun enterBehaviorOptions(): List<String> {
+internal fun enterBehaviorOptions(): List<String> {
     return listOf(
         SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT,
         SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE,
-        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND,
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND,
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND
     )
 }
 
@@ -833,7 +850,7 @@ private fun KnownEnterBehaviorStatus(packageName: String, behavior: String) {
             behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
             stringResource(R.string.app_enter_behaviour_strategy_none_label)
         packageName == DISCORD_PACKAGE_NAME &&
-            behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
+            behavior in listOf(SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND, SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND) ->
             stringResource(R.string.app_enter_behaviour_strategy_plain_enter_label)
         behavior == SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT ->
             stringResource(R.string.app_enter_behaviour_strategy_none_label)
@@ -847,7 +864,7 @@ private fun KnownEnterBehaviorStatus(packageName: String, behavior: String) {
             behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
             stringResource(R.string.app_enter_behaviour_status_native_result)
         packageName == DISCORD_PACKAGE_NAME &&
-            behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
+            behavior in listOf(SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND, SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND) ->
             stringResource(R.string.app_enter_behaviour_status_strategy_result, behaviorText)
         behavior == SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT ->
             stringResource(R.string.app_enter_behaviour_status_native_result)
@@ -859,16 +876,18 @@ private fun KnownEnterBehaviorStatus(packageName: String, behavior: String) {
             stringResource(R.string.app_enter_behaviour_status_not_active, behaviorText)
     }
     val strategyText = when {
+        behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND ->
+            stringResource(R.string.app_enter_behaviour_alt_send_description)
         packageName == DISCORD_PACKAGE_NAME &&
             behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
             stringResource(R.string.app_enter_behaviour_strategy_discord_app_default_detail)
         packageName == DISCORD_PACKAGE_NAME &&
-            behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
+            behavior in listOf(SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND, SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND) ->
             stringResource(R.string.app_enter_behaviour_strategy_discord_partial_detail)
         behavior == SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT ->
             stringResource(R.string.app_enter_behaviour_strategy_app_default_detail)
         packageName in testedEnterBehaviorPackages &&
-            behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
+            behavior in listOf(SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND, SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND) ->
             stringResource(R.string.app_enter_behaviour_strategy_whatsapp_newline_ctrl_send)
         packageName in testedEnterBehaviorPackages &&
             behavior == SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
@@ -941,6 +960,8 @@ private fun explicitEnterSendStrategy(packageName: String, strategy: String): St
 @Composable
 private fun getEnterAdditionalSendShortcutLabel(shortcut: String): String {
     return when (shortcut) {
+        SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER ->
+            stringResource(R.string.app_enter_behaviour_additional_send_shortcut_alt_enter)
         SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_SYM_ENTER ->
             stringResource(R.string.app_enter_behaviour_additional_send_shortcut_sym_enter)
         ENTER_ADDITIONAL_SEND_SHORTCUT_CUSTOM ->
@@ -952,6 +973,7 @@ private fun getEnterAdditionalSendShortcutLabel(shortcut: String): String {
 private fun enterAdditionalSendShortcutOptions(): List<String> {
     return listOf(
         SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_NONE,
+        SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_ALT_ENTER,
         SettingsManager.ENTER_ADDITIONAL_SEND_SHORTCUT_SYM_ENTER
     )
 }
@@ -1049,8 +1071,12 @@ private fun enterBehaviorForPreset(preset: String): String? {
     return when (preset) {
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE ->
             SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND ->
+            SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND ->
             SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND
+        SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND ->
+            SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND
         SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ONLY ->
             SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE
         SettingsManager.ENTER_BEHAVIOR_PRESET_APP_DEFAULT ->
@@ -1074,8 +1100,12 @@ internal fun inferKnownAppEnterBehaviorPreset(
             SettingsManager.ENTER_BEHAVIOR_PRESET_APP_DEFAULT
         SettingsManager.ENTER_BEHAVIOR_ENTER_SEND_SHIFT_NEWLINE ->
             SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_ALT_SEND ->
+            SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_ALT_SEND
         SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND ->
             SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_CTRL_SEND
+        SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_SHIFT_SEND ->
+            SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_NEWLINE_SHIFT_SEND
         else -> SettingsManager.ENTER_BEHAVIOR_PRESET_CUSTOM
     }
 }
@@ -1148,4 +1178,31 @@ private fun getApplicationIcon(context: Context, packageName: String): Drawable?
     return runCatching {
         context.packageManager.getApplicationIcon(packageName)
     }.getOrNull()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EnterSendShiftSideSelector() {
+    val context = LocalContext.current
+    var side by remember { mutableStateOf(SettingsManager.getAppEnterSendShiftSide(context)) }
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        OutlinedTextField(value = stringResource(if (side == SettingsManager.ENTER_SEND_SHIFT_RIGHT)
+            R.string.app_enter_behaviour_shift_right else R.string.app_enter_behaviour_shift_left),
+            onValueChange = {}, readOnly = true,
+            label = { Text(stringResource(R.string.app_enter_behaviour_send_shift_side)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable))
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf(SettingsManager.ENTER_SEND_SHIFT_LEFT, SettingsManager.ENTER_SEND_SHIFT_RIGHT).forEach { value ->
+                DropdownMenuItem(text = { Text(stringResource(if (value == SettingsManager.ENTER_SEND_SHIFT_RIGHT)
+                    R.string.app_enter_behaviour_shift_right else R.string.app_enter_behaviour_shift_left)) }, onClick = {
+                    side = value
+                    SettingsManager.setAppEnterSendShiftSide(context, value)
+                    expanded = false
+                })
+            }
+        }
+    }
 }

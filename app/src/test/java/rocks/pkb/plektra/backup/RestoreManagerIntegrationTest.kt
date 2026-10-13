@@ -36,7 +36,7 @@ class RestoreManagerIntegrationTest {
 
     @Before
     fun setUp() {
-        context = RuntimeEnvironment.getApplication()
+        context = rocks.pkb.plektra.test.ShortPathContext.wrap(RuntimeEnvironment.getApplication())
         userDefaultsFile = File(context.filesDir, "user_defaults.json")
         originalUserDefaultsExisted = userDefaultsFile.exists()
         originalUserDefaultsContent = userDefaultsFile.takeIf { it.exists() }?.readText()

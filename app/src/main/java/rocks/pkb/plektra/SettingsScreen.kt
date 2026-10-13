@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Engineering
@@ -68,6 +69,7 @@ enum class SettingsDestination {
     TextInput,
     SpeechRecognition,
     Accessibility,
+    TypingStatistics,
     AutoCorrection,
     Customization,
     NavMode,
@@ -212,6 +214,7 @@ fun SettingsScreen(
                     onTextInputClick = { navigateTo(SettingsDestination.TextInput) },
                     onSpeechRecognitionClick = { navigateTo(SettingsDestination.SpeechRecognition) },
                     onAccessibilityClick = { navigateTo(SettingsDestination.Accessibility) },
+                    onTypingStatisticsClick = { navigateTo(SettingsDestination.TypingStatistics) },
                     onAutoCorrectionClick = { navigateTo(SettingsDestination.AutoCorrection) },
                     onCustomizationClick = { openCustomization(null) },
                     onDisplayGeometryClick = { openCustomization("display_geometry") },
@@ -275,6 +278,9 @@ fun SettingsScreen(
                     modifier = modifier,
                     onBack = { navigateBack() }
                 )
+            }
+            SettingsDestination.TypingStatistics -> {
+                TypingStatisticsScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.AutoCorrection -> {
                 AutoCorrectionCategoryScreen(
@@ -366,6 +372,7 @@ private fun SettingsMainScreen(
     onTextInputClick: () -> Unit,
     onSpeechRecognitionClick: () -> Unit,
     onAccessibilityClick: () -> Unit,
+    onTypingStatisticsClick: () -> Unit,
     onAutoCorrectionClick: () -> Unit,
     onCustomizationClick: () -> Unit,
     onDisplayGeometryClick: () -> Unit,
@@ -576,6 +583,12 @@ private fun SettingsMainScreen(
                 title = stringResource(R.string.settings_category_accessibility),
                 linkId = SettingLinkIds.MAIN_ACCESSIBILITY,
                 onClick = onAccessibilityClick
+            )
+            SettingsCategoryRow(
+                icon = Icons.Filled.BarChart,
+                title = stringResource(R.string.typing_statistics_title),
+                linkId = SettingLinkIds.MAIN_TYPING_STATISTICS,
+                onClick = onTypingStatisticsClick
             )
 
             SettingsGroupDivider(stringResource(R.string.settings_group_plektra))

@@ -31,7 +31,8 @@ class PastieraBackupImportTest {
     private val prefs get() = SettingsManager.getPreferences(context)
 
     @Before fun setUp() {
-        val base = RuntimeEnvironment.getApplication() as Context
+        org.robolectric.shadows.ShadowLog.stream = System.out
+        val base = rocks.pkb.plektra.test.ShortPathContext.wrap(RuntimeEnvironment.getApplication())
         root = File.createTempFile("pastiera_import_", "", base.cacheDir).apply { delete(); mkdirs() }
         context = object : ContextWrapper(base) {
             override fun getFilesDir() = File(root, "files").apply { mkdirs() }
@@ -85,7 +86,8 @@ class PastieraBackupImportTest {
             assertEquals(listOf("language"), SettingsManager.getSlimStatusBarSlotsLeft(context))
             assertEquals(listOf("hamburger"), SettingsManager.getSlimStatusBarSlotsRight(context))
             assertEquals("[\"PastieraWord\"]", prefs.getString("user_dictionary_entries", null))
-            assertTrue(result.postActionsTriggered.containsAll(RestoreManager.PostRestoreAction.entries))
+            assertTrue(result.postActionsTriggered.containsAll(listOf(RestoreManager.PostRestoreAction.REFRESH_USER_DICTIONARY,
+                RestoreManager.PostRestoreAction.REGISTER_CUSTOM_INPUT_STYLES)))
             assertTrue(result.preferencesSummary.appliedKeys.all { it.startsWith("plektra_prefs:") })
             assertFalse(prefs.getBoolean("slim_mode_active", true))
             assertEquals("force_hardware", prefs.getString("software_keyboard_mode_runtime_override", null))
@@ -205,7 +207,8 @@ class PastieraBackupImportTest {
         assertEquals(before, prefs.all)
         assertEquals("{\"existing\":true}", existing.readText())
         assertFalse(File(context.filesDir, "ctrl_key_mappings.json").exists())
-        assertTrue(broadcasts.isEmpty())
+        assertEquals(1, broadcasts.count { it.action == AppBroadcastActions.LEARNING_RESTORED })
+        assertTrue(broadcasts.all { it.action == AppBroadcastActions.LEARNING_RESTORED })
     }
 
     @Test fun unrelatedArchiveIsRejectedWithoutCreatingPreferenceFiles() = runBlocking {

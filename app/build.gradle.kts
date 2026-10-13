@@ -433,6 +433,15 @@ listOf("stable", "nightly", "nightlyNoAccessibility", "playStable", "playNightly
     }
 }
 
+androidComponents.onVariants(androidComponents.selector().withBuildType("debug")) { variant ->
+    if (variant.name == "stableDebug") {
+        // *Keep the fusion test app separate from Pastiera Multimots Test and official Plektra.*
+        variant.applicationId.set("rocks.pkb.plektra.custom.integrationtest")
+        variant.manifestPlaceholders.put("appLabel", "Plektra Integration Test")
+        variant.manifestPlaceholders.put("imeLabel", "Plektra Integration Test")
+    }
+}
+
 androidComponents.onVariants(androidComponents.selector().withBuildType("release")) { variant ->
     val title = variant.name.replaceFirstChar { it.uppercase() }
     variant.sources.assets?.addGeneratedSourceDirectory(
@@ -474,6 +483,7 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     testImplementation(libs.junit)
+    testImplementation("androidx.test:core:1.6.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
     testImplementation(libs.robolectric)
     testImplementation("org.mockito:mockito-core:5.11.0")
@@ -485,3 +495,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+

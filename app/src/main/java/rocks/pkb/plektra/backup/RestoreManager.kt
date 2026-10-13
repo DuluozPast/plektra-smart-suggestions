@@ -22,7 +22,8 @@ object RestoreManager {
 
     enum class PostRestoreAction {
         REFRESH_USER_DICTIONARY,
-        REGISTER_CUSTOM_INPUT_STYLES
+        REGISTER_CUSTOM_INPUT_STYLES,
+        REFRESH_CORRECTION_USAGE
     }
 
     enum class ImportMode {
@@ -81,7 +82,7 @@ object RestoreManager {
         context: Context,
         sourceUri: Uri,
         importMode: ImportMode = ImportMode.UNCHANGED
-    ): RestoreResult = withContext(Dispatchers.IO) {
+    ): RestoreResult = LearningOperationGate.withExclusiveOperation { withContext(Dispatchers.IO) {
         val workingDir = File(context.cacheDir, "restore_${System.currentTimeMillis()}").apply { mkdirs() }
         val extractedDir = File(workingDir, "unzipped").apply { mkdirs() }
         var retainRecoveryData = false
@@ -94,9 +95,15 @@ object RestoreManager {
             val (metadata, prefsData) = readAndValidateBackup(extractedDir)
             val filesDir = File(extractedDir, "files")
 
+            val learningDir = File(extractedDir, "learning")
+            val correctionsDir = File(extractedDir, "corrections")
+            LearningOperationGate.awaitPendingLearning()
+            rocks.pkb.plektra.statistics.TypingStatisticsStore.get(context).flush()
             val snapshot = RestoreSnapshot(context, File(workingDir, "rollback"))
             try {
                 val fileSummary = FileBackupHelper.restoreFiles(context, filesDir)
+                val correctionsRestored = CorrectionUsageBackupHelper.restoreCorrections(context, correctionsDir)
+                if (learningDir.exists()) LearningBackupHelper.importBackup(context, learningDir)
                 val excludedKeys = BackupPreferencePolicy.runtimeDerivedKeys +
                     if (importMode == ImportMode.ADAPT_TO_CURRENT_DEVICE) {
                         BackupPreferencePolicy.targetDeviceDerivedKeys
@@ -114,7 +121,9 @@ object RestoreManager {
                         )
                     }
                 )
-                val postRestoreActions = collectTriggeredPostRestoreActions(prefsSummary, fileSummary)
+                val postRestoreActions = collectTriggeredPostRestoreActions(prefsSummary, fileSummary).toMutableSet()
+                if (correctionsRestored) postRestoreActions.add(PostRestoreAction.REFRESH_CORRECTION_USAGE)
+                if (learningDir.exists()) context.sendBroadcast(Intent(AppBroadcastActions.LEARNING_RESTORED).setPackage(context.packageName))
                 notifyPostRestoreEffects(context, postRestoreActions)
                 if (fileSummary.restoredFiles.any { it.startsWith("dictionaries_serialized/") }) {
                     rocks.pkb.plektra.dictionaries.DictionaryRepositoryManager.notifyDictionariesChanged(context)
@@ -146,12 +155,16 @@ object RestoreManager {
         }
     }
 
+    }
+
     private fun readAndValidateBackup(
         extractedDir: File
     ): Pair<BackupMetadata?, Map<String, Map<String, PreferenceValue>>> {
         val metadataFile = File(extractedDir, "backup_meta.json")
         val metadata = BackupMetadata.fromFile(metadataFile)
         require(!metadataFile.exists() || metadata != null) { "Invalid backup metadata" }
+        val learningDir = File(extractedDir, "learning")
+        if (learningDir.exists()) LearningBackupHelper.validateBackup(learningDir)
         val prefs = PreferencesBackupHelper.readPreferencesFromBackup(File(extractedDir, "prefs"))
         val fileCount = FileBackupHelper.validateRestoreFiles(File(extractedDir, "files"))
         require(prefs.values.any { it.isNotEmpty() } || fileCount > 0) {
@@ -168,6 +181,8 @@ object RestoreManager {
 
         init {
             directory.mkdirs()
+            LearningBackupHelper.export(context, File(directory, "learning"))
+            CorrectionUsageBackupHelper.dumpCorrections(context, File(directory, "corrections"))
             val entries = org.json.JSONObject()
             preferenceFiles.forEach { (name, preferences) ->
                 val values = org.json.JSONObject()
@@ -182,6 +197,9 @@ object RestoreManager {
         }
 
         fun rollback() {
+            LearningBackupHelper.importBackup(context, File(directory, "learning"))
+            CorrectionUsageBackupHelper.restoreCorrections(context, File(directory, "corrections"))
+            context.sendBroadcast(Intent(AppBroadcastActions.LEARNING_RESTORED).setPackage(context.packageName))
             roots.forEach { name ->
                 val target = File(context.filesDir, name)
                 check(!target.exists() || target.deleteRecursively()) { "Unable to roll back $name" }
@@ -277,6 +295,8 @@ object RestoreManager {
                     context.sendBroadcast(intent)
                     Log.i(TAG, "Sent user dictionary refresh broadcast after restore")
                 }
+                PostRestoreAction.REFRESH_CORRECTION_USAGE -> context.sendBroadcast(
+                    Intent(AppBroadcastActions.CORRECTION_USAGE_UPDATED).setPackage(context.packageName))
                 PostRestoreAction.REGISTER_CUSTOM_INPUT_STYLES -> {
                     AdditionalSubtypeUtils.registerAdditionalSubtypes(context.applicationContext)
                     Log.i(TAG, "Registered custom input styles after restore")

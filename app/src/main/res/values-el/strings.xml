@@ -1,6 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Plektra</string>
-    <string name="input_method_name">Plektra</string>
+    <string name="input_method_name">Παστιέρα</string>
     <string name="input_method_name_en">English</string>
     <string name="input_method_name_it">Italiano</string>
     <string name="input_method_name_fr">Français</string>
@@ -13,43 +14,29 @@
     <string name="input_method_name_ru">Русский</string>
     <string name="input_method_name_sr">Српски</string>
     <string name="input_method_name_uk">Українська</string>
-
-    <!-- Settings Screen -->
     <string name="settings_title">Ρυθμίσεις</string>
     <string name="back">Πίσω</string>
     <string name="settings_back_content_description">Πίσω</string>
-
-    <!-- Long Press Section -->
     <string name="long_press_title">Παρατεταμένο πάτημα</string>
     <string name="keyboard_timing_long_press_value">%1$dms</string>
     <string name="long_press_duration">Διάρκεια παρατεταμένου πατήματος: %1$dms</string>
     <string name="long_press_description">Χρόνος αναμονής πριν αναγνωριστεί ένα παρατεταμένο πάτημα. Μικρότερη τιμή κάνει το παρατεταμένο πάτημα πιο άμεσο, ενώ μεγαλύτερη τιμή απαιτεί πιο παρατεταμένο πάτημα.</string>
     <string name="setting_applied_immediately">Η ρύθμιση εφαρμόστηκε αμέσως</string>
-
-    <!-- Text Input Sections -->
     <string name="text_input_section_capitalization">Κεφαλαία</string>
     <string name="text_input_section_spacing_punctuation">Διαστήματα &amp; στίξη</string>
     <string name="text_input_section_typography">Τυπογραφία</string>
     <string name="text_input_section_keyboard_behavior">Συμπεριφορά πληκτρολογίου</string>
     <string name="text_input_section_delete">Διαγραφή</string>
-
-    <!-- Auto Capitalize Section -->
     <string name="auto_capitalize_title">Κεφαλαίο στην αρχή κειμένου</string>
     <string name="auto_capitalize_description">Κάνει κεφαλαίο το πρώτο γράμμα όταν ξεκινάτε σε κενό πεδίο κειμένου.</string>
     <string name="auto_capitalize_respect_manual_shift_off_title">Σεβασμός χειροκίνητου Shift off</string>
     <string name="auto_capitalize_respect_manual_shift_off_description">Διατηρεί απενεργοποιημένο το αυτόματο Shift όσο παραμένετε στο ίδιο πεδίο κειμένου.</string>
     <string name="auto_capitalize_restricted_fields_title">Shift σε όλα τα πεδία κειμένου</string>
     <string name="auto_capitalize_restricted_fields_description">Ξεκινά επίσης γραμμές διευθύνσεων, email και πεδία αναζήτησης με Shift. Τα πεδία κωδικού πρόσβασης δεν αλλάζουν.</string>
-
-    <!-- Auto Capitalize After Period Section -->
     <string name="auto_capitalize_after_period_title">Κεφαλαίο μετά το τέλος πρότασης</string>
     <string name="auto_capitalize_after_period_description">Κάνει κεφαλαίο το επόμενο γράμμα μετά από τελεία και διάστημα.</string>
-
-    <!-- Double Space to Period Section -->
     <string name="double_space_to_period_title">Διπλό Space εισάγει τελεία</string>
     <string name="double_space_to_period_description">Πατήστε Space δύο φορές για εισαγωγή τελείας και διαστήματος.</string>
-
-    <!-- Smart punctuation Section -->
     <string name="spaced_hyphen_to_en_dash_title">Ενωτικό σε παύλα</string>
     <string name="spaced_hyphen_to_en_dash_description">Μετατρέπει το “λέξη - λέξη” σε παύλα.</string>
     <string name="mid_word_quote_to_apostrophe_title">Εισαγωγικά μέσα σε λέξεις</string>
@@ -63,30 +50,20 @@
     <string name="auto_space_punctuation_title">Διαστήματα στίξης</string>
     <string name="auto_space_punctuation_selected">Επιλεγμένα:</string>
     <string name="auto_space_punctuation_none_selected">κανένα</string>
-    <string name="auto_space_punctuation_dialog_instruction">Επιλέξτε αν το Plektra αφαιρεί το δικό του αυτόματο διάστημα πριν από κάθε χαρακτήρα και εισάγει αναβλημένο διάστημα πριν από το επόμενο κείμενο.</string>
-    <string name="auto_space_punctuation_character_column">Χαρακτήρας</string>
     <string name="auto_space_punctuation_before_column">Αφαίρεση πριν</string>
-    <string name="auto_space_punctuation_after_column">Πριν το επόμενο κείμενο</string>
     <string name="auto_space_punctuation_help_action">Εξήγηση διαστημάτων στίξης</string>
     <string name="auto_space_punctuation_help_title">Πώς λειτουργούν τα διαστήματα στίξης</string>
-    <string name="auto_space_punctuation_help_text">Το “Αφαίρεση πριν” αφαιρεί μόνο διάστημα που εισήγαγε αυτόματα το Plektra, όχι κάποιο που πληκτρολογήσατε χειροκίνητα.\n\nΤο “Πριν το επόμενο κείμενο” αναβάλλει το διάστημα μέχρι να πληκτρολογηθεί περισσότερο κείμενο. Έτσι το Enter ή η Αποστολή δεν αφήνει τελικό διάστημα.</string>
     <string name="auto_space_punctuation_choose">Επιλεγμένα:</string>
     <string name="auto_space_punctuation_choose_off">Ανενεργό</string>
     <string name="auto_space_punctuation_reset">Επαναφορά</string>
     <string name="smart_quotes_title">Στυλ εισαγωγικών</string>
-
-    <!-- Clear Alt on Space Section -->
     <string name="clear_alt_on_space_title">Απελευθέρωση Alt με Space</string>
     <string name="clear_alt_on_space_description">Τερματίζει Alt ή Alt-Lock όταν πατηθεί Space.</string>
-
-    <!-- Swipe to Delete Section -->
     <string name="swipe_to_delete_title">Ενεργοποίηση σάρωσης για διαγραφή</string>
     <string name="swipe_to_delete_description">Διαγράφει την προηγούμενη λέξη με σάρωση προς τα αριστερά σε υποστηριζόμενη είσοδο trackpad.</string>
     <string name="swipe_to_delete_provider_title">Πάροχος σάρωσης για διαγραφή</string>
     <string name="swipe_to_delete_provider_titan2_keycode">Παράκαμψη keycode για Titan 2</string>
     <string name="swipe_to_delete_provider_native_ime">Εγγενή συμβάντα IME</string>
-
-    <!-- Delete Alternatives Section -->
     <string name="delete_alternatives_title">Διαγραφή</string>
     <string name="delete_alternatives_description">Εναλλακτικοί τρόποι διαγραφής χαρακτήρων δεξιά από τον δρομέα</string>
     <string name="delete_alternatives_nav_mode_title">Άνοιγμα ρυθμίσεων Nav Mode</string>
@@ -95,20 +72,12 @@
     <string name="backspace_at_start_delete_title">Backspace στην αρχή γραμμής</string>
     <string name="delete_alternatives_hint">Συμβουλή: Ctrl + πλήκτρο μπορεί να ρυθμιστεί στις ρυθμίσεις Nav Mode</string>
     <string name="delete_alternatives_selection_hint">Όταν είναι επιλεγμένο κείμενο, αυτές οι εναλλακτικές απενεργοποιούνται και το Backspace διαγράφει την επιλογή.</string>
-
-    <!-- Swipe Incremental Threshold Section -->
     <string name="swipe_incremental_threshold_title">Ευαισθησία γραμμής σάρωσης</string>
     <string name="swipe_incremental_threshold_description">Απόσταση που απαιτείται για μετακίνηση του δρομέα κατά μία θέση. Μικρότερες τιμές κάνουν τον δρομέα να κινείται πιο γρήγορα.</string>
-
-    <!-- Auto Show Keyboard Section -->
     <string name="auto_show_keyboard_title">Αυτόματη εμφάνιση πληκτρολογίου</string>
     <string name="auto_show_keyboard_description">Εμφανίζει αυτόματα το πληκτρολόγιο οθόνης σε πεδία κειμένου.</string>
-
-    <!-- Alt+Ctrl Speech Recognition Shortcut Section -->
     <string name="alt_ctrl_speech_shortcut_title">Alt+Ctrl / BlackBerry Alt+0 για φωνητική εισαγωγή</string>
     <string name="alt_ctrl_speech_shortcut_description">Ξεκινά φωνητική εισαγωγή με Alt+Ctrl / BlackBerry Alt+0.</string>
-
-    <!-- Static Variation Bar Mode -->
     <string name="static_variation_bar_mode_title">Στατική γραμμή παραλλαγών</string>
     <string name="static_variation_bar_mode_description">Εμφανίζει πάντα ένα σταθερό σύνολο βοηθητικών πλήκτρων στη γραμμή παραλλαγών αντί για παραλλαγές βάσει περιβάλλοντος.</string>
     <string name="static_variation_preset_title">Προρύθμιση στατικής παραλλαγής</string>
@@ -127,12 +96,8 @@
     <string name="static_variation_layer_sticky_title">Κολλημένο επίπεδο</string>
     <string name="static_variation_layer_sticky_description">Όταν το επίπεδο Shift ή Device SYM κλειδωθεί με διπλό πάτημα, παραμένει ενεργό μετά την επιλογή συμβόλου από αυτό το επίπεδο.</string>
     <string name="swipe_to_move_cursor">Σάρωση για μετακίνηση δρομέα</string>
-
-    <!-- Info Section -->
     <string name="info_title">Πληροφορίες</string>
     <string name="info_description">Οι ρυθμίσεις αποθηκεύονται αυτόματα και εφαρμόζονται αμέσως στη μέθοδο εισαγωγής.</string>
-
-    <!-- Main Activity -->
     <string name="keyboard_title">Πληκτρολόγιο Plektra</string>
     <string name="software_keyboard_accessibility_shift">Shift</string>
     <string name="software_keyboard_accessibility_backspace">Backspace</string>
@@ -150,45 +115,31 @@
     <string name="software_keyboard_accessibility_disabled">Απενεργοποιημένο</string>
     <string name="keyboard_subtitle">Φυσικό πληκτρολόγιο με υποστήριξη παρατεταμένου πατήματος</string>
     <string name="settings_content_description">Ρυθμίσεις</string>
-
-    <!-- Installation Section -->
     <string name="installation_title">Εγκατάσταση</string>
     <string name="installation_step1">1. Πατήστε το κουμπί παρακάτω για να ανοίξετε τις ρυθμίσεις</string>
     <string name="installation_step2">2. Ενεργοποιήστε το \'Plektra Physical Keyboard\'</string>
     <string name="installation_step3">3. Επιστρέψτε εδώ και δοκιμάστε το πληκτρολόγιο</string>
     <string name="open_keyboard_settings">Άνοιγμα ρυθμίσεων πληκτρολογίου</string>
-
-    <!-- Main Activity - Enable/Select IME -->
     <string name="enable_plektra">Ενεργοποίηση Plektra</string>
     <string name="plektra_not_enabled">Το Plektra δεν είναι ενεργοποιημένο</string>
     <string name="choose_input_method">Επιλογή μεθόδου εισαγωγής</string>
     <string name="plektra_not_selected">Το Plektra δεν είναι επιλεγμένο</string>
-
-    <!-- Test Section -->
     <string name="test_keyboard_title">Δοκιμή πληκτρολογίου</string>
     <string name="test_keyboard_description">Συνδέστε φυσικό πληκτρολόγιο και δοκιμάστε παρακάτω:</string>
     <string name="test_keyboard_normal">• Κανονικό πάτημα: εισάγει τον χαρακτήρα</string>
     <string name="test_keyboard_long_press">• Παρατεταμένο πάτημα (500ms): εισάγει τον χαρακτήρα Alt</string>
     <string name="test_field_label">Πεδίο δοκιμής</string>
     <string name="test_field_placeholder">Πληκτρολογήστε εδώ με το φυσικό πληκτρολόγιο…</string>
-
-    <!-- Last Event Section -->
     <string name="last_keyboard_event_title">Τελευταίο συμβάν πληκτρολογίου</string>
     <string name="no_event_yet">Κανένα συμβάν ακόμη</string>
     <string name="ignore_back_short">Αγνόηση BACK</string>
-
-    <!-- Long Press Mappings Section -->
     <string name="long_press_mappings_title">Αντιστοιχίσεις παρατεταμένου πατήματος</string>
     <string name="long_press_mappings_line1">Q→0, W→1, E→2, R→3, T→(, Y→), U→-, I→_, O→\', P→:</string>
     <string name="long_press_mappings_line2">A→@, S→4, D→5, F→6, G→*, H→#, J→+, K→\", L→\'</string>
     <string name="long_press_mappings_line3">Z→!, X→7, C→8, V→9, B→., N→\', M→?</string>
-
-    <!-- Buttons -->
     <string name="settings_button">Ρυθμίσεις</string>
     <string name="change_keyboard_button">Αλλαγή πληκτρολογίου</string>
     <string name="save">Αποθήκευση</string>
-
-    <!-- SYM Customization -->
     <string name="sym_customization_title">Προσαρμογή επιπέδων SYM</string>
     <string name="sym_customization_button">Προσαρμογή επιπέδων SYM</string>
     <string name="sym_customization_description">Τακτοποιήστε και προσαρμόστε τα επίπεδα Device, Emoji και Symbols SYM.</string>
@@ -197,8 +148,6 @@
     <string name="reset_to_default">Επαναφορά προεπιλογών</string>
     <string name="select_emoji">Επιλογή emoji</string>
     <string name="close">Κλείσιμο</string>
-
-    <!-- Auto-Correction Section -->
     <string name="auto_correct_title">Αντικαταστάσεις κειμένου</string>
     <string name="auto_correct_title_description">Εφαρμόζει αποθηκευμένους κανόνες όπως “ca → ça” όταν πατάτε Space ή Enter.</string>
     <string name="auto_correct_languages_title">Διαχείριση αντικαταστάσεων κειμένου</string>
@@ -216,7 +165,7 @@
     <string name="auto_correct_edit_correction">Επεξεργασία διόρθωσης</string>
     <string name="auto_correct_original">Αρχικό</string>
     <string name="auto_correct_corrected">Διορθωμένο</string>
-    <string name="auto_correct_add_replacement_to_dictionary">Προσθήκη αντικατάστασης στο προσωπικό λεξικό</string>
+    <string name="auto_correct_add_replacement_to_dictionary">Προσθήκη της αντικατάστασης στο προσωπικό λεξικό</string>
     <string name="auto_correct_delete">Διαγραφή</string>
     <string name="auto_correct_save">Αποθήκευση</string>
     <string name="auto_correct_cancel">Άκυρο</string>
@@ -245,20 +194,16 @@
     <string name="auto_correct_keyboard_proximity_title">Κατάταξη εγγύτητας πληκτρολογίου</string>
     <string name="auto_correct_keyboard_proximity_description">Φιλτράρει απίθανα λάθη βάσει απόστασης πλήκτρων (QWERTY/AZERTY/QWERTZ)</string>
     <string name="auto_correct_edit_type_ranking_title">Κατάταξη τύπου επεξεργασίας</string>
-    <string name="auto_correct_edit_type_ranking_description">Κατατάσσει προτάσεις κατά τύπο επεξεργασίας (εισαγωγή > αντικατάσταση > διαγραφή)</string>
+    <string name="auto_correct_edit_type_ranking_description">Κατατάσσει προτάσεις κατά τύπο επεξεργασίας (εισαγωγή &gt; αντικατάσταση &gt; διαγραφή)</string>
     <string name="clear">Εκκαθάριση</string>
     <string name="experimental_suggestions_title">Πειραματικές προτάσεις</string>
     <string name="experimental_suggestions_subtitle">Ενεργοποίηση της νέας μηχανής λεξικού/προτάσεων (beta)</string>
-
-    <!-- User dictionary management -->
     <string name="user_dict_title">Λεξικό χρήστη</string>
     <string name="user_dict_add_hint">Προσθήκη λέξης</string>
     <string name="user_dict_add_button">Αποθήκευση λέξης</string>
     <string name="user_dict_empty_state">Δεν έχουν αποθηκευτεί ακόμη λέξεις χρήστη.</string>
     <string name="user_dict_edit_title">Επεξεργασία λέξης</string>
     <string name="user_dict_frequency_label">Χρήσεις: %1$d</string>
-
-    <!-- SYM Customization Screen -->
     <string name="sym_customize_title">Προσαρμογή πληκτρολογίου SYM</string>
     <string name="sym_auto_close_title">Αυτόματο κλείσιμο διάταξης SYM</string>
     <string name="sym_auto_close_description">Κλείνει αυτόματα τη διάταξη SYM μετά την εισαγωγή χαρακτήρα, το πάτημα Alt ή το πάτημα Enter. Δεν κλείνει με Control ή Shift.</string>
@@ -295,7 +240,7 @@
     <string name="modifiers_section_long_press">Παρατεταμένο πάτημα</string>
     <string name="modifiers_section_alt_modifier">Πλήκτρο Alt</string>
     <string name="modifiers_section_indicators">Ενδείξεις τροποποιητών</string>
-    <string name="modifiers_section_control">Control</string>
+    <string name="modifiers_section_control">Έλεγχος</string>
     <string name="modifier_control_nav_mode_title">Control στο Nav Mode</string>
     <string name="modifier_control_nav_mode_description">Το Ctrl είναι αυτήν τη στιγμή ρυθμισμένο ως τροποποιητής Nav Mode. Ανοίξτε το Nav Mode για να αλλάξετε τις αντιστοιχίσεις πλήκτρων και τη συμπεριφορά του.</string>
     <string name="sym_modifiers_deeplink_description">Επιλέξτε ποιο επίπεδο SYM χρησιμοποιεί το Alt στις ρυθμίσεις τροποποιητών.</string>
@@ -313,8 +258,6 @@
     <string name="sym_reset_confirm_message">Θέλετε σίγουρα να επαναφέρετε όλες τις αντιστοιχίσεις SYM στις προεπιλογές; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</string>
     <string name="sym_reset_confirm_button">Επαναφορά</string>
     <string name="cancel">Άκυρο</string>
-
-    <!-- Emoji Picker Dialog -->
     <string name="emoji_picker_title">Επιλογή Emoji</string>
     <string name="emoji_picker_title_for_letter">Επιλογή emoji για το γράμμα %1$s</string>
     <string name="emoji_picker_close">Κλείσιμο</string>
@@ -322,16 +265,12 @@
     <string name="emoji_category_animals">Ζώα &amp; φύση</string>
     <string name="emoji_category_food">Φαγητό &amp; ποτό</string>
     <string name="emoji_category_travel">Ταξίδια &amp; μέρη</string>
-
-    <!-- Modifiers -->
     <string name="modifier_shift">SHIFT</string>
     <string name="modifier_ctrl">CTRL</string>
-
-    <!-- Long Press Modifier Section -->
     <string name="long_press_modifier_title">Τροποποιητής παρατεταμένου πατήματος</string>
     <string name="long_press_modifier_description">Επιλέξτε αν το παρατεταμένο πάτημα ανοίγει ένα επίπεδο SYM ή Παραλλαγές, ή αν εφαρμόζει Shift.</string>
     <string name="long_press_modifier_alt">Επίπεδο Device SYM (πρώην Alt)</string>
-    <string name="long_press_modifier_shift">Shift</string>
+    <string name="long_press_modifier_shift">Μετατόπιση</string>
     <string name="long_press_modifier_variations">Παραλλαγές</string>
     <string name="long_press_modifier_sym">Πρώτο επίπεδο Emoji ή συμβόλων</string>
     <string name="long_press_modifier_sym_symbols">Επίπεδο συμβόλων</string>
@@ -366,8 +305,6 @@
     <string name="tap_haptic_system_description">Χρησιμοποιεί απτική ανάδραση πληκτρολογίου Android για προτάσεις και παραλλαγές σε συμβατές συσκευές.</string>
     <string name="tap_haptic_duration_title">Προσαρμοσμένη δόνηση: %1$d ms</string>
     <string name="tap_haptic_duration_description">Χρησιμοποιείται όταν η απτική ανάδραση πληκτρολογίου Android είναι απενεργοποιημένη.</string>
-
-    <!-- Keyboard Layout Section -->
     <string name="keyboard_layout_title">Διάταξη πληκτρολογίου</string>
     <string name="keyboard_layout_description">Επιλέξτε τη διάταξη πληκτρολογίου. Οι αντιστοιχίσεις ALT, SYM και Ctrl παραμένουν βασισμένες στη φυσική θέση των πλήκτρων.</string>
     <string name="keyboard_layout_editor_title">Επεξεργαστής διάταξης πληκτρολογίου</string>
@@ -405,7 +342,7 @@
     <string name="keyboard_profile_option_titan">Unihertz Titan</string>
     <string name="keyboard_profile_option_titan2">Unihertz Titan 2</string>
     <string name="keyboard_profile_option_titan2elite_qwerty">Titan 2 Elite (QWERTY)</string>
-    <string name="keyboard_profile_option_mp01">Minimal Phone (MP01)</string>
+    <string name="keyboard_profile_option_mp01">Ελάχιστο τηλέφωνο (MP01)</string>
     <string name="keyboard_currency_symbol_title">Σύμβολο νομίσματος</string>
     <string name="keyboard_currency_symbol_description">Σύμβολο που εισάγεται από ειδικά φυσικά πλήκτρα νομίσματος.</string>
     <string name="hardware_keyboards_title">Ενσωματωμένα πληκτρολόγια</string>
@@ -413,16 +350,16 @@
     <string name="hardware_keyboard_detected_device_title">Εντοπισμένη συσκευή</string>
     <string name="hardware_keyboard_detected_device_summary">%1$s · %2$s</string>
     <string name="hardware_keyboard_device_bound">Δεσμευμένο στη συσκευή</string>
-    <string name="keyboard_profile_option_clicks_razr">Clicks for Razr | Razrberry</string>
-    <string name="keyboard_profile_option_clicks_pixel">Clicks for Pixel 9/9 Pro | Clixel</string>
-    <string name="keyboard_profile_option_clicks_power_converted">Clicks Power Keyboard (converted)</string>
+    <string name="keyboard_profile_option_clicks_razr">Κλικ για το Razr | Razrberry</string>
+    <string name="keyboard_profile_option_clicks_pixel">Κλικ για Pixel 9/9 Pro | Κλίξελ</string>
+    <string name="keyboard_profile_option_clicks_power_converted">Κλικ Power Keyboard (μετατροπή)</string>
     <string name="hardware_keyboard_behavior_title">Συμπεριφορά συγκεκριμένης συσκευής</string>
     <string name="hardware_keyboard_profile_titan2_description">Χειρισμός πλήκτρων και διάταξη ειδικά για Unihertz.</string>
     <string name="hardware_keyboard_curated_profiles_title">Επιμελημένα προφίλ</string>
     <string name="hardware_keyboard_profile_select_label">Προφίλ πληκτρολογίου</string>
     <string name="hardware_keyboard_custom_profiles_title">Προσαρμοσμένα προφίλ</string>
     <string name="hardware_keyboard_custom_profiles_empty">Τα προσαρμοσμένα προφίλ που δημιουργούνται στον Επεξεργαστή επιπέδου Device SYM (πρώην Alt Key Editor) θα εμφανίζονται εδώ.</string>
-    <string name="clicks_power_keyboard_title">Clicks Power Keyboard</string>
+    <string name="clicks_power_keyboard_title">Κάντε κλικ στο Power Keyboard</string>
     <string name="clicks_power_keyboard_summary">Πλήκτρα, οπίσθιος φωτισμός, εξοικονόμηση ενέργειας, φόρτιση και αυτοματισμός.</string>
     <string name="clicks_power_keyboard_stub_description">Προγραμματισμένα στοιχεία ελέγχου για το BLE Power Keyboard.</string>
     <string name="clicks_power_keyboard_description">Άμεσος έλεγχος BLE του Clicks Power Keyboard. Οι ρυθμίσεις αποθηκεύονται στο πληκτρολόγιο.</string>
@@ -657,15 +594,11 @@
     <string name="tutorial_feature_status_experimental_title">Πειραματικό</string>
     <string name="tutorial_feature_status_experimental_description">Η λειτουργία μπορεί ήδη να δουλεύει, αλλά είναι νέα και μπορεί σύντομα να προσαρμοστεί ή να βελτιωθεί. Οι αναφορές σφαλμάτων είναι ευπρόσδεκτες.</string>
     <string name="tutorial_feature_status_footer">Πατήστε οποιοδήποτε σύμβολο στις Ρυθμίσεις για σύντομη εξήγηση. Ένας δείκτης roadmap δεν είναι υπόσχεση για συγκεκριμένη έκδοση.</string>
-
-    <!-- About Section -->
     <string name="about_github">GitHub</string>
     <string name="about_build_info">Plektra IME - Palsoftware 2026</string>
     <string name="settings_device_keyboard_info">Συσκευή: %1$s; Πληκτρολόγιο: %2$s</string>
     <string name="about_title">Σχετικά</string>
     <string name="about_credits_error">Δεν είναι δυνατή η φόρτωση πληροφοριών συντελεστών.</string>
-
-    <!-- Launcher Shortcuts Section -->
     <string name="starter_launcher_shortcuts_title">Plektra-QuickLauncher</string>
     <string name="starter_launcher_shortcuts_description">Γρήγορη εκκίνηση, συντομεύσεις SYM και αντιστοιχίσεις πλήκτρων launcher</string>
     <string name="starter_launcher_shortcuts_intro">Αυτές οι ρυθμίσεις μοιράζονται μία λίστα αντιστοίχισης πλήκτρων launcher. Επιλέξτε πού θα ακούει το Plektra για αυτά τα αντιστοιχισμένα πλήκτρα.</string>
@@ -676,8 +609,6 @@
     <string name="launcher_shortcuts_configure_description">Πατήστε ένα πλήκτρο για αντιστοίχιση ή αντικατάσταση εντολής. Τα αντιστοιχισμένα πλήκτρα μοιράζονται και από τους δύο τρόπους ενεργοποίησης.</string>
     <string name="launcher_shortcuts_configure_description_with_quick_launcher">Πατήστε ένα πλήκτρο για αντιστοίχιση ή αντικατάσταση εντολής. Ο Quick launcher είναι αυτήν τη στιγμή αντιστοιχισμένος στο %1$s.</string>
     <string name="quick_launcher_default_blocked_hint">Νέο: Το SYM μπορεί να ανοίγει τον quick launcher. Το Plektra κανονικά θα το αντιστοιχούσε στο Space, αλλά το Space έχει ήδη συντόμευση. Ανοίξτε τη σελίδα αντιστοιχίσεων και επιλέξτε “Άνοιγμα quick launcher” σε οποιοδήποτε πλήκτρο για να το δοκιμάσετε.</string>
-
-    <!-- Launcher Shortcuts Screen -->
     <string name="launcher_shortcuts_screen_title">Plektra-QuickLauncher</string>
     <string name="launcher_shortcuts_not_assigned">Δεν έχει αντιστοιχιστεί</string>
     <string name="launcher_shortcuts_remove">Αφαίρεση</string>
@@ -685,8 +616,6 @@
     <string name="launcher_shortcuts_shortcut_type">Συντόμευση: %1$s</string>
     <string name="launcher_shortcuts_shortcut_unknown">άγνωστη</string>
     <string name="launcher_shortcuts_action_type">Ενέργεια: %1$s</string>
-
-    <!-- Launcher Shortcut Assignment Activity -->
     <string name="launcher_shortcut_assignment_title">Αντιστοίχιση εντολής σε πλήκτρο</string>
     <string name="launcher_shortcut_assignment_key">Πλήκτρο %1$s</string>
     <string name="launcher_shortcut_assignment_header">Συντόμευση</string>
@@ -840,8 +769,6 @@
     <string name="quick_launcher_no_apps">Δεν βρέθηκαν εφαρμογές</string>
     <string name="quick_launcher_no_results">Δεν υπάρχουν αποτελέσματα για \"%1$s\"</string>
     <string name="quick_launcher_enter_hint">Enter</string>
-
-    <!-- Power Shortcuts Section -->
     <string name="power_shortcuts_title">Συντομεύσεις πλήκτρου SYM</string>
     <string name="power_shortcuts_description">Χρησιμοποιήστε SYM με αντιστοιχισμένα πλήκτρα για εκκίνηση εφαρμογών και ενεργειών.</string>
     <string name="alt_key_shortcuts_title">Συντομεύσεις πλήκτρου Alt</string>
@@ -854,20 +781,14 @@
     <string name="sym_shortcuts_compatibility_title">Συμβατότητα πλήκτρου SYM</string>
     <string name="sym_shortcuts_compatibility_description">Οι συντομεύσεις πλήκτρου SYM απαιτούν πληκτρολόγιο που εκθέτει το SYM ως τροποποιητή στο Android. Προς το παρόν δεν μπορούν να λειτουργήσουν με πληκτρολόγια των οποίων το firmware μετατρέπει τους συνδυασμούς SYM σε τελικούς χαρακτήρες ή συμβάντα πλοήγησης πριν τους λάβει το Plektra. Αυτό περιλαμβάνει την τρέχουσα συμπεριφορά SYM του Clicks Power Keyboard.</string>
     <string name="power_shortcuts_press_key">Πατήστε πλήκτρο συντόμευσης για εκκίνηση</string>
-
-    <!-- Notification Helper -->
     <string name="notification_nav_mode_channel_name">Plektra Nav Mode</string>
     <string name="notification_nav_mode_channel_description">Ειδοποιήσεις για το nav mode του Plektra</string>
     <string name="notification_nav_mode_activated_title">Το Nav Mode ενεργοποιήθηκε</string>
     <string name="notification_nav_mode_activated_text">Το Nav mode ενεργοποιήθηκε</string>
-
-    <!-- Update Notifications -->
     <string name="notification_update_channel_name">Ενημερώσεις Plektra</string>
     <string name="notification_update_channel_description">Ειδοποιήσεις για νέες εκδόσεις Plektra</string>
     <string name="notification_successor_release_title">Plektra update available</string>
     <string name="notification_successor_release_text">%1$s is available.</string>
-
-    <!-- Speech Recognition -->
     <string name="speech_recognition_prompt">Μιλήστε τώρα...</string>
     <string name="speech_recognition_error_no_match">Δεν αναγνωρίστηκε κείμενο. Δοκιμάστε ξανά.</string>
     <string name="speech_recognition_error_timeout">Δεν εντοπίστηκε φωνητική εισαγωγή.</string>
@@ -875,15 +796,11 @@
     <string name="speech_recognition_error_network">Σφάλμα δικτύου.</string>
     <string name="speech_recognition_error_generic">Σφάλμα αναγνώρισης ομιλίας.</string>
     <string name="speech_recognition_error_not_available">Η αναγνώριση ομιλίας δεν είναι διαθέσιμη.</string>
-
-    <!-- Auto Correct Edit Screen -->
     <string name="auto_correct_search_placeholder">Αναζήτηση διορθώσεων...</string>
     <string name="auto_correct_search_description">Αναζήτηση</string>
     <string name="auto_correct_clear_search">Εκκαθάριση αναζήτησης</string>
     <string name="auto_correct_no_corrections_found">Δεν βρέθηκαν διορθώσεις</string>
-
-    <!-- Nav Mode Settings -->
-    <string name="nav_mode_title">Nav Mode</string>
+    <string name="nav_mode_title">Λειτουργία Nav</string>
     <string name="nav_mode_guide_title">Οδηγός Nav Mode</string>
     <string name="nav_mode_guide_description">Πώς συνεργάζονται το Ctrl, οι αντιστοιχίσεις, οι συντομεύσεις εφαρμογών και οι υποδείξεις διάταξης.</string>
     <string name="nav_mode_guide_text">Το Nav Mode μετατρέπει τα πλήκτρα γραμμάτων σε πλήκτρα πλοήγησης και συντομεύσεων. Το αποτέλεσμα μπορεί να διαφέρει ανά εφαρμογή, επειδή ορισμένες εφαρμογές καταλαβαίνουν ενέργειες επεξεργαστή Android, ενώ άλλες αντιδρούν μόνο σε πραγματικές συντομεύσεις Ctrl.
@@ -924,16 +841,14 @@ QWERTZ σε φυσικό QWERTY
     <string name="nav_mode_warning_icon">⚠</string>
     <string name="nav_mode_configure_key">Ρύθμιση %1$s</string>
     <string name="nav_mode_type">Τύπος</string>
-    <string name="nav_mode_keycode">Keycode</string>
-    <string name="nav_mode_action">Action</string>
-    <string name="nav_mode_native_ctrl">Native Ctrl</string>
-    <string name="nav_mode_none">None</string>
+    <string name="nav_mode_keycode">Κωδικός κλειδιού</string>
+    <string name="nav_mode_action">Δράση</string>
+    <string name="nav_mode_native_ctrl">Εγγενές Ctrl</string>
+    <string name="nav_mode_none">Κανένας</string>
     <string name="nav_mode_use_default">Χρήση προεπιλογής: %1$s</string>
     <string name="nav_mode_save">Αποθήκευση</string>
     <string name="nav_mode_cancel">Άκυρο</string>
     <string name="nav_mode_default">προεπιλογή</string>
-
-    <!-- Unicode Character Picker -->
     <string name="unicode_picker_title_for_letter">Επιλογή χαρακτήρα για %1$s</string>
     <string name="unicode_picker_title">Επιλογή χαρακτήρα Unicode</string>
     <string name="unicode_picker_close">Κλείσιμο</string>
@@ -959,8 +874,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="emoji_picker_search_label">Αναζήτηση</string>
     <string name="emoji_picker_search_placeholder">Αναζήτηση emoji...</string>
     <string name="emoji_picker_no_results">Δεν βρέθηκε emoji</string>
-
-    <!-- Variation Customization -->
     <string name="variation_customize_title">Προσαρμογή παραλλαγών</string>
     <string name="app_enter_behaviour_title">Συμπεριφορά πλήκτρου Enter</string>
     <string name="app_enter_behaviour_description">Ρυθμίστε χειρισμό Enter και νέας γραμμής ανά εφαρμογή</string>
@@ -1033,20 +946,14 @@ QWERTZ σε φυσικό QWERTY
     <string name="variation_global_layout_override_title">Καθολική αντιστοίχιση παραλλαγών</string>
     <string name="variation_global_layout_override_description">Επιβάλλει τη σειρά παραλλαγών από μία διάταξη σε όλες τις διατάξεις. Προεπιλογή είναι η τρέχουσα διάταξη IME (%1$s).</string>
     <string name="variation_global_layout_override_none">Καμία (χρήση τρέχουσας διάταξης)</string>
-
-    <!-- SYM Customization Screen -->
     <string name="sym_tab_emoji">Emoji</string>
     <string name="sym_tab_characters">Χαρακτήρες</string>
-
-    <!-- App Picker Dialog -->
     <string name="app_picker_title">Επιλογή εφαρμογής</string>
     <string name="app_picker_cancel">Άκυρο</string>
     <string name="app_picker_search_placeholder">Αναζήτηση εφαρμογών...</string>
-
-    <!-- Settings Screen -->
     <string name="settings_support_open_collective">Open Collective</string>
     <string name="settings_nav_mode_configure">Ρύθμιση αντιστοιχίσεων πλήκτρων λειτουργίας πλοήγησης</string>
-    <string name="settings_update_section_title">Plektra</string>
+    <string name="settings_update_section_title">Πλέκτρα</string>
     <string name="settings_update_section_description">Check for Plektra Nightly updates.</string>
     <string name="settings_update_checking">Checking for Plektra Nightly updates…</string>
     <string name="settings_update_up_to_date">No newer Plektra Nightly found.</string>
@@ -1055,11 +962,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="successor_dialog_message">%1$s is available on GitHub.</string>
     <string name="successor_dialog_open_release">View release</string>
     <string name="successor_dialog_later">Αργότερα</string>
-
-    <!-- Auto Correct Settings -->
     <string name="auto_correct_ricette_plektra_name">Ricette Plektra</string>
-
-    <!-- Settings Categories -->
     <string name="settings_category_text_input">Έξυπνες λειτουργίες</string>
     <string name="settings_category_accessibility">Προσβασιμότητα</string>
     <string name="settings_category_auto_correction">Αυτόματη διόρθωση</string>
@@ -1093,21 +996,17 @@ QWERTZ σε φυσικό QWERTY
     <string name="settings_accessibility_bounce_keys_modifier_keys_title">Πλήκτρα τροποποιητών</string>
     <string name="settings_accessibility_bounce_keys_modifier_keys_description">Shift, Ctrl, Alt και Sym.</string>
     <string name="settings_accessibility_bounce_keys_text_control_title">Πλήκτρα ελέγχου κειμένου</string>
-    <string name="settings_accessibility_bounce_keys_space_title">Space</string>
+    <string name="settings_accessibility_bounce_keys_space_title">Διάστημα</string>
     <string name="settings_accessibility_bounce_keys_space_description">Αγνοεί ακούσια επαναλαμβανόμενα διαστήματα.</string>
-    <string name="settings_accessibility_bounce_keys_enter_title">Enter</string>
+    <string name="settings_accessibility_bounce_keys_enter_title">Εισαγάγετε</string>
     <string name="settings_accessibility_bounce_keys_enter_description">Αγνοεί ακούσιες επαναλαμβανόμενες αλλαγές γραμμής ή ενέργειες αποστολής.</string>
     <string name="settings_accessibility_bounce_keys_backspace_title">Backspace</string>
     <string name="settings_accessibility_bounce_keys_backspace_description">Αγνοεί ακούσιες επαναλαμβανόμενες διαγραφές.</string>
     <string name="settings_accessibility_overlapping_keys_title">Αγνόηση επικαλυπτόμενων πατημάτων πλήκτρων</string>
     <string name="settings_accessibility_overlapping_keys_description">Για κάθε φυσικό πληκτρολόγιο, αγνοεί ένα δεύτερο μη τροποποιητικό πλήκτρο μέχρι να απελευθερωθεί το πρώτο. Οι συντομεύσεις τροποποιητών εξακολουθούν να λειτουργούν.</string>
-
-    <!-- Languages (Input Method Subtypes) -->
     <string name="languages_title">Γλώσσες</string>
     <string name="languages_description">Προσθέστε γλώσσες στον επιλογέα μεθόδου εισαγωγής Android. Εμφανίζονται μόνο γλώσσες με λεξικά που δεν είναι γλώσσες συστήματος.</string>
     <string name="languages_no_available">Όλες οι διαθέσιμες γλώσσες έχουν ήδη προστεθεί ή είναι γλώσσες συστήματος.</string>
-
-    <!-- Keyboard Layout Settings -->
     <string name="layout_save_content_description">Αποθήκευση διάταξης</string>
     <string name="layout_import_content_description">Εισαγωγή διάταξης</string>
     <string name="layout_imported_successfully">Η διάταξη εισήχθη επιτυχώς</string>
@@ -1159,8 +1058,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="layout_enable_for_cycling">Ενεργοποίηση για εναλλαγή</string>
     <string name="layout_select_as_active">Επιλογή ως ενεργή διάταξη</string>
     <string name="delete">Διαγραφή</string>
-
-    <!-- Main Activity Event Display -->
     <string name="modifier_alt">ALT</string>
     <string name="event_action_label">Ενέργεια: </string>
     <string name="event_keycode_label">KeyCode: </string>
@@ -1183,8 +1080,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="debug_recorder_include_suggestions">περιλ. προτάσεις</string>
     <string name="debug_recorder_include_raw_trackpad">περιλ. ακατέργαστο trackpad</string>
     <string name="debug_report_viewer_title">Προβολή αναφοράς debug</string>
-
-    <!-- Nav Mode Key Labels -->
     <string name="nav_mode_action_copy">Αντιγρ.</string>
     <string name="nav_mode_action_paste">Επικόλλ.</string>
     <string name="nav_mode_action_cut">Αποκοπή</string>
@@ -1207,16 +1102,14 @@ QWERTZ σε φυσικό QWERTY
     <string name="nav_mode_keycode_left">←</string>
     <string name="nav_mode_keycode_right">→</string>
     <string name="nav_mode_keycode_center">○</string>
-    <string name="nav_mode_keycode_home">Home</string>
-    <string name="nav_mode_keycode_end">End</string>
+    <string name="nav_mode_keycode_home">Αρχική σελίδα</string>
+    <string name="nav_mode_keycode_end">Τέλος</string>
     <string name="nav_mode_keycode_page_up">PgUp</string>
     <string name="nav_mode_keycode_page_down">PgDn</string>
     <string name="nav_mode_keycode_escape">Esc</string>
-    <string name="nav_mode_keycode_tab">Tab</string>
+    <string name="nav_mode_keycode_tab">Πιν</string>
     <string name="nav_mode_keycode_forward_delete">Del→</string>
     <string name="nav_mode_key_unknown">?</string>
-
-    <!-- Tutorial -->
     <string name="tutorial_skip">Παράλειψη</string>
     <string name="tutorial_skip_update">Παράλειψη</string>
     <string name="tutorial_previous">Προηγούμενο</string>
@@ -1303,7 +1196,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="tutorial_review_description">Επανεξέταση του εισαγωγικού tutorial</string>
     <string name="tutorial_show_release_notes">Εμφάνιση tutorial σημειώσεων έκδοσης</string>
     <string name="tutorial_show_release_notes_description">Προεπισκόπηση της εισαγωγής ενημέρωσης χωρίς εγκατάσταση αναβάθμισης</string>
-
     <string name="slim_mode_title">Λειτουργία Slim</string>
     <string name="slim_mode_description">Εναλλαγή ελάχιστου UI</string>
     <string name="software_keyboard_mode_title">Λειτουργία πληκτρολογίου</string>
@@ -1343,11 +1235,8 @@ QWERTZ σε φυσικό QWERTY
     <string name="software_keyboard_right_modifier_key_title">Δεξί πλήκτρο</string>
     <string name="software_keyboard_modifier_key_ctrl">Ctrl</string>
     <string name="software_keyboard_modifier_key_alt">Alt</string>
-
     <string name="titan2_layout_title">Στοίχιση διάταξης Titan 2</string>
     <string name="titan2_layout_description">Στοιχίζει το πληκτρολόγιο οθόνης με τα φυσικά πλήκτρα Titan 2</string>
-
-    <!-- Backup & Restore -->
     <string name="backup_now">Δημιουργία αντιγράφου τώρα</string>
     <string name="backup_now_description">Εξαγωγή όλων των ρυθμίσεων και προσαρμοσμένων διατάξεων σε ZIP</string>
     <string name="restore_from_file">Επαναφορά από αρχείο</string>
@@ -1360,11 +1249,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="restore_device_change_message">Αυτό το αντίγραφο ασφαλείας δημιουργήθηκε σε %1$s και εισάγεται σε %2$s. Η προσαρμογή διατηρεί το εντοπισμένο προφίλ πληκτρολογίου αυτής της συσκευής και τις ρυθμίσεις που αφορούν την οθόνη.</string>
     <string name="restore_device_change_adapt">Προσαρμογή για αυτήν τη συσκευή</string>
     <string name="restore_device_change_unchanged">Εισαγωγή χωρίς αλλαγές</string>
-
-    <!-- Units -->
     <string name="dip_unit">DIP</string>
-
-    <!-- Custom Input Styles -->
     <string name="custom_input_styles_title">Γλώσσες εισαγωγής</string>
     <string name="keyboards_devices_title">Πληκτρολόγια &amp; συσκευές</string>
     <string name="keyboard_switching_section_title">Αυτόματη εναλλαγή</string>
@@ -1443,8 +1328,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="custom_input_styles_suggestion_dictionaries">Λεξικά προτάσεων</string>
     <string name="custom_input_styles_primary_suggestion_dictionary">Κύριο: %1$s</string>
     <string name="custom_input_styles_no_extra_suggestion_dictionaries">Δεν υπάρχουν άλλα εγκατεστημένα λεξικά διαθέσιμα.</string>
-
-    <!-- Installed dictionaries screen -->
     <string name="installed_dictionaries_title">Εγκατεστημένα λεξικά</string>
     <string name="installed_dictionaries_empty">Δεν βρέθηκαν σειριοποιημένα λεξικά.</string>
     <string name="installed_dictionaries_language_code">Γλώσσα: %1$s</string>
@@ -1474,8 +1357,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="installed_dictionaries_uninstall_not_found">Το αρχείο λεξικού δεν βρέθηκε</string>
     <string name="installed_dictionaries_uninstall_cannot_delete_asset">Δεν είναι δυνατή η απεγκατάσταση ενσωματωμένων λεξικών</string>
     <string name="installed_dictionaries_uninstall_failed">Αποτυχία απεγκατάστασης λεξικού</string>
-
-    <!-- Clipboard page UI -->
     <string name="clipboard_history_title">Ιστορικό πρόχειρου</string>
     <string name="clipboard_clear_all">Εκκαθάριση όλων</string>
     <string name="clipboard_empty_state">Δεν υπάρχει ιστορικό πρόχειρου</string>
@@ -1487,8 +1368,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="clipboard_retention_time_title">Χρόνος διατήρησης πρόχειρου</string>
     <string name="clipboard_retention_time_description">0 = να μη διαγράφονται ποτέ τα αποσπάσματα</string>
     <string name="clipboard_retention_time_minutes">%1$d λεπτά</string>
-
-    <!-- Trackpad Gesture Settings -->
     <string name="trackpad_gestures_title">Προτάσεις με χειρονομίες trackpad</string>
     <string name="trackpad_gestures_description">Σαρώστε προς τα πάνω στο trackpad για αποδοχή προτάσεων</string>
     <string name="trackpad_gestures_enabled_title">Ενεργοποίηση χειρονομιών trackpad</string>
@@ -1530,8 +1409,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="trackpad_suggestion_swipe_threshold_description">Απόσταση που απαιτείται για σάρωση προς τα πάνω και αποδοχή πρότασης.</string>
     <string name="trackpad_delete_swipe_threshold_title">Σάρωση διαγραφής</string>
     <string name="trackpad_delete_swipe_threshold_description">Απόσταση που απαιτείται για σάρωση προς τα αριστερά και διαγραφή της προηγούμενης λέξης.</string>
-
-    <!-- Trackpad Gesture Tutorial -->
     <string name="trackpad_tutorial_title">Προτάσεις με χειρονομίες trackpad</string>
     <string name="trackpad_tutorial_welcome_title">Προτάσεις με χειρονομίες trackpad</string>
     <string name="trackpad_tutorial_welcome_description">Σαρώστε προς τα πάνω στο trackpad για γρήγορη αποδοχή προτάσεων λέξεων χωρίς κλικ!</string>
@@ -1544,11 +1421,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="trackpad_tutorial_complete">Το κατάλαβα</string>
     <string name="trackpad_tutorial_next">Επόμενο</string>
     <string name="trackpad_tutorial_previous">Προηγούμενο</string>
-
-    <!-- Trackpad Debug Accessibility Service -->
     <string name="trackpad_debug_service_description">Εμφανίζει συμβάντα trackpad σε μικρή επικάλυψη για σκοπούς debug</string>
-
-    <!-- Status Bar Buttons Configuration -->
     <string name="status_bar_buttons_title">Γραμμή κατάστασης</string>
     <string name="status_bar_buttons_description">Ρυθμίστε τη γραμμή κατάστασης και το Slim Mode.</string>
     <string name="status_bar_style_section">Στυλ γραμμής κατάστασης</string>
@@ -1583,7 +1456,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="status_bar_button_language_state_description">Γλώσσα %1$s, διάταξη %2$s</string>
     <string name="status_bar_button_hamburger">Μενού</string>
     <string name="status_bar_button_hamburger_description">Γρήγορες ενέργειες</string>
-    <string name="status_bar_button_minimal_ui">Slim</string>
+    <string name="status_bar_button_minimal_ui">Παστιερίνα</string>
     <string name="status_bar_button_software_keyboard_mode">Λειτουργία πληκτρολογίου</string>
     <string name="status_bar_button_software_keyboard_mode_description">Προσωρινό άνοιγμα / κλείσιμο πληκτρολογίου οθόνης (Ctrl+B)</string>
     <string name="status_bar_button_close_menu_description">Κλείσιμο γρήγορων ενεργειών</string>
@@ -1655,8 +1528,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="symbol_shortcodes_enable_description">Πληκτρολογήστε :name για αναζήτηση τυπογραφικών και μαθηματικών συμβόλων.</string>
     <string name="emoji_symbols_close_title">Επέκταση :name:</string>
     <string name="emoji_symbols_close_description">Μια τελική άνω-κάτω τελεία επεκτείνει μια μοναδική ακριβή αντιστοίχιση. Οι συγκρούσεις μένουν επιλέξιμες.</string>
-
-    <!-- Settings search and shareable setting links -->
     <string name="settings_search_hint">Αναζήτηση ρυθμίσεων</string>
     <string name="settings_search_no_results">Δεν υπάρχουν αντίστοιχες ρυθμίσεις</string>
     <string name="settings_link_copy">Αντιγραφή συνδέσμου</string>
@@ -1665,9 +1536,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="settings_link_with_description">Με περιγραφή</string>
     <string name="settings_link_copied_toast">Ο σύνδεσμος αντιγράφηκε</string>
     <string name="settings_link_unavailable_toast">Αυτή η ρύθμιση δεν είναι διαθέσιμη</string>
-
-    <!-- Invisible search keywords per settings entry; never rendered, only
-         consumed by the settings search. -->
     <string name="kw_main_keyboards_devices">πληκτρολόγια, συσκευές, hardware, bluetooth, φυσικό πληκτρολόγιο, keyboards, devices, physical keyboard, clicks</string>
     <string name="kw_main_modifiers">LED, LEDs, φώτα, ενδείξεις, shift, ctrl, alt, sym, modifiers, indicators</string>
     <string name="kw_main_custom_input_styles">διάταξη πληκτρολογίου, διατάξεις, στυλ εισαγωγής, γλώσσες, ανά γλώσσα, keyboard layout, layouts, input styles, languages</string>
@@ -1709,5 +1577,26 @@ QWERTZ σε φυσικό QWERTY
     <string name="kw_theme_led_colors">LED, LEDs, ανενεργό, ενεργό, κλειδωμένο, τροποποιητής, χρώματα, ενδείξεις, inactive, active, locked, modifier, colors</string>
     <string name="kw_indicator_bottom_strip">LED, LEDs, φώτα, λωρίδα, κάτω, strip, bottom</string>
     <string name="kw_indicator_menu_bar">LED, φώτα, εικονίδιο, γραμμή κατάστασης, ενδείξεις, icon, status bar, indicators</string>
-    <string name="kw_indicator_status_bar">LED, φώτα, σύμβολα, ενδείξεις, plektra, lights, symbols, indicators</string>
+    <string name="auto_space_punctuation_dialog_instruction">Επιλέξτε τα σύμβολα που αφαιρούν ένα αυτόματο κενό πριν ή προσθέτουν αμέσως ένα κενό μετά.</string>
+    <string name="auto_space_punctuation_character_column">Σύμβολο</string>
+    <string name="auto_space_punctuation_after_column">Προσθήκη μετά</string>
+    <string name="auto_space_punctuation_help_text">Η αφαίρεση πριν αφορά μόνο αυτόματα κενά. Η προσθήκη μετά εισάγει αμέσως κενό. Αν πατήσετε μετά Διάστημα, δεν διπλασιάζεται. Η μεσαία παύλα και η δεξιά παρένθεση επιλέγονται χωριστά.</string>
+    <string name="kw_indicator_status_bar">LED, φώτα, σύμβολα, ενδείξεις, pastiera, lights, symbols, indicators</string>
+    <string name="trackpad_calibration_title">Βαθμονόμηση χειρονομιών</string>
+    <string name="trackpad_calibration_target_left">στα αριστερά</string>
+    <string name="trackpad_calibration_target_center">στο κέντρο</string>
+    <string name="trackpad_calibration_target_right">στα δεξιά</string>
+    <string name="trackpad_calibration_instruction">Κάντε φυσικά τη χειρονομία που θα χρησιμοποιούσατε για να επιλέξετε την πρόταση %1$s.</string>
+    <string name="trackpad_calibration_gesture_count">%1$d / 10 χειρονομίες</string>
+    <string name="trackpad_calibration_text_field_hint">Πεδίο βαθμονόμησης — το Pastiera πρέπει να είναι ενεργό εδώ</string>
+    <string name="trackpad_calibration_cancel">Ακύρωση</string>
+    <string name="trackpad_calibration_save">Αποθήκευση</string>
+    <string name="typing_statistics_title">Στατιστικά πληκτρολόγησης</string>
+    <string name="typing_statistics_total_words">Συνολικός αριθμός λέξεων</string>
+    <string name="typing_statistics_manual_words">Λέξεις που πληκτρολογήθηκαν χειροκίνητα</string>
+    <string name="typing_statistics_suggested_words">Λέξεις που εισήχθησαν μέσω προτάσεων</string>
+    <string name="app_enter_behaviour_newline_shift_send">Enter: νέα γραμμή· Shift + Enter: αποστολή</string>
+    <string name="app_enter_behaviour_send_shift_side">Πλήκτρο Shift για αποστολή</string>
+    <string name="app_enter_behaviour_shift_left">Αριστερό Shift</string>
+    <string name="app_enter_behaviour_shift_right">Δεξί Shift</string>
 </resources>

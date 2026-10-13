@@ -24,6 +24,7 @@ object SettingLinkIds {
     const val MAIN_APP_ENTER_BEHAVIOR = "main.app_enter_behavior"
     const val MAIN_ADVANCED = "main.advanced"
     const val MAIN_ACCESSIBILITY = "main.accessibility"
+    const val MAIN_TYPING_STATISTICS = "main.typing_statistics"
     const val MAIN_ABOUT = "main.about"
 
     // App appearance
@@ -332,6 +333,11 @@ object SettingLinkRegistry {
             destination = SettingsDestination.Accessibility
         ),
         entry(
+            SettingLinkIds.MAIN_TYPING_STATISTICS,
+            R.string.typing_statistics_title,
+            destination = SettingsDestination.TypingStatistics
+        ),
+        entry(
             SettingLinkIds.MAIN_ABOUT,
             R.string.about_title,
             destination = SettingsDestination.About
@@ -536,7 +542,6 @@ object SettingLinkRegistry {
         entry(
             SettingLinkIds.AUTO_CORRECTION_USER_DICTIONARY,
             R.string.auto_correct_manage_user_dict_title,
-            R.string.auto_correct_manage_user_dict_description,
             destination = SettingsDestination.AutoCorrection
         ),
         entry(
@@ -1071,6 +1076,7 @@ object SettingLinkRegistry {
         SettingsDestination.TextInput to R.string.settings_category_text_input,
         SettingsDestination.SpeechRecognition to R.string.speech_settings_title,
         SettingsDestination.Accessibility to R.string.settings_category_accessibility,
+        SettingsDestination.TypingStatistics to R.string.typing_statistics_title,
         SettingsDestination.AutoCorrection to R.string.settings_category_auto_correction,
         SettingsDestination.Customization to R.string.settings_category_customization,
         SettingsDestination.NavMode to R.string.nav_mode_title,

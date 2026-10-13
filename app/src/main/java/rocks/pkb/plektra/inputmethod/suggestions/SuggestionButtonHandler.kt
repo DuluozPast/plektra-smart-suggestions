@@ -23,7 +23,7 @@ object SuggestionButtonHandler {
         inputConnection: InputConnection?,
         listener: VariationButtonHandler.OnVariationSelectedListener? = null,
         shouldDisableAutoCapitalize: Boolean,
-        onSuggestionCommitted: (() -> Unit)? = null
+        onSuggestionCommitted: ((String, String) -> Unit)? = null
     ): View.OnClickListener {
         return View.OnClickListener {
             Log.d(TAG, "Click on suggestion button: $suggestion")
@@ -40,24 +40,40 @@ object SuggestionButtonHandler {
                 shouldDisableAutoCapitalize = shouldDisableAutoCapitalize
             ) && SettingsManager.getAutoCapitalizeFirstLetter(context)
 
-            val committed = replaceCurrentWord(inputConnection, suggestion, forceLeadingCapital)
-            if (committed) {
-                onSuggestionCommitted?.invoke()
+            val result = replaceCurrentWord(
+                inputConnection,
+                suggestion,
+                forceLeadingCapital
+            )
+
+            if (result != null) {
+                onSuggestionCommitted?.invoke(
+                    result.original,
+                    result.replacement
+                )
             }
+
             listener?.onVariationSelected(suggestion)
         }
     }
+
+    private data class ReplacementResult(
+        val original: String,
+        val replacement: String
+    )
 
     /**
      * Replace the word immediately before the cursor with the given suggestion.
      * Deletes up to the nearest whitespace/punctuation boundary and applies basic casing
      * (leading capital only). All-caps input (e.g., CapsLock) will not force the suggestion to uppercase.
      */
+
+
     private fun replaceCurrentWord(
         inputConnection: InputConnection,
         suggestion: String,
         forceLeadingCapital: Boolean
-    ): Boolean {
+    ): ReplacementResult? {
         fun ensureTrailingSpaceAfterSuggestion(): Boolean {
             val beforeAfterCommit = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
             if (beforeAfterCommit.endsWith(" ")) {
@@ -136,7 +152,7 @@ object SuggestionButtonHandler {
                 ensureTrailingSpaceAfterSuggestion()
             }
             if (spaced) {
-                AutoSpaceTracker.markAutoSpace()
+                AutoSpaceTracker.markSuggestionAutoSpace(inputConnection)
                 Log.d(TAG, "Suggestion auto-space marked")
             } else {
                 Log.w(TAG, "Suggestion space could not be enforced")
@@ -152,6 +168,13 @@ object SuggestionButtonHandler {
                 source = "UNKNOWN"
             )
         }
-        return committed
+        return if (committed) {
+            ReplacementResult(
+                original = currentWord,
+                replacement = replacement
+            )
+        } else {
+            null
+        }
     }
 }
