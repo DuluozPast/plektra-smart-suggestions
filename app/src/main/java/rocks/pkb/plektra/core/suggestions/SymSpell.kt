@@ -73,6 +73,7 @@ class SymSpell(
     }
 
     fun lookup(input: String, maxSuggestions: Int = 8): List<SuggestItem> {
+        SuggestionWorkCancellation.check()
         if (input.isEmpty()) return emptyList()
         val suggestions = mutableListOf<SuggestItem>()
         val suggestionSet = HashSet<String>()
@@ -104,12 +105,14 @@ class SymSpell(
         }
 
         while (queue.isNotEmpty()) {
+            SuggestionWorkCancellation.check()
             val candidate = queue.removeAt(0)
             val distance = inputPrefix.length - candidate.length
             if (distance > maxEditDistance) continue
 
             // candidate is a delete; see if it maps to any terms
             deletes[candidate]?.forEach { suggestionTerm ->
+                SuggestionWorkCancellation.check()
                 // Many delete buckets contain the same word; calculate its distance only once.
                 if (!consideredTerms.add(suggestionTerm)) return@forEach
                 val editDistance = damerauDistanceLimited(input, suggestionTerm, maxEditDistance)
@@ -156,6 +159,7 @@ class SymSpell(
         val prevPrev = IntArray(b.length + 1)
 
         for (i in 1..a.length) {
+            SuggestionWorkCancellation.check()
             curr[0] = i
             var minRow = curr[0]
             for (j in 1..b.length) {

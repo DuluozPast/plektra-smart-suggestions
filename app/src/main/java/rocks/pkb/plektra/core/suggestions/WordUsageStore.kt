@@ -257,6 +257,8 @@ class WordUsageStore(context: Context, private val asyncPersistence: Boolean = f
                 return cached
             }
 
+            // *Absent usage is common while ranking dictionary candidates; remember bounded misses.*
+            if (usageMissCache.contains(key)) return null
             val cursor = readableDatabase.query(
                 TABLE_WORD_USAGE,
                 arrayOf(COL_WORD, COL_COUNT, COL_LAST_USED),
@@ -269,7 +271,7 @@ class WordUsageStore(context: Context, private val asyncPersistence: Boolean = f
             )
 
             cursor.use {
-                if (!it.moveToFirst()) return null
+                if (!it.moveToFirst()) { rememberMiss(usageMissCache, key); return null }
 
                 val usage = Usage(
                     word = it.getString(it.getColumnIndexOrThrow(COL_WORD)),
@@ -310,7 +312,7 @@ class WordUsageStore(context: Context, private val asyncPersistence: Boolean = f
             null,
             "1"
         ).use { cursor ->
-            if (!cursor.moveToFirst()) return null
+            if (!cursor.moveToFirst()) { rememberMiss(exactUsageMissCache, key); return null }
 
             val usage = Usage(
                 word = cursor.getString(cursor.getColumnIndexOrThrow(COL_WORD)),
