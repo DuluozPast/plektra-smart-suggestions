@@ -2,6 +2,8 @@
 
 This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.
 
+Latest update: indexed learned groups and one atomic multiword write per completed-word operation. See the [performance notes and limitations](docs/integration-upgrades/performance-phase1.md) and [performance test results](docs/integration-upgrades/performance-targeted-test-results.json).
+
 Read the [complete English change summary](docs/integration-upgrades/README.md) and [targeted test results](docs/integration-upgrades/targeted-test-results.json). Based on nightly `v26.10-nightly.11.184948Z`; later upstream main commits are not included. Phone validation remains pending.
 
 The local stableDebug test APK uses `rocks.pkb.plektra.custom.integrationtest` and can coexist with Pastiera Multimots Test. Transfer learned data through backup/import. No private signing key or personal backup is included.
