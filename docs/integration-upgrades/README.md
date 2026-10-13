@@ -4,6 +4,8 @@ This contribution branch ports the custom Pastiera Integration improvements onto
 
 Latest performance update: [background learning persistence, validation and remaining limits](performance-phase2.md), with [phase 2 test results](performance-phase2-test-results.json). Earlier features below are retained.
 
+Latest search update: [cancellation, bounded negative caches and tangible work counts](performance-phase3.md), with [phase 3 validation](performance-phase3-test-results.json).
+
 ## Changes compared with the original Plektra baseline
 
 ### 1. Learned multiword suggestions and next-word continuity
