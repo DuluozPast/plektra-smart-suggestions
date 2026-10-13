@@ -218,6 +218,54 @@ class AlternateCharacterManagerTest {
         assertEquals("l'", recorder.text)
     }
 
+    private fun pressT(
+        manager: AlternateCharacterManager,
+        inputConnection: InputConnection,
+        shiftOneShot: Boolean
+    ) {
+        manager.handleKeyWithAltMapping(
+            keyCode = KeyEvent.KEYCODE_T,
+            inputConnection = inputConnection,
+            event = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_T),
+            capsLockEnabled = false,
+            shiftOneShot = shiftOneShot,
+            layoutChar = 't'
+        )
+    }
+
+    @Test
+    fun shiftLongPress_autoCapitalizedLetterTogglesToLowercase() {
+        SettingsManager.setLongPressModifier(context, "shift")
+        val recorder = RecordingInputConnection()
+        val inputConnection = recorder.asProxy()
+        val manager = AlternateCharacterManager(context.assets, prefs, context).apply {
+            addAltKeyMapping(KeyEvent.KEYCODE_T, "(")
+        }
+
+        // Auto-capitalization arrives as a one-shot Shift on the typed letter.
+        pressT(manager, inputConnection, shiftOneShot = true)
+        assertEquals("T", recorder.text)
+        shadowOf(Looper.getMainLooper()).idleFor(60, TimeUnit.MILLISECONDS)
+        assertEquals("t", recorder.text)
+        shadowOf(Looper.getMainLooper()).idleFor(500, TimeUnit.MILLISECONDS)
+        assertEquals("t", recorder.text)
+    }
+
+    @Test
+    fun shiftLongPress_lowercaseLetterStillGivesUppercase() {
+        SettingsManager.setLongPressModifier(context, "shift")
+        val recorder = RecordingInputConnection()
+        val inputConnection = recorder.asProxy()
+        val manager = AlternateCharacterManager(context.assets, prefs, context).apply {
+            addAltKeyMapping(KeyEvent.KEYCODE_T, "(")
+        }
+
+        pressT(manager, inputConnection, shiftOneShot = false)
+        shadowOf(Looper.getMainLooper()).idleFor(60, TimeUnit.MILLISECONDS)
+        assertEquals("T", recorder.text)
+    }
+
+
     private class RecordingInputConnection(
         var extractedTextAvailable: Boolean = true
     ) {
@@ -271,6 +319,11 @@ class AlternateCharacterManagerTest {
                         val before = args?.getOrNull(0) as Int
                         val after = args.getOrNull(1) as Int
                         deleteCalls += before to after
+                        val start = (selectionStart - before).coerceAtLeast(0)
+                        val end = (selectionEnd + after).coerceAtMost(text.length)
+                        text = text.removeRange(start, end)
+                        selectionStart = start
+                        selectionEnd = start
                         true
                     }
                     "finishComposingText" -> {
