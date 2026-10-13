@@ -190,9 +190,21 @@ class CommandExecutor(
                     null,
                     null
                 ) as Process
-                val exitCode = process.waitFor()
-                if (exitCode != 0) {
-                    Log.w(TAG, "Shell keyevent $keyCode exited with $exitCode")
+                try {
+                    // A hung process must not block every later event queued behind it.
+                    if (process.waitFor(SHELL_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
+                        val exitCode = process.exitValue()
+                        if (exitCode != 0) {
+                            Log.w(TAG, "Shell keyevent $keyCode exited with $exitCode")
+                        }
+                    } else {
+                        Log.w(TAG, "Shell keyevent $keyCode timed out after ${SHELL_TIMEOUT_SECONDS}s")
+                    }
+                } finally {
+                    process.destroy()
+                    runCatching { process.inputStream.close() }
+                    runCatching { process.errorStream.close() }
+                    runCatching { process.outputStream.close() }
                 }
             } catch (error: Exception) {
                 Log.e(TAG, "Failed to send shell keyevent $keyCode", error)
@@ -220,6 +232,7 @@ class CommandExecutor(
 
     companion object {
         private val shellExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+        private const val SHELL_TIMEOUT_SECONDS = 5L
         private const val TAG = "CommandExecutor"
     }
 }
