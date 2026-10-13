@@ -44,7 +44,8 @@ class SuggestionController(
     wordUsageRepositoryOverride: WordUsageRepository? = null,
     phraseUsageRepositoryOverride: PhraseUsageRepository? = null,
     multiWordStoreOverride: MultiWordStore? = null,
-    correctionUsageRepositoryOverride: CorrectionUsageRepository? = null
+    correctionUsageRepositoryOverride: CorrectionUsageRepository? = null,
+    private val asyncPersistence: Boolean = false
 ) {
 
     private val appContext = context.applicationContext
@@ -52,15 +53,16 @@ class SuggestionController(
     private val typingStatisticsTracker = TypingStatisticsTracker(typingStatisticsStore::record)
     private val debugLogging: Boolean = debugLogging
     private val userDictionaryStore = UserDictionaryStore()
+    private val sharedLearningStores = if (asyncPersistence) SharedLearningStores.get(appContext) else null
 
     private val wordUsageStore: WordUsageRepository =
-        wordUsageRepositoryOverride ?: WordUsageStore(appContext)
+        wordUsageRepositoryOverride ?: sharedLearningStores?.words ?: WordUsageStore(appContext)
 
     private val phraseUsageStore: PhraseUsageRepository =
-        phraseUsageRepositoryOverride ?: PhraseUsageStore(appContext)
+        phraseUsageRepositoryOverride ?: sharedLearningStores?.phrases ?: PhraseUsageStore(appContext)
 
     private val correctionUsageStore: CorrectionUsageRepository =
-        correctionUsageRepositoryOverride ?: CorrectionUsageStore(appContext)
+        correctionUsageRepositoryOverride ?: sharedLearningStores?.corrections ?: CorrectionUsageStore(appContext)
 
     private val dictionaryRepositoryCache =
         mutableMapOf<String, DictionaryRepository>()
@@ -97,9 +99,9 @@ class SuggestionController(
         autoSpacePunctuationProvider = { settingsProvider().autoSpacePunctuation }
     )
     private var autoReplaceController = createAutoReplaceController()
-    private val nextWordPredictor = nextWordPredictorOverride ?: NextWordPredictor(UserNGramStore(appContext))
+    private val nextWordPredictor = nextWordPredictorOverride ?: sharedLearningStores?.nextWord ?: NextWordPredictor(UserNGramStore(appContext))
     private val multiWordStore =
-        multiWordStoreOverride ?: MultiWordStore(appContext)
+        multiWordStoreOverride ?: sharedLearningStores?.multiwords ?: MultiWordStore(appContext)
 
     private val multiWordPromotionEngine = MultiWordPromotionEngine(
         phraseUsageRepository = phraseUsageStore,
@@ -1103,11 +1105,18 @@ class SuggestionController(
 
     fun invalidateMultiWordCache() {
         multiWordStore.invalidateCache()
+        (phraseUsageStore as? AsyncPhraseUsageRepository)?.invalidateCache()
     }
 
 
     suspend fun flushPendingNextWordLearning() {
         nextWordPredictor.flushPendingLearning()
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            (wordUsageStore as? WordUsageStore)?.flushPendingWrites()
+            (correctionUsageStore as? CorrectionUsageStore)?.flushPendingWrites()
+            (phraseUsageStore as? AsyncPhraseUsageRepository)?.flushPendingWrites()
+            multiWordStore.flushPendingWrites()
+        }
     }
 
 
@@ -1161,6 +1170,10 @@ class SuggestionController(
 
     internal fun flushNextWordLearningForTests() {
         nextWordPredictor.flushLearningForTests()
+        (wordUsageStore as? WordUsageStore)?.flushPendingWrites()
+        (correctionUsageStore as? CorrectionUsageStore)?.flushPendingWrites()
+        (phraseUsageStore as? AsyncPhraseUsageRepository)?.flushPendingWrites()
+        multiWordStore.flushPendingWrites()
     }
 
     internal fun noteCompletedWordForMaintenanceForTests() {
@@ -1187,7 +1200,14 @@ class SuggestionController(
         maintenanceJob?.cancel()
         maintenanceJob = null
         cursorRunnable?.let { cursorHandler.removeCallbacks(it) }
-        nextWordPredictor.destroy()
+        if (!asyncPersistence) {
+            nextWordPredictor.destroy()
+            (wordUsageStore as? WordUsageStore)?.closeWhenDrained()
+            (correctionUsageStore as? CorrectionUsageStore)?.closeWhenDrained()
+            (phraseUsageStore as? AsyncPhraseUsageRepository)?.closeWhenDrained()
+            multiWordStore.closeWhenDrained()
+        }
+        // *Production models survive a service restart; accepted writes keep draining.*
     }
 
     private fun learnPhraseUsage(
@@ -2094,6 +2114,9 @@ class SuggestionController(
      * Should be called during initialization to have dictionary ready when user focuses a field.
      */
     fun preloadDictionary() {
+        if (settingsProvider().multiWordSuggestionsEnabled) {
+            loadScope.launch { multiWordStore.preload() }
+        }
         schedulePrimaryDictionaryLoad(refreshAfterLoad = false)
         activeExtraSuggestionEngines().forEach { scheduleRepositoryLoad(it.repository, refreshAfterLoad = false) }
     }

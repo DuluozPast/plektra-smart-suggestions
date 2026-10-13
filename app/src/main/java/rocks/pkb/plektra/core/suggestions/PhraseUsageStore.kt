@@ -657,6 +657,23 @@ class PhraseUsageStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    /** *Seed an exact context cache in insertion order, preserving SQLite tie-breaks.* */
+    internal fun predictionRows(locale: Locale, normalizedContext: List<String>): List<Prediction> =
+        readableDatabase.query(
+            TABLE_PHRASE_NEXT_WORD,
+            arrayOf(COL_NEXT_WORD, COL_COUNT, COL_LAST_USED),
+            "$COL_LOCALE = ? AND $COL_CONTEXT = ?",
+            arrayOf(locale.language.lowercase(Locale.ROOT), normalizedContext.joinToString(SEPARATOR)),
+            null, null, "rowid ASC"
+        ).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) {
+                    add(Prediction(cursor.getString(0), count = cursor.getInt(1),
+                        lastUsed = cursor.getLong(2), contextLength = normalizedContext.size))
+                }
+            }
+        }
+
     companion object {
         private const val DATABASE_NAME = "phrase_usage.db"
         private const val DATABASE_VERSION = 2

@@ -198,7 +198,6 @@ class NextWordPredictor(
 
     fun destroy() {
         learningQueue?.destroy()
-        pendingLearning.clear()
     }
 
     private fun mergePredictions(
@@ -332,72 +331,18 @@ class NextWordPredictor(
         )
     }
 
-    private class AsyncLearningQueue(
-        private val store: UserNGramRepository
-    ) {
-        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        private val channel = Channel<Command>(Channel.UNLIMITED)
-
-        init {
-            scope.launch {
-                for (command in channel) {
-                    when (command) {
-                        is Command.Learn -> handleLearn(command)
-                        is Command.Flush -> command.completed.complete(Unit)
-                    }
-                }
+    private class AsyncLearningQueue(private val store: UserNGramRepository) {
+        private val writer = OrderedPersistenceQueue("next-word-learning")
+        fun enqueue(localeTag: String, prefix: String, nextWord: String, nowMs: Long,
+                    shouldPersist: () -> Boolean, onFinished: () -> Unit): Boolean = try {
+            writer.enqueue {
+                if (shouldPersist()) store.learn(localeTag, prefix, nextWord, nowMs)
+                // *A failed write stays queued and visible; remove pending counts only after success.*
+                onFinished()
             }
-        }
-
-        fun enqueue(
-            localeTag: String,
-            prefix: String,
-            nextWord: String,
-            nowMs: Long,
-            shouldPersist: () -> Boolean,
-            onFinished: () -> Unit
-        ): Boolean {
-            return channel.trySend(
-                Command.Learn(localeTag, prefix, nextWord, nowMs, shouldPersist, onFinished)
-            ).isSuccess
-        }
-
-        suspend fun flush() {
-            val completed = CompletableDeferred<Unit>()
-            if (!channel.trySend(Command.Flush(completed)).isSuccess) return
-            completed.await()
-        }
-
-        fun destroy() {
-            channel.close()
-            scope.cancel()
-        }
-
-        private fun handleLearn(command: Command.Learn) {
-            try {
-                if (command.shouldPersist()) {
-                    store.learn(command.localeTag, command.prefix, command.nextWord, command.nowMs)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to persist next-word learning", e)
-            } finally {
-                command.onFinished()
-            }
-        }
-
-        private sealed class Command {
-            data class Learn(
-                val localeTag: String,
-                val prefix: String,
-                val nextWord: String,
-                val nowMs: Long,
-                val shouldPersist: () -> Boolean,
-                val onFinished: () -> Unit
-            ) : Command()
-
-            data class Flush(
-                val completed: CompletableDeferred<Unit>
-            ) : Command()
-        }
+            true
+        } catch (_: IllegalStateException) { false }
+        suspend fun flush() = kotlinx.coroutines.withContext(Dispatchers.IO) { writer.flush() }
+        fun destroy() { writer.closeWhenDrained() }
     }
 }

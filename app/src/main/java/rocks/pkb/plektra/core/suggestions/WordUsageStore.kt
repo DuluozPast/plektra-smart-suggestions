@@ -32,12 +32,19 @@ interface WordUsageRepository {
     fun clearAll()
 }
 
-class WordUsageStore(context: Context) : SQLiteOpenHelper(
+class WordUsageStore(context: Context, private val asyncPersistence: Boolean = false) : SQLiteOpenHelper(
     context.applicationContext,
     DATABASE_NAME,
     null,
     DATABASE_VERSION
 ), WordUsageRepository {
+
+    private val modelLock = Any()
+    private val writer = if (asyncPersistence) OrderedPersistenceQueue("WordUsageStore-usage") else null
+    fun flushPendingWrites() { writer?.flush() }
+    fun closeWhenDrained() { writer?.closeWhenDrained() }
+
+    init { if (asyncPersistence) setWriteAheadLoggingEnabled(true) }
 
     private val usageCache = ConcurrentHashMap<String, Usage>()
     private val exactUsageCache = ConcurrentHashMap<String, Usage>()
@@ -56,6 +63,14 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         val count: Int,
         val lastUsed: Long
     )
+
+    override fun close() {
+        synchronized(modelLock) {
+            flushPendingWrites()
+            writer?.closeWhenDrained()
+            super.close()
+        }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -104,7 +119,22 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
             )
         }
     }
-    override fun learn(
+    /** *Publish counters immediately; queue only the durable SQL mutation.* */
+    override fun learn(locale: Locale, word: String, nowMs: Long) {
+        synchronized(modelLock) {
+        if (!asyncPersistence) { persistLearn(locale, word, nowMs); return }
+        if (word.isBlank() || normalize(word, locale).isBlank()) return
+        val prior = getUsage(locale, word)
+        val exact = getExactUsage(locale, word)
+        usageCache[cacheKey(locale, word)] = Usage(word, (prior?.count ?: 0) + 1, nowMs)
+        exactUsageCache[exactCacheKey(locale, word)] = Usage(word, (exact?.count ?: 0) + 1, nowMs)
+        usageMissCache.remove(cacheKey(locale, word))
+        exactUsageMissCache.remove(exactCacheKey(locale, word))
+        writer!!.enqueue { persistLearn(locale, word, nowMs) }
+        }
+    }
+
+    private fun persistLearn(
         locale: Locale,
         word: String,
         nowMs: Long
@@ -176,6 +206,9 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         }
 
         // Keep the in-memory cache synchronized with the persisted usage count.
+        // *The immediate cache may already contain later queued increments.*
+        if (asyncPersistence) return
+
         val key = cacheKey(locale, word)
         usageMissCache.remove(key)
         val persistedUsage = readableDatabase.query(
@@ -291,6 +324,8 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
     }
 
     override fun delete(locale: Locale, word: String): Int {
+        synchronized(modelLock) {
+        flushPendingWrites()
         if (word.isBlank()) return 0
 
         val localeKey = locale.language.lowercase(Locale.ROOT)
@@ -330,6 +365,7 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         }
 
         return deleted
+        }
     }
 
     override fun prune(
@@ -338,6 +374,8 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         weakCountThreshold: Int,
         maxEntriesPerLocale: Int
     ): Int {
+        synchronized(modelLock) {
+        flushPendingWrites()
         require(staleAfterMs >= 0L)
         require(weakCountThreshold >= 0)
         require(maxEntriesPerLocale > 0)
@@ -520,9 +558,12 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         exactUsageMissCache.clear()
 
         return deletedCount
+        }
     }
 
     override fun clearAll() {
+        synchronized(modelLock) {
+        flushPendingWrites()
         val db = writableDatabase
 
         db.beginTransaction()
@@ -538,13 +579,17 @@ class WordUsageStore(context: Context) : SQLiteOpenHelper(
         exactUsageCache.clear()
         usageMissCache.clear()
         exactUsageMissCache.clear()
+        }
     }
 
     fun invalidateCache() {
+        synchronized(modelLock) {
+        flushPendingWrites()
         usageCache.clear()
         exactUsageCache.clear()
         usageMissCache.clear()
         exactUsageMissCache.clear()
+        }
     }
 
     private fun cacheKey(locale: Locale, word: String): String {

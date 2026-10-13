@@ -36,12 +36,19 @@ interface CorrectionUsageRepository {
     fun clearAll()
 }
 
-class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
+class CorrectionUsageStore(context: Context, private val asyncPersistence: Boolean = false) : SQLiteOpenHelper(
     context.applicationContext,
     DATABASE_NAME,
     null,
     DATABASE_VERSION
 ), CorrectionUsageRepository {
+
+    private val modelLock = Any()
+    private val writer = if (asyncPersistence) OrderedPersistenceQueue("CorrectionUsageStore-usage") else null
+    fun flushPendingWrites() { writer?.flush() }
+    fun closeWhenDrained() { writer?.closeWhenDrained() }
+
+    init { if (asyncPersistence) setWriteAheadLoggingEnabled(true) }
 
     private val usageCache = ConcurrentHashMap<String, Usage>()
 
@@ -55,6 +62,14 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
         val count: Int,
         val lastUsed: Long
     )
+
+    override fun close() {
+        synchronized(modelLock) {
+            flushPendingWrites()
+            writer?.closeWhenDrained()
+            super.close()
+        }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -88,7 +103,21 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    override fun learn(
+    /** *Correction ranking sees accepted changes before background persistence completes.* */
+    override fun learn(locale: Locale, original: String, correction: String, nowMs: Long) {
+        synchronized(modelLock) {
+        if (!asyncPersistence) { persistLearn(locale, original, correction, nowMs); return }
+        val first = normalize(original, locale)
+        val second = normalize(correction, locale)
+        if (first.isBlank() || second.isBlank() || first == second) return
+        val prior = getUsage(locale, original, correction)
+        usageCache[cacheKey(locale, original, correction)] = Usage(
+            locale.language.lowercase(Locale.ROOT), original, correction, (prior?.count ?: 0) + 1, nowMs)
+        writer!!.enqueue { persistLearn(locale, original, correction, nowMs) }
+        }
+    }
+
+    private fun persistLearn(
         locale: Locale,
         original: String,
         correction: String,
@@ -149,6 +178,9 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
         } finally {
             db.endTransaction()
         }
+
+        // *The immediate cache may already contain later queued increments.*
+        if (asyncPersistence) return
 
         val key = cacheKey(locale, original, correction)
 
@@ -302,16 +334,21 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
             )
     }
 
-    @Synchronized
     override fun invalidateCache() {
+        synchronized(modelLock) {
+        flushPendingWrites()
         usageCache.clear()
         cacheFullyLoaded = false
+        }
     }
 
     override fun clearAll() {
+        synchronized(modelLock) {
+        flushPendingWrites()
         writableDatabase.delete(TABLE_CORRECTION_USAGE, null, null)
         usageCache.clear()
         cacheFullyLoaded = true
+        }
     }
 
     override fun restoreUsage(
@@ -321,6 +358,8 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
         count: Int,
         lastUsed: Long
     ) {
+        synchronized(modelLock) {
+        flushPendingWrites()
         if (localeTag.isBlank()) return
         if (original.isBlank() || correction.isBlank()) return
         if (count <= 0) return
@@ -365,6 +404,7 @@ class CorrectionUsageStore(context: Context) : SQLiteOpenHelper(
             count = count,
             lastUsed = lastUsed
         )
+        }
     }
 
     private fun cacheKey(
