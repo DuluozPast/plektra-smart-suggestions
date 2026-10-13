@@ -6,6 +6,11 @@ import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.atomic.AtomicBoolean
 
 object LearningOperationGate {
+    private val pendingWriters = java.util.concurrent.ConcurrentHashMap<Any, suspend () -> Unit>()
+
+    /** *Include writers from a closing keyboard session until their accepted updates are durable.* */
+    fun registerPendingWriter(owner: Any, drain: suspend () -> Unit) { pendingWriters[owner] = drain }
+    fun unregisterPendingWriter(owner: Any) { pendingWriters.remove(owner) }
 
     private val mutex = Mutex()
     private val learningSuspended = AtomicBoolean(false)
@@ -39,6 +44,7 @@ object LearningOperationGate {
                 "No active suggestion controller to drain"
             )
         }
+        pendingWriters.values.toList().forEach { it.invoke() }
     }
 
 

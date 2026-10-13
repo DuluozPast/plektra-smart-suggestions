@@ -150,6 +150,7 @@ object RestoreManager {
             Log.e(TAG, "Restore failed", e)
             RestoreResult.Failure(e.message ?: "Restore failed")
         } finally {
+            rocks.pkb.plektra.core.suggestions.SharedLearningStores.invalidate(context)
             extractedDir.deleteRecursively()
             if (!retainRecoveryData) workingDir.deleteRecursively()
         }
