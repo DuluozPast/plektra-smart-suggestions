@@ -2,7 +2,7 @@
 
 This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.
 
-Latest update: indexed learned groups and one atomic multiword write per completed-word operation. See the [performance notes and limitations](docs/integration-upgrades/performance-phase1.md) and [performance test results](docs/integration-upgrades/performance-targeted-test-results.json).
+Latest update: learning writes now run on ordered background workers, with immediate in-memory counters/predictions, shared session models and backup barriers. See the [phase 2 performance notes and tradeoffs](docs/integration-upgrades/performance-phase2.md) and [test results](docs/integration-upgrades/performance-phase2-test-results.json): 173 Integration tests passed; 346 Plektra tests passed and 2 Windows graphics tests skipped. Indexed multiword lookup from [phase 1](docs/integration-upgrades/performance-phase1.md) is retained. Phone validation remains pending.
 
 Read the [complete English change summary](docs/integration-upgrades/README.md) and [targeted test results](docs/integration-upgrades/targeted-test-results.json). Based on nightly `v26.10-nightly.11.184948Z`; later upstream main commits are not included. Phone validation remains pending.
 
