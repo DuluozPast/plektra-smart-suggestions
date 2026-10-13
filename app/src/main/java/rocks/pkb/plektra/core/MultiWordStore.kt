@@ -8,7 +8,7 @@ import java.io.File
 import java.util.Locale
 import android.util.AtomicFile
 
-class MultiWordStore(context: Context) {
+class MultiWordStore(context: Context, private val asyncPersistence: Boolean = false) {
 
     @Serializable
     data class Entry(
@@ -36,6 +36,9 @@ class MultiWordStore(context: Context) {
     private val ordinals = HashMap<Key, Long>()
     private val byLocale = HashMap<String, LinkedHashSet<Key>>()
     private val byPrefix = HashMap<Prefix, LinkedHashSet<Key>>()
+    private val writer = if (asyncPersistence) OrderedPersistenceQueue("multiword-json") else null
+    private var writeScheduled = false
+    private var revision = 0L
     private var loaded = false
     private var nextOrdinal = 0L
     private var batchDepth = 0
@@ -50,12 +53,14 @@ class MultiWordStore(context: Context) {
     }
 
     /** *Restoration invalidates both the in-memory data and its lookup indexes.* */
-    @Synchronized
     fun invalidateCache() {
+        flushPendingWrites()
+        synchronized(this) {
         check(batchDepth == 0) { "Cannot invalidate during learning" }
         resetIndexes()
         loaded = false
         dirty = false
+        }
     }
 
     @Synchronized
@@ -105,7 +110,7 @@ class MultiWordStore(context: Context) {
         return entries[Key(localeKey(locale), normalized)]
     }
 
-    /** *Batch one logical learning operation into one atomic write, with no deferred-loss window.* */
+    /** *Group immediate model updates; production persistence runs on its serial IO worker.* */
     @Synchronized
     fun <T> batchUpdates(block: () -> T): T {
         // *An empty/disabled learning batch must not load the store.*
@@ -163,16 +168,23 @@ class MultiWordStore(context: Context) {
         return true
     }
 
-    @Synchronized
     fun clearAll() {
+        flushPendingWrites()
+        synchronized(this) {
         AtomicFile(storeFile).delete()
         resetIndexes()
         loaded = true
         dirty = false
+        }
     }
+
+    fun flushPendingWrites() { writer?.flush() }
+    fun closeWhenDrained() { writer?.closeWhenDrained() }
+    @Synchronized fun preload() { ensureLoaded() }
 
     private fun changed() {
         dirty = true
+        revision++
         if (batchDepth == 0) persistIfDirty()
     }
 
@@ -220,14 +232,41 @@ class MultiWordStore(context: Context) {
 
     private fun persistIfDirty() {
         if (!dirty) return
+        if (writer == null) {
+            writeSnapshot(StoreData(entries = entries.values.toList()))
+            dirty = false
+            persistenceCountForTests++
+            return
+        }
+        if (writeScheduled) return
+        writeScheduled = true
+        writer.enqueue {
+            // *Copy under the model lock; serialization and atomic disk IO never hold it.*
+            while (true) {
+                val snapshot = synchronized(this) {
+                    revision to StoreData(entries = entries.values.toList())
+                }
+                writeSnapshot(snapshot.second)
+                val complete = synchronized(this) {
+                    persistenceCountForTests++
+                    if (revision == snapshot.first) {
+                        dirty = false
+                        writeScheduled = false
+                        true
+                    } else false
+                }
+                if (complete) break
+            }
+        }
+    }
+
+    private fun writeSnapshot(data: StoreData) {
         val atomicFile = AtomicFile(storeFile)
-        val bytes = json.encodeToString(StoreData(entries = entries.values.toList())).toByteArray(Charsets.UTF_8)
+        val bytes = json.encodeToString(data).toByteArray(Charsets.UTF_8)
         val output = atomicFile.startWrite()
         try {
             output.write(bytes)
             atomicFile.finishWrite(output)
-            dirty = false
-            persistenceCountForTests++
         } catch (e: Exception) {
             atomicFile.failWrite(output)
             throw e
