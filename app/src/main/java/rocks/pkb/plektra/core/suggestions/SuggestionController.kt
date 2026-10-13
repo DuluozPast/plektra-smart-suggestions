@@ -1402,6 +1402,7 @@ class SuggestionController(
                 )
             }
 
+            multiWordStore.batchUpdates {
             learnedPhraseSequences.forEach { sequence ->
                 multiWordStore.markUsed(
                     locale = currentLocale,
@@ -1412,6 +1413,8 @@ class SuggestionController(
                     locale = currentLocale,
                     words = sequence
                 )
+            }
+
             }
 
             noteCompletedWordForMaintenance()
@@ -1493,7 +1496,7 @@ class SuggestionController(
             WordNormalization.normalizeForSuggestion(it.word, currentLocale)
         }
 
-        return multiWordStore.getForLocale(currentLocale)
+        return multiWordStore.getForContext(currentLocale, context)
             .asSequence()
             .flatMap { entry ->
                 val normalized = entry.normalizedWords
@@ -1674,7 +1677,7 @@ class SuggestionController(
             settings.multiWordSuggestionsEnabled &&
             predictedFirstWords.isNotEmpty()
         ) {
-            multiWordStore.getForLocale(currentLocale)
+            multiWordStore.getStartingWith(currentLocale, predictedFirstWords)
                 .asSequence()
                 .filter { entry ->
                     entry.words.size >= 2 &&
