@@ -1910,7 +1910,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             onSuggestionsUpdated = { suggestions -> handleSuggestionsUpdated(suggestions) },
             currentLocale = initialLocale,
             keyboardLayoutProvider = { SettingsManager.getKeyboardLayout(this) },
-            activeSuggestionLocalesProvider = { getAdditionalSuggestionLocalesForActiveInputStyle() }
+            activeSuggestionLocalesProvider = { getAdditionalSuggestionLocalesForActiveInputStyle() },
+            // *Production learning persists on serial IO workers; counters stay immediately visible.*
+            asyncPersistence = true
         )
         inputEventRouter.suggestionController = suggestionController
 
