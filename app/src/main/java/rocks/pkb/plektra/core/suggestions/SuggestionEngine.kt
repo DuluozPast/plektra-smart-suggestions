@@ -321,6 +321,7 @@ class SuggestionEngine(
         useKeyboardProximity: Boolean = true,
         useEditTypeRanking: Boolean = true
     ): List<SuggestionResult> {
+        SuggestionWorkCancellation.check()
         if (currentWord.isBlank() || currentWord.length > 48) return emptyList()
         if (!repository.isReady) return emptyList()
 
@@ -366,6 +367,7 @@ class SuggestionEngine(
         correctionOriginalWord: String = currentWord,
         correctionPrefix: String = ""
     ): List<SuggestionResult> {
+        SuggestionWorkCancellation.check()
         val normalizedWord = normalize(currentWord)
         val normalizedWordBare = normalizedWord.replace("'", "")
         val inputLen = normalizedWord.length
@@ -389,6 +391,7 @@ class SuggestionEngine(
 
         val completions = prefixCandidates
             .filter {
+                SuggestionWorkCancellation.check()
                 val norm = normalizeCached(it.word)
 
                 // Personal usage must be able to rescue a word that would otherwise
@@ -417,6 +420,7 @@ class SuggestionEngine(
 
         // SymSpell lookup on normalized input (skip for single-char to avoid noise)
         // Reduce SymSpell suggestions to prioritize prefix matches
+        SuggestionWorkCancellation.check()
         val symResultsPrimary = if (inputLen == 1) {
             emptyList()
         } else if (inputLen <= 3) {
@@ -425,6 +429,7 @@ class SuggestionEngine(
         } else {
             repository.symSpellLookup(normalizedWord, maxSuggestions = limit * 4)
         }
+        SuggestionWorkCancellation.check()
         val symResultsAccent = if (includeAccentMatching && inputLen > 1) {
             val normalizedAccentless = stripAccents(normalizedWord)
             if (normalizedAccentless != normalizedWord) {
@@ -492,6 +497,7 @@ class SuggestionEngine(
             isForcedPrefix: Boolean = false,
             overrideCandidates: List<DictionaryEntry>? = null
         ) {
+            SuggestionWorkCancellation.check()
             // For very short inputs, avoid suggesting single-char tokens unless exact
             if (inputLen <= 2 && term.length == 1 && term != normalizedWord) return
             if (inputLen <= 2 && distance > 1) return

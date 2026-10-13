@@ -325,6 +325,8 @@ class SuggestionController(
         suggestionJob = suggestionScope.launch {
             // Coalesce key repeat/backspace bursts before doing CPU-bound dictionary work.
             delay(40)
+            val searchContext = coroutineContext
+            SuggestionWorkCancellation.withCheckpoint({ searchContext.ensureActive() }) {
             val primary = if (primaryRepository.isReady) {
                 SuggestionEngine(
                     primaryRepository,
@@ -449,6 +451,7 @@ class SuggestionController(
                 latestSuggestions.set(next)
                 suggestionsListener?.invoke(next)
             }
+            } // *Restore the thread checkpoint even when an obsolete search is cancelled.*
         }
     }
 
@@ -1777,7 +1780,7 @@ class SuggestionController(
             rankedPredictions
         }
 
-        android.util.Log.d(
+        if (debugLogging) android.util.Log.d(
             "PastieraSouviensRun",
             "prev='$previousWord' " +
                     "primary=${primary.joinToString { "'${it.candidate}'" }} " +

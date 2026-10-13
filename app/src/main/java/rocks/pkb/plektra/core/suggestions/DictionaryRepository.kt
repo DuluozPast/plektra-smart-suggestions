@@ -730,10 +730,12 @@ class AndroidDictionaryRepository(
         val seen = LinkedHashMap<String, DictionaryEntry>()
 
         for (length in maxPrefixLength downTo 1) {
+            SuggestionWorkCancellation.check()
             val entries =
                 reader.prefixEntries(normalizedPrefix.take(length))
 
             for (compactEntry in entries) {
+            SuggestionWorkCancellation.check()
                 val entry = compactEntry.toDictionaryEntry()
                 val key = entry.word.lowercase(baseLocale)
 
@@ -770,6 +772,7 @@ class AndroidDictionaryRepository(
         val maxPrefixLength = normalizedPrefix.length.coerceAtMost(cachePrefixLength)
 
         for (length in maxPrefixLength downTo 1) {
+            SuggestionWorkCancellation.check()
             val bucket = prefixCache[normalizedPrefix.take(length)]
             if (!bucket.isNullOrEmpty()) {
                 return bucket
@@ -809,10 +812,12 @@ class AndroidDictionaryRepository(
          * USER / DEFAULT_USER.
          */
         for (length in maxPrefixLength downTo 1) {
+            SuggestionWorkCancellation.check()
             val bucket =
                 prefixCache[normalizedPrefix.take(length)] ?: continue
 
             for (entry in bucket) {
+            SuggestionWorkCancellation.check()
                 if (entry.source == SuggestionSource.MAIN) {
                     continue
                 }
@@ -834,6 +839,7 @@ class AndroidDictionaryRepository(
                 lookupByPrefixMergedV31(prefix, maxSize)
 
             for (entry in compactEntries) {
+            SuggestionWorkCancellation.check()
                 val key =
                     entry.word.lowercase(baseLocale)
 
@@ -847,10 +853,12 @@ class AndroidDictionaryRepository(
              * which do not yet have a V3.1 file.
              */
             for (length in maxPrefixLength downTo 1) {
+            SuggestionWorkCancellation.check()
                 val bucket =
                     prefixCache[normalizedPrefix.take(length)] ?: continue
 
                 for (entry in bucket) {
+            SuggestionWorkCancellation.check()
                     val key =
                         entry.word.lowercase(baseLocale)
 
@@ -881,10 +889,12 @@ class AndroidDictionaryRepository(
         var current = IntArray(right.length + 1)
 
         for (i in 1..left.length) {
+            SuggestionWorkCancellation.check()
             current[0] = i
             var rowMinimum = current[0]
 
             for (j in 1..right.length) {
+            SuggestionWorkCancellation.check()
                 val substitutionCost =
                     if (left[i - 1] == right[j - 1]) 0 else 1
 
@@ -935,6 +945,7 @@ class AndroidDictionaryRepository(
             entries: List<CompactDictionaryV31Reader.WordEntry>
         ) {
             for (entry in entries) {
+            SuggestionWorkCancellation.check()
                 val current = candidates[entry.normalized]
 
                 if (
@@ -993,7 +1004,9 @@ class AndroidDictionaryRepository(
                 LinkedHashSet<String>()
 
             for (value in currentLevel) {
+            SuggestionWorkCancellation.check()
                 for (index in value.indices) {
+            SuggestionWorkCancellation.check()
                     val deleted =
                         value.removeRange(index, index + 1)
 
@@ -1007,6 +1020,7 @@ class AndroidDictionaryRepository(
         }
 
         for (deleteKey in deletes) {
+            SuggestionWorkCancellation.check()
             addEntries(
                 reader.symDeleteEntries(deleteKey)
             )
@@ -1021,6 +1035,7 @@ class AndroidDictionaryRepository(
  */
         normalizedIndex.forEach { (_, entries) ->
             for (entry in entries) {
+            SuggestionWorkCancellation.check()
                 if (entry.source == SuggestionSource.MAIN) {
                     continue
                 }
@@ -1061,6 +1076,7 @@ class AndroidDictionaryRepository(
          * Static MAIN candidates from V3.1.
          */
         candidates.values.forEach { entry ->
+            SuggestionWorkCancellation.check()
             val distance =
                 editDistanceAtMostTwo(
                     normalizedTerm,
@@ -1084,6 +1100,7 @@ class AndroidDictionaryRepository(
          * Dynamic USER / DEFAULT_USER candidates.
          */
         dynamicCandidates.forEach { (normalized, entry) ->
+            SuggestionWorkCancellation.check()
             val distance =
                 editDistanceAtMostTwo(
                     normalizedTerm,
