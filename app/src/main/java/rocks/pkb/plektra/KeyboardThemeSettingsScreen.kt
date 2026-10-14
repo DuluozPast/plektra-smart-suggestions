@@ -1008,13 +1008,13 @@ fun KeyboardThemeScreen(
             initialOverride = request.override,
             themeOptions = options,
             onDismiss = { overrideEditorRequest = null },
-            onSave = { locale, layout, theme ->
+            onSave = { locale, layout, theme, mode, names, anchor ->
                 SettingsManager.upsertKeyboardThemeLayoutOverride(
                     context,
                     request.target,
                     locale,
                     layout,
-                    theme.toSettingsTheme()
+                    theme.toSettingsTheme(), mode, names, anchor
                 )
                 if (request.target == SettingsManager.KeyboardThemeTarget.HARDWARE) {
                     hardwareOverrides = SettingsManager.getKeyboardThemeLayoutOverrides(context, request.target)
@@ -1427,7 +1427,9 @@ private fun KeyboardThemeOverrideRow(
                     maxLines = 1
                 )
                 Text(
-                    text = themeName,
+                    text = if (override.mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY)
+                        stringResource(R.string.keyboard_theme_override_rotation_summary, override.rotationThemeNames.size)
+                    else themeName,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
@@ -1539,7 +1541,7 @@ private fun KeyboardThemeOverrideEditorDialog(
     initialOverride: SettingsManager.KeyboardThemeLayoutOverride?,
     themeOptions: List<KeyboardThemeOption>,
     onDismiss: () -> Unit,
-    onSave: (String?, String?, KeyboardThemePreset) -> Unit
+    onSave: (String?, String?, KeyboardThemePreset, String, List<String>, Long) -> Unit
 ) {
     val context = LocalContext.current
     val targets = remember(context) { keyboardThemeOverrideTargets(context) }
@@ -1561,6 +1563,12 @@ private fun KeyboardThemeOverrideEditorDialog(
                 ?: themeOptions.first().preset
         )
     }
+
+    // *Edits remain local until Save; cancelling must not change the stored cycle or its anchor.*
+    var mode by remember(initialOverride) { mutableStateOf(initialOverride?.mode ?: SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED) }
+    var rotationNames by remember(initialOverride) { mutableStateOf(initialOverride?.rotationThemeNames.orEmpty()) }
+    val savedOptions = themeOptions.filter { it.userSaved }
+    val validNames = rotationNames.filter { name -> savedOptions.any { it.preset.name == name } }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1585,6 +1593,29 @@ private fun KeyboardThemeOverrideEditorDialog(
                         onClick = { selectedTarget = target }
                     )
                 }
+                KeyboardThemeModeButton(stringResource(R.string.keyboard_theme_override_fixed),
+                    mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED, Modifier.fillMaxWidth()) {
+                    mode = SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED
+                }
+                KeyboardThemeModeButton(stringResource(R.string.keyboard_theme_daily_rotation),
+                    mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY, Modifier.fillMaxWidth()) {
+                    mode = SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY
+                }
+                if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+                    Text(stringResource(R.string.keyboard_theme_override_rotation_description), style = MaterialTheme.typography.bodySmall)
+                    if (savedOptions.isEmpty()) Text(stringResource(R.string.keyboard_theme_daily_rotation_empty))
+                    savedOptions.forEach { option ->
+                        val name = option.preset.name
+                        val checked = name in rotationNames
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = checked, onCheckedChange = { enable ->
+                                rotationNames = if (enable) rotationNames + name else rotationNames - name
+                            })
+                            Text(if (checked) "${rotationNames.indexOf(name) + 1}. $name" else name)
+                        }
+                    }
+                    if (validNames.isEmpty()) Text(stringResource(R.string.keyboard_theme_daily_rotation_none))
+                } else {
                 Text(
                     text = stringResource(R.string.keyboard_theme_layout_override_theme),
                     style = MaterialTheme.typography.labelLarge,
@@ -1597,15 +1628,22 @@ private fun KeyboardThemeOverrideEditorDialog(
                         onClick = { selectedTheme = option.preset }
                     )
                 }
+                }
             }
         },
         confirmButton = {
             TextButton(
+                enabled = mode != SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY || validNames.isNotEmpty(),
                 onClick = {
+                    // *Unchanged cycles keep their original calendar anchor; new selections start today.*
+                    val anchor = initialOverride?.takeIf {
+                        it.mode == mode && it.rotationThemeNames == validNames &&
+                            it.locale == selectedTarget.locale && it.layout == selectedTarget.layout
+                    }?.rotationAnchorDay ?: java.time.LocalDate.now().toEpochDay()
                     onSave(
                         selectedTarget.locale,
                         selectedTarget.layout,
-                        selectedTheme
+                        selectedTheme, mode, validNames, anchor
                     )
                 }
             ) {

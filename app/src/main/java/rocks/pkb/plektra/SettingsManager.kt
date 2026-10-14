@@ -579,7 +579,11 @@ object SettingsManager {
     data class KeyboardThemeLayoutOverride(
         val locale: String?,
         val layout: String?,
-        val theme: KeyboardThemeSettings
+        val theme: KeyboardThemeSettings,
+        // *Legacy assignments stay fixed; each language/layout can opt into its own daily cycle.*
+        val mode: String = KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED,
+        val rotationThemeNames: List<String> = emptyList(),
+        val rotationAnchorDay: Long = 0L
     )
 
     /**
@@ -1031,7 +1035,12 @@ object SettingsManager {
         locale: String?,
         layout: String?
     ): KeyboardThemeSettings {
-        findKeyboardThemeLayoutOverride(context, target, locale, layout)?.let { return it.theme }
+        findKeyboardThemeLayoutOverride(context, target, locale, layout)?.let { assignment ->
+            // *Resolve the matching assignment's cycle before the global theme policy.*
+            return if (assignment.mode == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
+                DailyThemeRotation.themeForOverride(context, target, assignment) ?: assignment.theme
+            } else assignment.theme
+        }
         if (getKeyboardThemeAssignmentMode(context, target) == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
             DailyThemeRotation.theme(context, target)?.let { return it }
         }
@@ -1061,7 +1070,15 @@ object SettingsManager {
                         KeyboardThemeLayoutOverride(
                             locale = locale?.let(::normalizeKeyboardThemeOverrideLocale),
                             layout = layout,
-                            theme = keyboardThemeFromJson(themeObject, defaultKeyboardTheme(target))
+                            theme = keyboardThemeFromJson(themeObject, defaultKeyboardTheme(target)),
+                            mode = if (item.optString("mode") == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY)
+                                KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY else KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED,
+                            rotationThemeNames = item.optJSONArray("rotationThemeNames")?.let { names ->
+                                (0 until names.length()).mapNotNull { index ->
+                                    (names.opt(index) as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                                }.distinct()
+                            }.orEmpty(),
+                            rotationAnchorDay = item.optLong("rotationAnchorDay", 0L)
                         )
                     )
                 }
@@ -1089,6 +1106,11 @@ object SettingsManager {
                         if (locale != null) put("locale", locale)
                         if (layout != null) put("layout", layout)
                         put("theme", keyboardThemeToJson(override.theme))
+                        // *Embedded in the existing backed-up assignment JSON; no separate preference keys.*
+                        put("mode", if (override.mode == KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY)
+                            KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY else KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED)
+                        put("rotationThemeNames", JSONArray(override.rotationThemeNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()))
+                        put("rotationAnchorDay", override.rotationAnchorDay)
                     }
                 }
             }
@@ -1104,7 +1126,10 @@ object SettingsManager {
         target: KeyboardThemeTarget,
         locale: String?,
         layout: String?,
-        theme: KeyboardThemeSettings
+        theme: KeyboardThemeSettings,
+        mode: String = KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED,
+        rotationThemeNames: List<String> = emptyList(),
+        rotationAnchorDay: Long = java.time.LocalDate.now().toEpochDay()
     ) {
         val normalizedLocale = locale?.let(::normalizeKeyboardThemeOverrideLocale)?.takeIf { it.isNotBlank() }
         val normalizedLayout = layout?.trim()?.takeIf { it.isNotBlank() }
@@ -1112,7 +1137,7 @@ object SettingsManager {
         val updated = getKeyboardThemeLayoutOverrides(context, target)
             .filterNot { it.locale == normalizedLocale && it.layout == normalizedLayout }
             .toMutableList()
-        updated += KeyboardThemeLayoutOverride(normalizedLocale, normalizedLayout, theme)
+        updated += KeyboardThemeLayoutOverride(normalizedLocale, normalizedLayout, theme, mode, rotationThemeNames, rotationAnchorDay)
         setKeyboardThemeLayoutOverrides(context, target, updated)
     }
 

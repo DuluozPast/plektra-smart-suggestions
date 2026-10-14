@@ -30,9 +30,7 @@ class DailyThemeRotationScheduler(private val context: Context, private val refr
         handler.removeCallbacks(midnight)
         if (!active) return
         refresh()
-        if (SettingsManager.KeyboardThemeTarget.entries.any {
-            SettingsManager.getKeyboardThemeAssignmentMode(context, it) == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY
-        }) handler.postDelayed(midnight, delayToNextDay(ZonedDateTime.now()))
+        if (DailyThemeRotation.hasDailyRotation(context)) handler.postDelayed(midnight, delayToNextDay(ZonedDateTime.now()))
     }
     fun stop() { active = false; handler.removeCallbacks(midnight) }
     fun close() { stop(); context.unregisterReceiver(receiver) }

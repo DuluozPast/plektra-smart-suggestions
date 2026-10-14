@@ -38,4 +38,36 @@ object DailyThemeRotation {
         caches[target] = Cache(prefs, saved, names, day, anchor, result)
         return result
     }
+
+    private data class OverrideCache(val prefs: android.content.SharedPreferences, val saved: String?,
+        val day: Long, val assignment: SettingsManager.KeyboardThemeLayoutOverride,
+        val theme: SettingsManager.KeyboardThemeSettings?)
+    // *Keep at most the last resolved assignment per keyboard target, not an ever-growing locale cache.*
+    private val overrideCaches = mutableMapOf<SettingsManager.KeyboardThemeTarget, OverrideCache>()
+    @Synchronized
+    fun themeForOverride(context: Context, target: SettingsManager.KeyboardThemeTarget,
+        assignment: SettingsManager.KeyboardThemeLayoutOverride,
+        day: Long = LocalDate.now().toEpochDay()): SettingsManager.KeyboardThemeSettings? {
+        val prefs = SettingsManager.getPreferences(context)
+        val saved = prefs.getString("keyboard_theme_saved_themes", null)
+        overrideCaches[target]?.let {
+            if (it.prefs === prefs && it.saved == saved && it.day == day && it.assignment == assignment) return it.theme
+        }
+        val available = SettingsManager.getSavedKeyboardThemes(context)
+        val themes = assignment.rotationThemeNames.mapNotNull { name ->
+            available.firstOrNull { it.name.equals(name, true) }?.theme
+        }
+        val result = themes.getOrNull(index(day, assignment.rotationAnchorDay, themes.size))
+        overrideCaches[target] = OverrideCache(prefs, saved, day, assignment, result)
+        return result
+    }
+
+    /** *A local rotation also needs the session-only midnight refresh when the global mode is fixed.* */
+    fun hasDailyRotation(context: Context): Boolean = SettingsManager.KeyboardThemeTarget.entries.any { target ->
+        SettingsManager.getKeyboardThemeAssignmentMode(context, target) == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY ||
+            SettingsManager.getKeyboardThemeLayoutOverrides(context, target).any {
+                it.mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY
+            }
+    }
+
 }
