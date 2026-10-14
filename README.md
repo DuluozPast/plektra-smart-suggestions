@@ -2,7 +2,7 @@
 
 This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.
 
-Latest update: obsolete suggestion searches stop cooperatively, repeated absent usage lookups use bounded negative caches, and detailed diagnostic logs are built only when enabled. See [phase 3 results and limitations](docs/integration-upgrades/performance-phase3.md) and [targeted test results](docs/integration-upgrades/performance-phase3-test-results.json): 211 Integration tests passed; 373 Plektra tests passed and 2 Windows graphics tests skipped. All earlier optional upgrades and [background persistence](docs/integration-upgrades/performance-phase2.md) remain. Phone validation remains pending.
+Latest update: each language/layout theme assignment can opt into its own saved daily rotation, with explicit Save, backup compatibility and reliable date refresh. See [scoped theme rotation](docs/integration-upgrades/scoped-theme-rotation.md) and [targeted test results](docs/integration-upgrades/scoped-theme-rotation-test-results.json): 218 Integration tests passed; 380 Plektra tests passed and 2 Windows graphics tests skipped. All earlier optional upgrades and [search performance changes](docs/integration-upgrades/performance-phase3.md) remain. Phone validation remains pending.
 
 Read the [complete English change summary](docs/integration-upgrades/README.md) and [targeted test results](docs/integration-upgrades/targeted-test-results.json). Based on nightly `v26.10-nightly.11.184948Z`; later upstream main commits are not included. Phone validation remains pending.
 
