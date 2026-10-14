@@ -6,6 +6,8 @@ Latest performance update: [background learning persistence, validation and rema
 
 Latest search update: [cancellation, bounded negative caches and tangible work counts](performance-phase3.md), with [phase 3 validation](performance-phase3-test-results.json).
 
+Latest theme update: [daily cycles scoped to language/layout assignments](scoped-theme-rotation.md), with [validation and backup round-trip results](scoped-theme-rotation-test-results.json).
+
 ## Changes compared with the original Plektra baseline
 
 ### 1. Learned multiword suggestions and next-word continuity
