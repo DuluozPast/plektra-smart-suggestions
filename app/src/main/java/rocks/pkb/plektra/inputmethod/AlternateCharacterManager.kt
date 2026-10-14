@@ -11,6 +11,7 @@ import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 import rocks.pkb.plektra.SettingsManager
 import rocks.pkb.plektra.data.layout.LayoutMappingRepository
+import rocks.pkb.plektra.data.layout.isRealMultiTap
 import rocks.pkb.plektra.data.mappings.KeyMappingLoader
 import rocks.pkb.plektra.data.mappings.AltModifierMappingResolver
 import rocks.pkb.plektra.data.mappings.DeviceSymMappingRepository
@@ -402,6 +403,35 @@ class AlternateCharacterManager(
         scheduleLongPress(keyCode, inputConnection)
     }
 
+    /**
+     * The text a Shift long press gives for [typedText] on [keyCode]: the uppercase
+     * letter, or the lowercase one when the typed letter already is that uppercase
+     * (auto-capitalized, one-shot Shift, Caps Lock), so Shift always toggles case.
+     * Null when the key has no case to toggle.
+     */
+    private fun resolveShiftLongPressText(keyCode: Int, typedText: String?): String? {
+        if (LayoutMappingRepository.isMapped(keyCode)) {
+            val mapping = LayoutMappingRepository.getMapping(keyCode) ?: return null
+            val tap = if (mapping.isRealMultiTap) {
+                mapping.taps.firstOrNull { typedText == it.lowercase || typedText == it.uppercase }
+            } else {
+                null
+            }
+            val upper = tap?.uppercase ?: mapping.uppercase
+            if (typedText != null && typedText == upper) {
+                val lower = (tap?.lowercase ?: mapping.lowercase)
+                    .takeIf { it.isNotEmpty() && it != upper }
+                    ?: upper.lowercase().takeIf { it != upper }
+                if (lower != null) return lower
+            }
+            return upper
+        }
+        if (typedText.isNullOrEmpty() || !typedText[0].isLetter()) return null
+        val upper = typedText.uppercase()
+        if (upper != typedText) return upper
+        return typedText.lowercase().takeIf { it != typedText } ?: upper
+    }
+
     private fun scheduleLongPress(
         keyCode: Int,
         inputConnection: InputConnection
@@ -527,38 +557,39 @@ class AlternateCharacterManager(
                     }
 
                     "shift" -> {
-                        // Long press with Shift: get uppercase from layout (always use JSON for mapped keys)
+                        // Long press with Shift toggles case: uppercase from the layout (always use
+                        // JSON for mapped keys), or lowercase when the typed letter is already
+                        // uppercase (auto-capitalized, one-shot Shift, Caps Lock).
                         if (LayoutMappingRepository.isMapped(keyCode)) {
-                            val upperChar = LayoutMappingRepository.getUppercase(keyCode)
-                            if (upperChar != null) {
+                            val shiftChar = resolveShiftLongPressText(keyCode, insertedChar)
+                            if (shiftChar != null) {
                                 longPressActivated[keyCode] = true
-                                val upperCharString = upperChar
 
                                 inputConnection.deleteSurroundingText(1, 0)
-                                if (!handleBoundaryTextBeforeCommit(upperCharString, inputConnection)) {
-                                    inputConnection.commitText(upperCharString, 1)
+                                if (!handleBoundaryTextBeforeCommit(shiftChar, inputConnection)) {
+                                    inputConnection.commitText(shiftChar, 1)
                                 }
 
                                 insertedNormalChars.remove(keyCode)
                                 keyPressWasShifted.remove(keyCode)
                                 longPressRunnables.remove(keyCode)
-                                Log.d(TAG, "Long press Shift per keyCode $keyCode -> $upperCharString")
-                                upperChar.firstOrNull()?.let { onAltCharInserted?.invoke(it) }
+                                Log.d(TAG, "Long press Shift per keyCode $keyCode -> $shiftChar")
+                                shiftChar.firstOrNull()?.let { onAltCharInserted?.invoke(it) }
                             }
                         } else if (insertedChar != null && insertedChar.isNotEmpty() && insertedChar[0].isLetter()) {
-                            // Fallback for unmapped keys only: use Kotlin uppercase.
+                            // Fallback for unmapped keys only: use Kotlin case conversion.
                             longPressActivated[keyCode] = true
-                            val upperChar = insertedChar.uppercase()
+                            val shiftChar = resolveShiftLongPressText(keyCode, insertedChar) ?: insertedChar.uppercase()
 
                             inputConnection.deleteSurroundingText(1, 0)
-                            inputConnection.commitText(upperChar, 1)
+                            inputConnection.commitText(shiftChar, 1)
 
                             insertedNormalChars.remove(keyCode)
                             keyPressWasShifted.remove(keyCode)
                             longPressRunnables.remove(keyCode)
-                            Log.d(TAG, "Long press Shift per keyCode $keyCode -> $upperChar (fallback)")
-                            if (upperChar.isNotEmpty()) {
-                                onAltCharInserted?.invoke(upperChar[0])
+                            Log.d(TAG, "Long press Shift per keyCode $keyCode -> $shiftChar (fallback)")
+                            if (shiftChar.isNotEmpty()) {
+                                onAltCharInserted?.invoke(shiftChar[0])
                             }
                         }
                     }
