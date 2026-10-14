@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Tema fijo</string>
+    <string name="keyboard_theme_override_rotation_description">Selecciona los temas guardados en el orden de rotación, solo para este idioma o distribución. Un solo tema no cambia. Cambiar la selección reinicia el ciclo hoy.</string>
+    <string name="keyboard_theme_override_rotation_summary">Rotación diaria (%1$d)</string>
+</resources>
