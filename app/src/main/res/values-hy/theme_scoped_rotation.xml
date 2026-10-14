@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Մշտական թեմա</string>
+    <string name="keyboard_theme_override_rotation_description">Ընտրեք պահպանված թեմաները հերթափոխի կարգով՝ միայն այս լեզվի կամ դասավորության համար։ Մեկ թեման մնում է անփոփոխ։ Ընտրությունը փոխելիս ցիկլը վերսկսվում է այսօր։</string>
+    <string name="keyboard_theme_override_rotation_summary">Ամենօրյա հերթափոխ (%1$d)</string>
+</resources>
