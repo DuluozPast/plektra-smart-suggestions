@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Giao diện cố định</string>
+    <string name="keyboard_theme_override_rotation_description">Chọn các giao diện đã lưu theo thứ tự luân phiên, chỉ cho ngôn ngữ hoặc bố cục này. Một giao diện sẽ giữ nguyên. Thay đổi lựa chọn sẽ bắt đầu lại chu kỳ hôm nay.</string>
+    <string name="keyboard_theme_override_rotation_summary">Luân phiên hằng ngày (%1$d)</string>
+</resources>
