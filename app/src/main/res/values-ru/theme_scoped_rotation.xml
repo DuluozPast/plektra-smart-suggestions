@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Постоянная тема</string>
+    <string name="keyboard_theme_override_rotation_description">Выберите сохранённые темы в порядке чередования только для этого языка или раскладки. Одна тема остаётся неизменной. При изменении выбора цикл начинается заново сегодня.</string>
+    <string name="keyboard_theme_override_rotation_summary">Ежедневная смена (%1$d)</string>
+</resources>
