@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Σταθερό θέμα</string>
+    <string name="keyboard_theme_override_rotation_description">Επιλέξτε τα αποθηκευμένα θέματα με τη σειρά εναλλαγής, μόνο για αυτή τη γλώσσα ή διάταξη. Ένα μόνο θέμα παραμένει σταθερό. Η αλλαγή της επιλογής ξεκινά ξανά τον κύκλο σήμερα.</string>
+    <string name="keyboard_theme_override_rotation_summary">Καθημερινή εναλλαγή (%1$d)</string>
+</resources>
