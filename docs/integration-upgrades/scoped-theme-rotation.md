@@ -1,5 +1,7 @@
 # Daily theme rotation within language/layout assignments
 
+Language/layout entries are now directly visible on the main Keyboard theme page, before the keyboard preview. Enabled input styles and previously saved assignments are listed, including saved scopes whose language is temporarily disabled. Opening a row edits that scope directly; no assignment is written until Save. The general keyboard policy remains accessible separately.
+
 Each existing theme assignment now offers Fixed theme or Daily rotation. Daily mode selects saved themes in click order, with an explicit Save button. Draft selection is local to the dialog; Cancel leaves stored settings unchanged. An empty selection cannot be saved. One saved theme stays constant; multiple themes cycle by local calendar day.
 
 The matching assignment resolves its own cycle before the global theme policy. A French/AZERTY cycle therefore does not affect other languages or layouts. The existing specificity rules remain. Old assignments lacking the new fields default to fixed mode; no automatic migration enables rotation.
