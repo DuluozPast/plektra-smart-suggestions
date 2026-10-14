@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Festes Design</string>
+    <string name="keyboard_theme_override_rotation_description">Wähle gespeicherte Designs in ihrer Reihenfolge, nur für diese Sprache oder dieses Layout. Ein einzelnes Design bleibt unverändert. Eine geänderte Auswahl startet den Zyklus heute neu.</string>
+    <string name="keyboard_theme_override_rotation_summary">Täglicher Wechsel (%1$d)</string>
+</resources>
