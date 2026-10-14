@@ -275,11 +275,11 @@
     <string name="keyboard_theme_customize_title">personnaliser les couleurs</string>
     <string name="keyboard_theme_assignment_hardware_title">Thème du clavier physique</string>
     <string name="keyboard_theme_assignment_software_title">Thème du clavier virtuel</string>
-    <string name="keyboard_theme_assignment_fixed">corrigé</string>
+    <string name="keyboard_theme_assignment_fixed">Thème fixe</string>
     <string name="keyboard_theme_assignment_follow_system">suivre le système</string>
     <string name="keyboard_theme_light_mode_theme">Thème du mode Lumière</string>
     <string name="keyboard_theme_dark_mode_theme">Thème du mode sombre</string>
-    <string name="keyboard_theme_layout_overrides_title">remplacements de disposition</string>
+    <string name="keyboard_theme_layout_overrides_title">Thèmes par langue et disposition</string>
     <string name="keyboard_theme_layout_overrides_description">forcer les thèmes pour des langues ou des dispositions spécifiques. Les remplacements ont la priorité sur le mode ci-dessus.</string>
     <string name="keyboard_theme_layout_overrides_add">ajouter un remplacement</string>
     <string name="keyboard_theme_layout_override_editor_title">remplacement du thème</string>
