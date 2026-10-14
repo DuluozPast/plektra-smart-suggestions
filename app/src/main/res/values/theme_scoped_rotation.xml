@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Fixed theme</string>
+    <string name="keyboard_theme_override_rotation_description">Select saved themes in their order of rotation for this language or layout only. One theme stays unchanged. Changing the selection starts the cycle today.</string>
+    <string name="keyboard_theme_override_rotation_summary">Daily rotation (%1$d)</string>
+</resources>
