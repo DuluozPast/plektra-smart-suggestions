@@ -3645,7 +3645,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         super.onStartInput(info, restarting)
         if (themeRotationScheduler == null) {
-            themeRotationScheduler = rocks.pkb.plektra.DailyThemeRotationScheduler(this) { updateStatusBarText() }
+            themeRotationScheduler = rocks.pkb.plektra.DailyThemeRotationScheduler(this) {
+                // *A date/theme change must repaint even when suggestions and modifiers are unchanged.*
+                invalidateRenderedStatusSnapshot()
+                updateStatusBarText()
+            }
         }
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
