@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_override_fixed">Stały motyw</string>
+    <string name="keyboard_theme_override_rotation_description">Wybierz zapisane motywy w kolejności rotacji, tylko dla tego języka lub układu. Jeden motyw pozostaje bez zmian. Zmiana wyboru rozpoczyna cykl od dzisiaj.</string>
+    <string name="keyboard_theme_override_rotation_summary">Codzienna rotacja (%1$d)</string>
+</resources>
