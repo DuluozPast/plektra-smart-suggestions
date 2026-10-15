@@ -1,0 +1,4 @@
+<resources>
+    <string name="keyboard_theme_show_name">Hiển thị tên chủ đề trên thanh bàn phím</string>
+    <string name="keyboard_theme_label_custom">Chủ đề tùy chỉnh</string>
+</resources>
