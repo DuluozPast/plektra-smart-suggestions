@@ -1,0 +1,4 @@
+<resources>
+    <string name="keyboard_theme_show_name">Показывать название темы на панели клавиатуры</string>
+    <string name="keyboard_theme_label_custom">Пользовательская тема</string>
+</resources>
