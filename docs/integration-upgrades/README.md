@@ -1,5 +1,7 @@
 # Plektra Smart Suggestions — proposed Integration upgrades
 
+Latest theme display update: [optional active-theme title, automatic text contrast and rotation selection repair](theme-title-and-rotation-selection.md), with [397-test validation](theme-title-and-rotation-selection-test-results.json).
+
 This contribution branch ports the custom Pastiera Integration improvements onto Plektra nightly `v26.10-nightly.11.184948Z`. It is a review and testing branch, not an official Plektra release. The Android project retains its normal structure, including `app`, `gradle`, the wrapper, resources and tests.
 
 Latest performance update: [background learning persistence, validation and remaining limits](performance-phase2.md), with [phase 2 test results](performance-phase2-test-results.json). Earlier features below are retained.
