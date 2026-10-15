@@ -1,0 +1,4 @@
+<resources>
+    <string name="keyboard_theme_show_name">Themennamen in der Tastaturleiste anzeigen</string>
+    <string name="keyboard_theme_label_custom">Benutzerdefiniertes Design</string>
+</resources>
