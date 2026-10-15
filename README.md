@@ -1,5 +1,7 @@
 # Plektra Smart Suggestions — contribution branch
 
+Latest theme display update: [optional active-theme title, automatic text contrast and rotation selection repair](docs/integration-upgrades/theme-title-and-rotation-selection.md), with [397-test validation](docs/integration-upgrades/theme-title-and-rotation-selection-test-results.json).
+
 This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.
 
 Latest update: each language/layout theme assignment can opt into its own saved daily rotation, with explicit Save, backup compatibility and reliable date refresh. See [scoped theme rotation](docs/integration-upgrades/scoped-theme-rotation.md) and [targeted test results](docs/integration-upgrades/scoped-theme-rotation-test-results.json): 218 Integration tests passed; 380 Plektra tests passed and 2 Windows graphics tests skipped. All earlier optional upgrades and [search performance changes](docs/integration-upgrades/performance-phase3.md) remain. Phone validation remains pending.
