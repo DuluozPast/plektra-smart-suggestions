@@ -1,0 +1,4 @@
+<resources>
+    <string name="keyboard_theme_show_name">Εμφάνιση ονόματος θέματος στη γραμμή πληκτρολογίου</string>
+    <string name="keyboard_theme_label_custom">Προσαρμοσμένο θέμα</string>
+</resources>
