@@ -283,6 +283,8 @@ internal object BackupPreferenceContract {
             "speech_continuous_preview" to PreferenceValueType.BOOLEAN,
             "speech_provider" to PreferenceValueType.STRING,
             "layout_aware_ctrl_shortcuts" to PreferenceValueType.BOOLEAN,
+            "french_formatting_shortcuts" to PreferenceValueType.BOOLEAN,
+            "reddit_markdown_formatting" to PreferenceValueType.BOOLEAN,
             "sym_mappings_custom" to PreferenceValueType.STRING,
             "sym_mappings_page2_custom" to PreferenceValueType.STRING,
             "user_dictionary_entries" to PreferenceValueType.STRING,
