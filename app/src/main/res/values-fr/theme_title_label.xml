@@ -1,0 +1,4 @@
+<resources>
+    <string name="keyboard_theme_show_name">Afficher le nom du thème dans la barre du clavier</string>
+    <string name="keyboard_theme_label_custom">Thème personnalisé</string>
+</resources>
