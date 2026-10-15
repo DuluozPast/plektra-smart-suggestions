@@ -14,6 +14,10 @@ object DailyThemeRotation {
         return try { val array = JSONArray(raw); (0 until array.length()).map { array.getString(it) }.distinct() }
         catch (_: Exception) { emptyList() }
     }
+    /** *Only visible saved themes receive a rank; imported renames must not leave invisible slots.* */
+    internal fun availableNames(names: List<String>, available: List<String>): List<String> =
+        names.mapNotNull { name -> available.firstOrNull { it.equals(name, ignoreCase = true) } }.distinct()
+
     fun select(context: Context, target: SettingsManager.KeyboardThemeTarget, names: List<String>) {
         SettingsManager.getPreferences(context).edit()
             .putString(namesKey(target), JSONArray(names.distinct()).toString())

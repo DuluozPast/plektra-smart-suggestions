@@ -895,6 +895,17 @@ object SettingsManager {
             KeyboardThemeTarget.SOFTWARE -> KEY_KEYBOARD_THEME_LAYOUT_OVERRIDES_SOFTWARE
         }
 
+    const val KEY_KEYBOARD_THEME_SHOW_NAME = "keyboard_theme_show_name"
+    // *The title display is optional; disabling it restores the original swipe instruction.*
+    fun isKeyboardThemeNameShown(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_KEYBOARD_THEME_SHOW_NAME, true)
+    fun setKeyboardThemeNameShown(context: Context, shown: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_KEYBOARD_THEME_SHOW_NAME, shown).apply()
+    }
+    internal fun keyboardThemeAssignmentForDisplay(context: Context, target: KeyboardThemeTarget,
+        locale: String?, layout: String?): KeyboardThemeLayoutOverride? =
+        findKeyboardThemeLayoutOverride(context, target, locale, layout)
+
     fun isKeyboardThemePreferenceKey(key: String?): Boolean {
         return key != KEY_KEYBOARD_THEME_DRAFTS && key != KEY_KEYBOARD_THEME_PREVIEW_VIEWPORT_SCALE &&
             key?.startsWith("keyboard_theme_") == true

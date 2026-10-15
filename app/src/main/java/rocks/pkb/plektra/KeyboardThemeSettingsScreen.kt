@@ -650,6 +650,16 @@ fun KeyboardThemeScreen(
             }
 
             if (editedDraft == null) {
+                // *This optional display setting does not alter swipe gestures or the saved theme itself.*
+                var showThemeName by remember { mutableStateOf(SettingsManager.isKeyboardThemeNameShown(context)) }
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.keyboard_theme_show_name), modifier = Modifier.weight(1f))
+                    Switch(checked = showThemeName, onCheckedChange = {
+                        showThemeName = it
+                        SettingsManager.setKeyboardThemeNameShown(context, it)
+                    })
+                }
                 KeyboardThemeAssignmentSummaryRow(
                     target = activeTarget,
                     mode = activeAssignmentMode,
@@ -1260,7 +1270,9 @@ private fun KeyboardThemeAssignmentSection(
     }
     var rotationSaved by remember(target) { mutableStateOf(false) }
     var rotationNames by remember(target, savedRotationThemes.map { it.name }) {
-        mutableStateOf(DailyThemeRotation.selectedNames(rotationContext, target))
+        // *Clean the draft only; persist it and restart its calendar cycle after an explicit Save.*
+        mutableStateOf(DailyThemeRotation.availableNames(
+            DailyThemeRotation.selectedNames(rotationContext, target), savedRotationThemes.map { it.name }))
     }
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -1307,6 +1319,12 @@ private fun KeyboardThemeAssignmentSection(
                 Text(stringResource(R.string.keyboard_theme_daily_rotation_description), style = MaterialTheme.typography.bodySmall)
                 if (savedRotationThemes.isEmpty()) {
                     Text(stringResource(R.string.keyboard_theme_daily_rotation_empty))
+                }
+                TextButton(onClick = {
+                    rotationNames = emptyList()
+                    rotationSaved = false
+                }, enabled = rotationNames.isNotEmpty()) {
+                    Text(stringResource(R.string.keyboard_theme_rotation_deselect_all))
                 }
                 savedRotationThemes.forEach { saved ->
                     val checked = saved.name in rotationNames
@@ -1610,9 +1628,13 @@ private fun KeyboardThemeOverrideEditorDialog(
 
     // *Edits remain local until Save; cancelling must not change the stored cycle or its anchor.*
     var mode by remember(initialOverride) { mutableStateOf(initialOverride?.mode ?: SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FIXED) }
-    var rotationNames by remember(initialOverride) { mutableStateOf(initialOverride?.rotationThemeNames.orEmpty()) }
     val savedOptions = themeOptions.filter { it.userSaved }
-    val validNames = rotationNames.filter { name -> savedOptions.any { it.preset.name == name } }
+    val availableRotationNames = savedOptions.map { it.preset.name }
+    // *Scoped rotations use the same visible, contiguous ranks as the global editor.*
+    var rotationNames by remember(initialOverride, availableRotationNames) {
+        mutableStateOf(DailyThemeRotation.availableNames(initialOverride?.rotationThemeNames.orEmpty(), availableRotationNames))
+    }
+    val validNames = DailyThemeRotation.availableNames(rotationNames, availableRotationNames)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1648,6 +1670,9 @@ private fun KeyboardThemeOverrideEditorDialog(
                 if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_DAILY) {
                     Text(stringResource(R.string.keyboard_theme_override_rotation_description), style = MaterialTheme.typography.bodySmall)
                     if (savedOptions.isEmpty()) Text(stringResource(R.string.keyboard_theme_daily_rotation_empty))
+                    TextButton(onClick = { rotationNames = emptyList() }, enabled = rotationNames.isNotEmpty()) {
+                        Text(stringResource(R.string.keyboard_theme_rotation_deselect_all))
+                    }
                     savedOptions.forEach { option ->
                         val name = option.preset.name
                         val checked = name in rotationNames
