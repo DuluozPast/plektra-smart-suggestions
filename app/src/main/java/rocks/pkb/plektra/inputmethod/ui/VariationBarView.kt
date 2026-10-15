@@ -163,6 +163,18 @@ class VariationBarView(
             field = value
             lastVariationAreaVisible = null
         }
+    // *Keep the theme title up to date without replacing a temporary speech prompt.*
+    var themeName: String? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            val label = value ?: context.getString(R.string.swipe_to_move_cursor)
+            if (originalHintText != null) originalHintText = label else emptyHintView?.text = label
+            emptyHintView?.setTextColor(hintTextColor())
+            emptyHintView?.contentDescription = if (value == null) label
+                else "$value. ${context.getString(R.string.swipe_to_move_cursor)}"
+        }
+
     var themeOverride: KeyboardThemeColors? = null
         set(value) {
             if (field == value) {
@@ -181,7 +193,7 @@ class VariationBarView(
             }
             wrapper?.setBackgroundColor(value?.background ?: Color.TRANSPARENT)
             container?.setBackgroundColor(value?.background ?: Color.TRANSPARENT)
-            emptyHintView?.setTextColor(colorWithAlpha(value?.textAndIcons ?: Color.WHITE, 120))
+            emptyHintView?.setTextColor(hintTextColor())
             swipeIndicator?.background = createSwipeIndicatorDrawable()
             applyHeight()
             lastThemeSignature = null
@@ -1049,10 +1061,28 @@ class VariationBarView(
         }
     }
 
+    // *Named titles use the configured swipe colour at full opacity, including on pale themes.
+    // The original instruction keeps its previous subdued appearance when the option is off.*
+    private fun hintTextColor(): Int {
+        if (themeName == null) return colorWithAlpha(themeOverride?.textAndIcons ?: Color.WHITE, 120)
+        val configured = themeOverride?.cursorSwipe ?: themeOverride?.textAndIcons ?: Color.WHITE
+        val background = androidx.core.graphics.ColorUtils.setAlphaComponent(themeOverride?.background ?: Color.BLACK, 255)
+        // *Keep the user's colour when readable. Otherwise adapt only the title, without changing saved colours.
+        // This calculation runs on title/theme changes, not on unchanged typing renders.*
+        if (androidx.core.graphics.ColorUtils.calculateContrast(configured, background) >= 4.5) return configured
+        val black = androidx.core.graphics.ColorUtils.calculateContrast(Color.BLACK, background)
+        val white = androidx.core.graphics.ColorUtils.calculateContrast(Color.WHITE, background)
+        return if (black >= white) Color.BLACK else Color.WHITE
+    }
+
     private fun createSwipeHintView(): TextView {
         return TextView(context).apply {
-            text = context.getString(R.string.swipe_to_move_cursor)
-            setTextColor(colorWithAlpha(themeOverride?.textAndIcons ?: Color.WHITE, 120))
+            text = themeName ?: context.getString(R.string.swipe_to_move_cursor)
+            contentDescription = if (themeName == null) text
+                else "$themeName. ${context.getString(R.string.swipe_to_move_cursor)}"
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(hintTextColor())
             textSize = 13f
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER
