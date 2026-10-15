@@ -1,5 +1,7 @@
 # Plektra Smart Suggestions — contribution branch
 
+Latest update: [learned punctuation and casing, app-aware Fn formatting, language-aware keys and suggestion-space repair](docs/integration-upgrades/punctuation-case-and-formatting.md), validated by [489 selected tests](docs/integration-upgrades/punctuation-case-and-formatting-test-results.json): 487 passed, two existing graphics exclusions, no failures. Earlier theme and search upgrades are retained.
+
 Latest theme display update: [optional active-theme title, automatic text contrast and rotation selection repair](docs/integration-upgrades/theme-title-and-rotation-selection.md), with [397-test validation](docs/integration-upgrades/theme-title-and-rotation-selection-test-results.json).
 
 This experimental branch proposes optional learned multiword suggestions and the custom Integration upgrades. It is not an official Plektra release.

@@ -36,6 +36,19 @@ object AutoSpaceTracker {
         suggestionSuffix = null
     }
 
+    /** *Move only the verified suggestion-generated space outside a closing formatting marker.* */
+    fun takeSuggestionSpaceForFormatting(input: InputConnection): Boolean {
+        val matches = suggestionConnection === input && suggestionSuffix != null &&
+            input.getTextBeforeCursor(128, 0)?.toString() == suggestionSuffix &&
+            suggestionSuffix?.endsWith(" ") == true
+        clearSuggestionSpace()
+        if (!matches || !input.deleteSurroundingText(1, 0)) return false
+        autoSpacePending = false
+        trimmedBoundaryConnection = null
+        trimmedBoundary = null
+        return true
+    }
+
     /** Remove only the space inserted by the preceding suggestion, before closing punctuation. */
     fun prepareSuggestionSpace(input: InputConnection, text: CharSequence) {
         if (text.isNotEmpty() && (trimmedBoundaryConnection !== input || text.first() != trimmedBoundary)) {

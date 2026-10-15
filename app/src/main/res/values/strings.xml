@@ -1825,4 +1825,12 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="app_enter_behaviour_send_shift_side">Shift key for sending</string>
     <string name="app_enter_behaviour_shift_left">Left Shift</string>
     <string name="app_enter_behaviour_shift_right">Right Shift</string>
+    <string name="formatting_shortcuts_title">Fn formatting shortcuts</string>
+    <string name="formatting_shortcuts_description">Outside Nav Mode: French input uses Fn+G/I/S; other input languages use Fn+B/I/U for bold/italic/underline. WhatsApp uses markers; other editors receive native shortcuts.</string>
+    <string name="formatting_reddit_title">Reddit: Markdown mode</string>
+    <string name="formatting_reddit_description">Enable only in an editor accepting **bold** and *italic*. Otherwise native shortcuts are used.</string>
+    <string name="formatting_bold">Bold</string>
+    <string name="formatting_italic">Italic</string>
+    <string name="formatting_underline">Underline</string>
+    <string name="formatting_unavailable">This formatting is unavailable in this messaging app.</string>
 </resources>

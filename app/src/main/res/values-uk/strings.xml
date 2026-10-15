@@ -883,4 +883,12 @@ Ctrl-ярлики застосунків із урахуванням розкл�
     <string name="auto_space_punctuation_character_column">Знак</string>
     <string name="auto_space_punctuation_dialog_instruction">Виберіть знаки, перед якими видаляється автоматичний пробіл або після яких пробіл додається відразу.</string>
     <string name="auto_space_punctuation_help_text">Видалення перед знаком стосується лише автоматичних пробілів. Додавання після знака вставляє пробіл відразу. Наступне натискання Пробілу не подвоює його. Коротке тире та закривальна дужка вибираються окремо.</string>
+    <string name="formatting_shortcuts_title">Сполучення Fn для форматування</string>
+    <string name="formatting_shortcuts_description">Поза режимом навігації: G/I/S для французької мови введення, B/I/U для інших (жирний/курсив/підкреслений). WhatsApp використовує розмітку, інші редактори — стандартні сполучення.</string>
+    <string name="formatting_reddit_title">Reddit: режим Markdown</string>
+    <string name="formatting_reddit_description">Увімкніть лише в редакторі з підтримкою **жирного** та *курсиву*. Інакше використовуються стандартні сполучення.</string>
+    <string name="formatting_bold">Жирний</string>
+    <string name="formatting_italic">Курсив</string>
+    <string name="formatting_underline">Підкреслений</string>
+    <string name="formatting_unavailable">Це форматування недоступне в цьому месенджері.</string>
 </resources>

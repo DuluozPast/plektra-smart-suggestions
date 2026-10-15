@@ -1617,4 +1617,12 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="app_enter_behaviour_send_shift_side">Umschalttaste zum Senden</string>
     <string name="app_enter_behaviour_shift_left">Linke Umschalttaste</string>
     <string name="app_enter_behaviour_shift_right">Rechte Umschalttaste</string>
+    <string name="formatting_shortcuts_title">Fn-Formatierungskürzel</string>
+    <string name="formatting_shortcuts_description">Außerhalb des Navigationsmodus: G/I/S bei französischer Eingabe, B/I/U bei anderen Eingabesprachen (fett/kursiv/unterstrichen). WhatsApp nutzt Markierungen, andere Editoren native Tastenkürzel.</string>
+    <string name="formatting_reddit_title">Reddit: Markdown-Modus</string>
+    <string name="formatting_reddit_description">Nur für Editoren aktivieren, die **fett** und *kursiv* unterstützen. Sonst werden native Tastenkürzel verwendet.</string>
+    <string name="formatting_bold">Fett</string>
+    <string name="formatting_italic">Kursiv</string>
+    <string name="formatting_underline">Unterstreichen</string>
+    <string name="formatting_unavailable">Diese Formatierung ist in dieser Nachrichten-App nicht verfügbar.</string>
 </resources>

@@ -196,7 +196,7 @@ class PhraseUsageStore(context: Context) : SQLiteOpenHelper(
                 val locale = Locale.forLanguageTag(localeKey)
 
                 val normalizedWords = words.map {
-                    WordNormalization.normalizeForSuggestion(it, locale)
+                    PunctuatedPhrase.normalize(it, locale)
                 }
 
                 if (normalizedWords.any { it.isBlank() }) continue
@@ -286,7 +286,7 @@ class PhraseUsageStore(context: Context) : SQLiteOpenHelper(
         if (cleanWords.size !in MIN_SEQUENCE_LENGTH..MAX_SEQUENCE_LENGTH) return
 
         val normalizedWords = cleanWords.map {
-            WordNormalization.normalizeForSuggestion(it, locale)
+            PunctuatedPhrase.normalize(it, locale)
         }
 
         if (normalizedWords.any { it.isBlank() }) return
@@ -375,7 +375,7 @@ class PhraseUsageStore(context: Context) : SQLiteOpenHelper(
         if (cleanWords.size !in MIN_SEQUENCE_LENGTH..MAX_SEQUENCE_LENGTH) return null
 
         val normalizedWords = cleanWords.map {
-            WordNormalization.normalizeForSuggestion(it, locale)
+            PunctuatedPhrase.normalize(it, locale)
         }
 
         if (normalizedWords.any { it.isBlank() }) return null
@@ -482,7 +482,7 @@ class PhraseUsageStore(context: Context) : SQLiteOpenHelper(
         if (cleanContext.isEmpty()) return emptyList()
 
         val normalizedContext = cleanContext.map {
-            WordNormalization.normalizeForSuggestion(it, locale)
+            PunctuatedPhrase.normalize(it, locale)
         }
 
         if (normalizedContext.any { it.isBlank() }) return emptyList()

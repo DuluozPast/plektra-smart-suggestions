@@ -70,6 +70,8 @@ fun NavModeSettingsScreen(
     var layoutAwareCtrlShortcutsEnabled by remember {
         mutableStateOf(SettingsManager.getLayoutAwareCtrlShortcutsEnabled(context))
     }
+    var frenchFormatting by remember { mutableStateOf(SettingsManager.getFrenchFormattingShortcuts(context)) }
+    var redditMarkdown by remember { mutableStateOf(SettingsManager.getRedditMarkdownFormatting(context)) }
     var showNavModeGuide by remember { mutableStateOf(false) }
     var showLayoutAwareCtrlInfo by remember { mutableStateOf(false) }
 
@@ -190,6 +192,29 @@ fun NavModeSettingsScreen(
                         SettingsManager.setNavModeEnabled(context, enabled)
                     }
                 )
+            }
+        }
+
+        Surface(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.formatting_shortcuts_title), fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.formatting_shortcuts_description), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Switch(checked = frenchFormatting, onCheckedChange = {
+                        frenchFormatting = it; SettingsManager.setFrenchFormattingShortcuts(context, it)
+                    })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.formatting_reddit_title), fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.formatting_reddit_description), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Switch(checked = redditMarkdown, onCheckedChange = {
+                        redditMarkdown = it; SettingsManager.setRedditMarkdownFormatting(context, it)
+                    })
+                }
             }
         }
 
@@ -749,7 +774,7 @@ private fun KeyMappingDialog(
                         }
                     } else if (selectedType == "action") {
                         val actions = listOf(
-                            "copy", "paste", "cut", "undo",
+                            "copy", "paste", "cut", "undo", "format_bold", "format_italic", "format_underline",
                             "select_all", "expand_selection_left", "expand_selection_right", "expand_selection_up", "expand_selection_down",
                             "move_word_left", "move_word_right",
                             "expand_selection_word_left", "expand_selection_word_right",
@@ -892,6 +917,9 @@ private fun commandLabel(command: CommandTarget): String {
 @Composable
 private fun getActionLabel(action: String): String {
     return when (action) {
+        "format_bold" -> stringResource(R.string.formatting_bold)
+        "format_italic" -> stringResource(R.string.formatting_italic)
+        "format_underline" -> stringResource(R.string.formatting_underline)
         "copy" -> stringResource(R.string.nav_mode_action_copy)
         "paste" -> stringResource(R.string.nav_mode_action_paste)
         "cut" -> stringResource(R.string.nav_mode_action_cut)
@@ -932,7 +960,10 @@ private fun getMappingLabelShort(mapping: KeyMappingLoader.CtrlMapping): String?
             else -> mapping.value
         }
         "action" -> when (mapping.value) {
-            "copy" -> stringResource(R.string.nav_mode_action_copy)
+            "format_bold" -> stringResource(R.string.formatting_bold)
+        "format_italic" -> stringResource(R.string.formatting_italic)
+        "format_underline" -> stringResource(R.string.formatting_underline)
+        "copy" -> stringResource(R.string.nav_mode_action_copy)
             "paste" -> stringResource(R.string.nav_mode_action_paste)
             "cut" -> stringResource(R.string.nav_mode_action_cut)
             "undo" -> stringResource(R.string.nav_mode_action_undo)

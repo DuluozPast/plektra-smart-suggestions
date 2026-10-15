@@ -281,7 +281,7 @@ class MultiWordStore(context: Context, private val asyncPersistence: Boolean = f
             .map { it.trim() }
             .filter { it.isNotBlank() }
             .map {
-                WordNormalization.normalizeForSuggestion(
+                PunctuatedPhrase.normalize(
                     it,
                     locale
                 )

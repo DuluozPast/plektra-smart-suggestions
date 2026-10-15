@@ -883,4 +883,12 @@ Nav Mode использует физическое положение клави
     <string name="auto_space_punctuation_character_column">Знак</string>
     <string name="auto_space_punctuation_dialog_instruction">Выберите знаки, перед которыми удаляется автоматический пробел или после которых пробел добавляется сразу.</string>
     <string name="auto_space_punctuation_help_text">Удаление перед знаком касается только автоматических пробелов. Добавление после знака вставляет пробел сразу. Последующее нажатие Пробела не удваивает его. Короткое тире и закрывающая скобка выбираются отдельно.</string>
+    <string name="formatting_shortcuts_title">Сочетания Fn для форматирования</string>
+    <string name="formatting_shortcuts_description">Вне режима навигации: G/I/S для французского языка ввода, B/I/U для остальных (жирный/курсив/подчёркнутый). WhatsApp использует разметку, другие редакторы — стандартные сочетания.</string>
+    <string name="formatting_reddit_title">Reddit: режим Markdown</string>
+    <string name="formatting_reddit_description">Включайте только в редакторе с поддержкой **жирного** и *курсива*. Иначе используются стандартные сочетания.</string>
+    <string name="formatting_bold">Жирный</string>
+    <string name="formatting_italic">Курсив</string>
+    <string name="formatting_underline">Подчёркнутый</string>
+    <string name="formatting_unavailable">Это форматирование недоступно в данном мессенджере.</string>
 </resources>

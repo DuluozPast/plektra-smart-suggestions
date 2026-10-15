@@ -883,4 +883,12 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="auto_space_punctuation_character_column">Signo</string>
     <string name="auto_space_punctuation_dialog_instruction">Elige los signos que eliminan un espacio automático antes o añaden un espacio inmediatamente después.</string>
     <string name="auto_space_punctuation_help_text">Quitar antes afecta solo a espacios automáticos. Añadir después inserta un espacio inmediatamente. Pulsar Espacio después no lo duplica. La semirraya y el paréntesis de cierre se pueden elegir por separado.</string>
+    <string name="formatting_shortcuts_title">Atajos de formato con Fn</string>
+    <string name="formatting_shortcuts_description">Fuera del modo Navegación: G/I/S en francés; B/I/U en los demás idiomas de escritura (negrita/cursiva/subrayado). WhatsApp usa marcadores; los otros editores, atajos nativos.</string>
+    <string name="formatting_reddit_title">Reddit: modo Markdown</string>
+    <string name="formatting_reddit_description">Activar solo si el editor admite **negrita** y *cursiva*. En caso contrario se usan atajos nativos.</string>
+    <string name="formatting_bold">Negrita</string>
+    <string name="formatting_italic">Cursiva</string>
+    <string name="formatting_underline">Subrayado</string>
+    <string name="formatting_unavailable">Este formato no está disponible en esta aplicación de mensajes.</string>
 </resources>

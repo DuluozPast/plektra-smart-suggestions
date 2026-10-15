@@ -393,7 +393,8 @@ class SuggestionController(
                 val prefix = WordNormalization.normalizeApostrophes(wordSnapshot).lowercase(localeSnapshot)
                 nextWordPredictor.predict(localeSnapshot, previousWordSnapshot, limit = 50)
                     .filter {
-                        (it.candidate.all { char -> char.isDigit() } || '-' in it.candidate) &&
+                        (it.candidate.all { char -> char.isDigit() } || '-' in it.candidate ||
+                            (it.score >= 3.0 && (wordUsageStore.getUsage(localeSnapshot, it.candidate)?.count ?: 0) >= 3)) &&
                             WordNormalization.normalizeApostrophes(it.candidate).lowercase(localeSnapshot).startsWith(prefix)
                     }
                     .map { it.copy(kind = SuggestionKind.CURRENT_WORD,
@@ -689,23 +690,8 @@ class SuggestionController(
                     completedText[end - 1], completedText.getOrNull(end - 2), completedText.getOrNull(end))) end--
             completedText = completedText.substring(0, end)
         }
-        // Cursor refresh must not resurrect the previous sentence as learning context.
-        val sentenceBoundary = completedText.indexOfLast { it == '.' || it == '!' || it == '?' || it == '\n' }
-        val trimmed = completedText.substring(sentenceBoundary + 1).trimEnd()
-        if (trimmed.isEmpty()) return emptyList()
-
-        return trimmed
-            .split(Regex("\\s+"))
-            .map { token ->
-                token.trim { ch ->
-                    !ch.isLetterOrDigit() &&
-                            ch != '\'' &&
-                            ch != '’' &&
-                            ch != '-'
-                }
-            }
-            .filter { it.isNotBlank() }
-            .takeLast(PhraseUsageStore.MAX_SEQUENCE_LENGTH - 1)
+        // *Reconstruct only this sentence and retain the internal punctuation used by phrase indexes.*
+        return PunctuatedPhrase.contextTokens(completedText)
     }
 
     private fun readPreviousWordBeforeCursor(
@@ -772,7 +758,7 @@ class SuggestionController(
                 !isSoftPredictionBoundary(boundaryChar = lastChar)
             ) {
                 val contextFromCursor = readCompletedWordsBeforeCursor(inputConnection, excludeCurrentWord = true)
-                previousCompletedWord = contextFromCursor.lastOrNull()
+                previousCompletedWord = contextFromCursor.lastOrNull()?.let(PunctuatedPhrase::lexical)
                 recentCompletedWords.clear()
                 contextFromCursor.forEach { recentCompletedWords.addLast(it) }
                 sentenceStartPending = previousCompletedWord == null
@@ -784,7 +770,7 @@ class SuggestionController(
                     readCompletedWordsBeforeCursor(inputConnection)
 
                 val previousFromCursor =
-                    contextFromCursor.lastOrNull()
+                    contextFromCursor.lastOrNull()?.let(PunctuatedPhrase::lexical)
 
                 if (previousFromCursor != null) {
                     previousCompletedWord = previousFromCursor
@@ -877,16 +863,23 @@ class SuggestionController(
                 nextWordPredictor.learn(
                     currentLocale,
                     previous,
-                    word
+                    PunctuatedPhrase.lexical(word)
                 )
             }
 
             learnPhraseUsage(word)
 
-            previousCompletedWord = word
+            previousCompletedWord = PunctuatedPhrase.lexical(word)
             sentenceStartPending = false
+            // *Accepting a suggestion ending a sentence must not link its last word to the next sentence.*
+            if (word.lastOrNull()?.let { PunctuatedPhrase.isTerminal(it) } == true) {
+                previousCompletedWord = null
+                recentCompletedWords.clear()
+                sentenceStartPending = true
+            }
         }
         previousCompletedWord?.let { publishNextWordPredictions(it) }
+            ?: publishSentenceStartPredictionsOrStarter()
     }
 
     fun onTypingStatisticsBoundary() { typingStatisticsTracker.finishWord() }
@@ -1403,12 +1396,32 @@ class SuggestionController(
             )
         }
 
+        if (cleanWord == null && PunctuatedPhrase.isInternal(boundaryChar) && recentCompletedWords.isNotEmpty()) {
+            // *Punctuation after Space or an accepted suggestion decorates the last token without relearning it.*
+            val last = recentCompletedWords.removeLast()
+            recentCompletedWords.addLast(PunctuatedPhrase.attach(last, boundaryChar!!, settingsProvider().frenchPunctuationSpacing))
+        }
+        val phraseWord = cleanWord?.let { word ->
+            if (PunctuatedPhrase.isRetained(boundaryChar)) PunctuatedPhrase.attach(word, boundaryChar!!, settings.frenchPunctuationSpacing) else word
+        }
+        if (cleanWord == null && boundaryChar != null && PunctuatedPhrase.isTerminal(boundaryChar) &&
+            PunctuatedPhrase.isRetained(boundaryChar) && recentCompletedWords.isNotEmpty()) {
+            // *A final sign after Space or an accepted word records the decorated phrase, not a second word occurrence.*
+            val last = recentCompletedWords.removeLast()
+            val sequences = learnPhraseUsage(PunctuatedPhrase.attach(last, boundaryChar, settings.frenchPunctuationSpacing))
+            multiWordStore.batchUpdates {
+                sequences.forEach { sequence ->
+                    multiWordStore.markUsed(locale = currentLocale, words = sequence)
+                    multiWordPromotionEngine.promoteIfEligible(locale = currentLocale, words = sequence)
+                }
+            }
+        }
         if (cleanWord != null) {
             wordUsageStore.learn(currentLocale, cleanWord)
             maybeConsolidateUnknownWord(cleanWord)
 
             val learnedPhraseSequences =
-                learnPhraseUsage(cleanWord)
+                learnPhraseUsage(phraseWord ?: cleanWord)
 
             if (sentenceStartPending) {
                 nextWordPredictor.learnSentenceStart(
@@ -1509,17 +1522,18 @@ class SuggestionController(
 
         val context = recentCompletedWords
             .map {
-                WordNormalization.normalizeForSuggestion(it, currentLocale)
+                PunctuatedPhrase.normalize(it, currentLocale)
             }
             .filter { it.isNotBlank() }
 
         if (context.isEmpty()) return emptyList()
 
+        // *Lexical transition evidence also supports a comma attached after the word's earlier Space boundary.*
         val predictedWords = phrasePredictions.associateBy {
             WordNormalization.normalizeForSuggestion(it.word, currentLocale)
         }
 
-        return multiWordStore.getForContext(currentLocale, context)
+        val candidates = multiWordStore.getForContext(currentLocale, context)
             .asSequence()
             .flatMap { entry ->
                 val normalized = entry.normalizedWords
@@ -1541,7 +1555,7 @@ class SuggestionController(
                     return@flatMap emptySequence<SuggestionResult>()
                 }
 
-                val prediction = predictedWords[normalized[matchLength]]
+                val prediction = predictedWords[PunctuatedPhrase.lexical(normalized[matchLength])]
                     ?: return@flatMap emptySequence<SuggestionResult>()
 
                 val baseScore =
@@ -1565,8 +1579,8 @@ class SuggestionController(
             }
             .distinctBy { it.candidate.lowercase(currentLocale) }
             .sortedByDescending { it.score }
-            .take(limit)
             .toList()
+        return PunctuatedPhrase.diverse(candidates, currentLocale).take(limit)
     }
 
 
@@ -1574,13 +1588,14 @@ class SuggestionController(
     private fun canonicalizeNextWordPrediction(
         result: SuggestionResult,
         locale: Locale,
-        repository: DictionaryRepository
+        repository: DictionaryRepository,
+        contextWord: String? = previousCompletedWord
     ): SuggestionResult {
         if (result.kind != SuggestionKind.NEXT_WORD) {
             return result
         }
 
-        if (result.candidate.any { it.isWhitespace() }) {
+        if (result.candidate.any { it.isWhitespace() || PunctuatedPhrase.isRetained(it) }) {
             return result
         }
 
@@ -1604,6 +1619,11 @@ class SuggestionController(
             )
         }
 
+        // *Preserve the spelling actually repeated in this transition; do not infer first names or surnames.*
+        if (result.candidate.any { it.isUpperCase() } && contextWord != null &&
+            (nextWordPredictor.getUsage(locale, PunctuatedPhrase.lexical(contextWord), result.candidate)?.count ?: 0) >= 3) {
+            return result
+        }
         val canonical = repository
             .topByNormalized(normalized, limit = 16)
             .filter { entry ->
@@ -1689,7 +1709,7 @@ class SuggestionController(
 
         val predictedFirstWords = (phraseSingleWord + primary)
             .map { prediction ->
-                WordNormalization.normalizeForSuggestion(
+                PunctuatedPhrase.normalize(
                     prediction.candidate,
                     currentLocale
                 )
@@ -1700,7 +1720,7 @@ class SuggestionController(
             settings.multiWordSuggestionsEnabled &&
             predictedFirstWords.isNotEmpty()
         ) {
-            multiWordStore.getStartingWith(currentLocale, predictedFirstWords)
+            val chained = multiWordStore.getStartingWith(currentLocale, predictedFirstWords)
                 .asSequence()
                 .filter { entry ->
                     entry.words.size >= 2 &&
@@ -1726,8 +1746,8 @@ class SuggestionController(
                 }
                 .distinctBy { it.candidate.lowercase(currentLocale) }
                 .sortedByDescending { it.score }
-                .take(settings.maxSuggestions)
                 .toList()
+            PunctuatedPhrase.diverse(chained, currentLocale).take(settings.maxSuggestions)
         } else {
             emptyList()
         }
@@ -1735,17 +1755,13 @@ class SuggestionController(
         val promotedMultiWord = (
                 directlyPromotedMultiWord + chainedMultiWord
                 ).map { result ->
-                result.copy(
-                    candidate = result.candidate
-                        .split(Regex("\\s+"))
-                        .joinToString(" ") { word ->
-                            canonicalizeNextWordPrediction(
-                                result.copy(candidate = word),
-                                currentLocale,
-                                dictionaryRepository
-                            ).candidate
-                        }
-                )
+                val words = result.candidate.split(Regex("\\s+"))
+                result.copy(candidate = words.mapIndexed { index, word ->
+                    canonicalizeNextWordPrediction(
+                        result.copy(candidate = word), currentLocale, dictionaryRepository,
+                        contextWord = words.getOrNull(index - 1) ?: previousCompletedWord
+                    ).candidate
+                }.joinToString(" "))
             }.distinctBy {
                 it.candidate.lowercase(currentLocale)
             }

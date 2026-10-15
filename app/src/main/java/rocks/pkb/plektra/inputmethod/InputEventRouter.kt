@@ -40,6 +40,8 @@ class InputEventRouter(
     private val swipeToDeleteKeyCodes = setOf(322, 404)
     private val restrictedFieldBasicCtrlActions = setOf("select_all", "copy", "cut", "paste")
 
+    var editorInfoProvider: () -> EditorInfo? = { null }
+    var typingLocaleProvider: () -> java.util.Locale = { java.util.Locale.getDefault() }
     var suggestionController: rocks.pkb.plektra.core.suggestions.SuggestionController? = null
     var onCommitText: (() -> Unit)? = null
 
@@ -1350,7 +1352,8 @@ return EditableFieldRoutingResult.CallSuper
         clearCtrlOneShot: () -> Unit,
         updateStatusBar: () -> Unit,
         callSuper: () -> Boolean,
-        toggleMinimalUi: () -> Unit
+        toggleMinimalUi: () -> Unit,
+        allowFormatting: Boolean = true
     ): Boolean {
         // Software Ctrl uses the same meta-state, but invokes the displayed Plektra mapping.
         // Only physical chords should prefer the editor's native shortcuts.
@@ -1382,6 +1385,31 @@ return EditableFieldRoutingResult.CallSuper
                 ic.sendKeyEvent(down)
             }
             return true
+        }
+
+        // *Explicit formatting mappings work in Nav Mode; the G/I/S preset leaves its physical grid intact.*
+        val explicitFormat = ctrlMapping?.takeIf { it.type == "action" && TextFormattingShortcuts.isAction(it.value) }?.value
+        val presetFormat = if (!isSoftwareEvent && !ctrlLatchFromNavMode && !usesPhysicalNavGrid &&
+            !selectionShiftActive && event?.isAltPressed != true && event?.isMetaPressed != true &&
+            SettingsManager.getFrenchFormattingShortcuts(context)) TextFormattingShortcuts.actionForKey(shortcutKeyCode, typingLocaleProvider()) else null
+        val formatAction = explicitFormat ?: presetFormat
+        if (allowFormatting && !forceBasicContextMenuActions && formatAction != null && inputConnection != null) {
+            if (ctrlOneShot && !ctrlLatchFromNavMode) clearCtrlOneShot()
+            val formattingEditor = editorInfoProvider()
+            val packageName = formattingEditor?.packageName
+            val markerEdit = packageName == "com.whatsapp" || packageName == "com.whatsapp.w4b" ||
+                packageName == "com.reddit.frontpage" && SettingsManager.getRedditMarkdownFormatting(context)
+            val replacesSelection = !inputConnection.getSelectedText(0).isNullOrEmpty()
+            val handled = TextFormattingShortcuts.handle(context, inputConnection, formattingEditor, formatAction, event)
+            if (handled) {
+                // *Formatting markers do not erase the word currently being learned; selection replacement invalidates it.*
+                if (markerEdit) {
+                    if (replacesSelection) suggestionController?.onContextReset()
+                    onCommitText?.invoke()
+                }
+                updateStatusBar()
+                return true
+            }
         }
 
         // When Ctrl is physically held, prefer native app shortcuts (rich-text editors, IDEs, etc.).

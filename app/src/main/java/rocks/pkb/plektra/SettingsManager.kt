@@ -2425,6 +2425,18 @@ object SettingsManager {
      * Returns whether Ctrl+letter app shortcuts should be resolved through
      * the active Plektra layout before being passed to the target app.
      */
+    /** *Formatting preferences are included in the normal settings backup.* */
+    fun getFrenchFormattingShortcuts(context: Context): Boolean =
+        getPreferences(context).getBoolean("french_formatting_shortcuts", true)
+    fun setFrenchFormattingShortcuts(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean("french_formatting_shortcuts", enabled).apply()
+    }
+    fun getRedditMarkdownFormatting(context: Context): Boolean =
+        getPreferences(context).getBoolean("reddit_markdown_formatting", false)
+    fun setRedditMarkdownFormatting(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean("reddit_markdown_formatting", enabled).apply()
+    }
+
     fun getLayoutAwareCtrlShortcutsEnabled(context: Context): Boolean {
         return getPreferences(context).getBoolean(
             KEY_LAYOUT_AWARE_CTRL_SHORTCUTS,

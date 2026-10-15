@@ -87,12 +87,27 @@ class SuggestionProvisionalSpaceTest {
         input.commitText("\"voudrais ", 1); AutoSpaceTracker.markSuggestionAutoSpace(input); type("\"")
         assertEquals("\"voudrais\"", input.value)
     }
+    @Test fun punctuatedSuggestionTapConsumesExistingCommaWithoutDoublingSpace() {
+        input.commitText("mons, suite", 1)
+        input.setSelection(4, 4)
+        SuggestionButtonHandler.createSuggestionClickListener("monsieur, je me permets", input,
+            shouldDisableAutoCapitalize = true).onClick(View(context))
+        assertEquals("monsieur, je me permets suite", input.value)
+    }
+
     @Test fun suggestionTapMarksSpaceAndClosingParenthesisRemovesIt() {
         input.commitText("voud", 1)
         SuggestionButtonHandler.createSuggestionClickListener("voudrais", input,
             shouldDisableAutoCapitalize = true).onClick(View(context))
         assertEquals("voudrais ", input.value)
         type(")"); assertEquals("voudrais)", input.value)
+    }
+    @Test fun terminalSuggestionTapKeepsNarrowSpaceAndDoesNotDuplicateExistingSign() {
+        input.commitText("Emmanuel Cast\u202f! suite", 1)
+        input.setSelection(13, 13)
+        SuggestionButtonHandler.createSuggestionClickListener("Castel\u202f!", input,
+            shouldDisableAutoCapitalize = true).onClick(View(context))
+        assertEquals("Emmanuel Castel\u202f! suite", input.value)
     }
     @Test fun altBoundaryRouterHonorsTrimAndConfiguredAfterSpace() {
         SettingsManager.setSpaceAfterPunctuation(context, ")")

@@ -883,4 +883,12 @@ Nav Mode-ը օգտագործում է ստեղնի ֆիզիկական դիրքը
     <string name="auto_space_punctuation_character_column">Նշան</string>
     <string name="auto_space_punctuation_dialog_instruction">Ընտրեք նշանները, որոնցից առաջ հեռացվում է ավտոմատ բացատը կամ հետո անմիջապես ավելացվում է բացատ։</string>
     <string name="auto_space_punctuation_help_text">Առաջի հեռացումը վերաբերում է միայն ավտոմատ բացատներին։ Հետոյի ավելացումը անմիջապես տեղադրում է բացատ։ Հետո բացատի ստեղնը սեղմելիս այն չի կրկնապատկվում։ Կարճ գծիկը և փակող փակագիծը ընտրվում են առանձին։</string>
+    <string name="formatting_shortcuts_title">Fn ձևաչափման դյուրանցումներ</string>
+    <string name="formatting_shortcuts_description">Նավարկման ռեժիմից դուրս՝ G/I/S ֆրանսերեն մուտքագրման համար, B/I/U մյուս լեզուների համար (թավ/շեղ/ընդգծված)։ WhatsApp-ը օգտագործում է նշաններ, մյուս խմբագրիչները՝ ստանդարտ դյուրանցումներ։</string>
+    <string name="formatting_reddit_title">Reddit․ Markdown ռեժիմ</string>
+    <string name="formatting_reddit_description">Միացնել միայն **թավ** և *շեղ* ձևաչափն ընդունող խմբագրիչում։ Այլապես օգտագործվում են ստանդարտ դյուրանցումները։</string>
+    <string name="formatting_bold">Թավ</string>
+    <string name="formatting_italic">Շեղ</string>
+    <string name="formatting_underline">Ընդգծված</string>
+    <string name="formatting_unavailable">Այս ձևաչափումը հասանելի չէ այս հաղորդագրությունների հավելվածում։</string>
 </resources>

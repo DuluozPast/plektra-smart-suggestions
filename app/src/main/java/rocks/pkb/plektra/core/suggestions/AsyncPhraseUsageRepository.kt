@@ -12,14 +12,14 @@ internal class AsyncPhraseUsageRepository(private val store: PhraseUsageStore) :
     init { store.setWriteAheadLoggingEnabled(true) }
 
     private fun normalized(words: List<String>, locale: Locale) =
-        words.map { WordNormalization.normalizeForSuggestion(it, locale) }
+        words.map { PunctuatedPhrase.normalize(it, locale) }
     private fun key(locale: Locale, words: List<String>) = Key(locale.language.lowercase(Locale.ROOT), words)
 
     private fun model(locale: Locale, context: List<String>): LinkedHashMap<String, PhraseUsageStore.Prediction> =
         models.getOrPut(key(locale, context)) {
             LinkedHashMap<String, PhraseUsageStore.Prediction>().apply {
                 store.predictionRows(locale, context).forEach { row ->
-                    put(WordNormalization.normalizeForSuggestion(row.word, locale), row)
+                    put(PunctuatedPhrase.normalize(row.word, locale), row)
                 }
             }
         }

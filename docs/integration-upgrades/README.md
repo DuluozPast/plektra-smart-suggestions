@@ -1,5 +1,7 @@
 # Plektra Smart Suggestions — proposed Integration upgrades
 
+Latest update: [learned punctuation and casing, app-aware Fn formatting, language-aware keys and suggestion-space repair](punctuation-case-and-formatting.md), validated by [489 selected tests](punctuation-case-and-formatting-test-results.json): 487 passed, two existing graphics exclusions, no failures. Earlier theme and search upgrades are retained.
+
 Latest theme display update: [optional active-theme title, automatic text contrast and rotation selection repair](theme-title-and-rotation-selection.md), with [397-test validation](theme-title-and-rotation-selection-test-results.json).
 
 This contribution branch ports the custom Pastiera Integration improvements onto Plektra nightly `v26.10-nightly.11.184948Z`. It is a review and testing branch, not an official Plektra release. The Android project retains its normal structure, including `app`, `gradle`, the wrapper, resources and tests.
@@ -120,13 +122,26 @@ Machine-assisted translations need native-speaker review. Some screens introduce
 
 The distributed APK is a local experiment. The private signing key is excluded. The contribution branch is not a ready-made independent release channel; release identity, branding and update endpoints require separate preparation before distributing a fork publicly as a product.
 
+### 14. Learned punctuation and observed capitalization
+
+- Preserve internal and final punctuation in expressions while keeping lexical learning and sentence boundaries correct.
+- Preserve repeated transition casing without guessing names; retain personal completion, existing dictionary alternatives and phrase diversity.
+- Keep saved learning compatible and verify punctuation/model persistence, backup restoration and acceptance without duplicated signs.
+
+### 15. App-aware formatting and input-language shortcuts
+
+- Add configurable bold, italic and underline actions, translated settings and backup support.
+- Use French G/I/S or standard B/I/U according to input language, while sending native Ctrl+B/I/U to rich-text editors.
+- Adapt markers for WhatsApp/Business and optional Reddit Markdown; keep the navigation grid intact.
+- Move a suggestion's verified automatic space after a closing marker, preserve manual/opening spaces and continue learning across formatting markers.
+
 ## Plektra improvements preserved
 
 The merge keeps Plektra’s cached keyboard-bar geometry, curved surfaces, Normal/Slim configuration, visibility management, notes, dictation and smooth-caret lifecycle. SymSpell candidate deduplication and the long-input safeguards remain in place. The learning extensions participate in Plektra’s restore validation and rollback rather than replacing them.
 
 ## Validation and remaining work
 
-- 293 targeted tests: **291 passed, 2 Windows graphics tests skipped**.
+- Latest selection: **489 tests — 487 passed, 2 existing Windows graphics exclusions, zero failures or errors**. Earlier validation results remain in their respective reports.
 - The APK compiled successfully. The separate test application ID and signing certificate were verified after rebuilding.
 - Coverage includes learning, backup/restore, migration, number/compound handling, punctuation, selection, statistics, Enter behavior, theme rotation and menu resources.
 - The full test suite was not run. The selected tests do not establish production readiness, phone compatibility or performance gains.

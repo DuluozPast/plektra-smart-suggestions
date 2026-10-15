@@ -883,4 +883,12 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="auto_space_punctuation_character_column">Ký tự</string>
     <string name="auto_space_punctuation_dialog_instruction">Chọn các dấu cần xóa khoảng trắng tự động ở trước hoặc thêm khoảng trắng ngay sau dấu.</string>
     <string name="auto_space_punctuation_help_text">Xóa trước chỉ áp dụng cho khoảng trắng tự động. Thêm sau chèn khoảng trắng ngay lập tức. Nhấn phím cách tiếp theo không tạo khoảng trắng kép. Có thể chọn riêng dấu gạch ngang ngắn và dấu ngoặc đóng.</string>
+    <string name="formatting_shortcuts_title">Phím tắt định dạng Fn</string>
+    <string name="formatting_shortcuts_description">Ngoài chế độ điều hướng: G/I/S khi nhập tiếng Pháp; B/I/U cho ngôn ngữ nhập khác (đậm/nghiêng/gạch chân). WhatsApp dùng ký hiệu; trình soạn thảo khác nhận phím tắt gốc.</string>
+    <string name="formatting_reddit_title">Reddit: chế độ Markdown</string>
+    <string name="formatting_reddit_description">Chỉ bật khi trình soạn thảo hỗ trợ **in đậm** và *in nghiêng*. Nếu không sẽ dùng phím tắt gốc.</string>
+    <string name="formatting_bold">In đậm</string>
+    <string name="formatting_italic">In nghiêng</string>
+    <string name="formatting_underline">Gạch chân</string>
+    <string name="formatting_unavailable">Ứng dụng nhắn tin này không hỗ trợ định dạng này.</string>
 </resources>

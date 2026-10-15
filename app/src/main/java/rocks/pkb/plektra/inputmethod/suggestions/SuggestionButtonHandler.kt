@@ -127,9 +127,9 @@ object SuggestionButtonHandler {
 
         // Delete the full word around the cursor
         val deleteBefore = wordBeforeCursor.length
-        val deleteAfter = wordAfterCursor.length
+        val deleteAfter = wordAfterCursor.length + rocks.pkb.plektra.core.suggestions.PunctuatedPhrase.overlappingAfter(suggestion, after.substring(end))
         val replacement = CasingHelper.applyCasing(suggestion, currentWord, forceLeadingCapital)
-        val nextChar = after.getOrNull(end)
+        val nextChar = after.getOrNull(deleteAfter)
         val normalizedNextChar = nextChar?.let { Punctuation.normalizeApostrophe(it) }
         val nextIsWhitespace = normalizedNextChar?.isWhitespace() == true
         val shouldAppendSpace = !replacement.endsWith("'") &&

@@ -98,9 +98,9 @@ class SuggestionControllerNextWordTest {
         assertEquals(SuggestionKind.NEXT_WORD, snapshots.last().first().kind)
 
         controller.reloadDictionaries()
-        assertTrue(snapshots.last().isEmpty())
-        val restored = waitForSuggestionCandidates("bin", "bar")
-        assertEquals(listOf("bin", "bar"), restored.map { it.candidate })
+        // *Reload preserves the current context; its callback may already have restored the prediction.*
+        val restored = waitForSuggestionCandidates("bin")
+        assertEquals(listOf("bin"), restored.map { it.candidate })
         assertEquals(SuggestionKind.NEXT_WORD, restored.first().kind)
     }
 
@@ -1041,8 +1041,10 @@ class SuggestionControllerNextWordTest {
             nowMs = 1_000L
         )
 
+        // *The phrase index learns the final transition of each supplied sequence.*
         // Rend "Je voudrais" éligible après "ici".
         repeat(4) {
+            phraseStore.learn(locale, listOf("ici", "Je"))
             phraseStore.learn(
                 locale = locale,
                 words = listOf("ici", "Je", "voudrais")
@@ -1317,6 +1319,217 @@ class SuggestionControllerNextWordTest {
         typeWord(controller, "1")
         controller.onSuggestionCommitted("11")
         assertEquals(listOf("heures"), snapshots.last().map { it.candidate })
+    }
+
+
+    private fun punctuationController(frenchSpacing: Boolean = false): SuggestionController {
+        val context = RuntimeEnvironment.getApplication()
+        PhraseUsageStore(context).apply { clearAll(); close() }
+        WordUsageStore(context).apply { clearAll(); close() }
+        context.getFileStreamPath("multi_word_sequences.json").delete()
+        return SuggestionController(context, context.assets,
+            settingsProvider = { SuggestionSettings(suggestionsEnabled = true, multiWordSuggestionsEnabled = true, maxSuggestions = 3, frenchPunctuationSpacing = frenchSpacing) },
+            onSuggestionsUpdated = { snapshots.add(it) }, currentLocale = Locale.FRANCE,
+            dictionaryRepositoryFactory = { _, _, _, _, _ -> fakeRepository },
+            nextWordPredictorOverride = NextWordPredictor(store, asyncLearning = false)
+        ).also { controllers.add(it) }
+    }
+
+    private fun trainGreeting(controller: SuggestionController, recipient: String, punctuationAfterSpace: Boolean = false) {
+        controller.onContextReset()
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        typeWord(controller, recipient)
+        if (punctuationAfterSpace) pressSpace(controller)
+        controller.onBoundaryKey(KeyEvent.KEYCODE_COMMA, null, null, boundaryCharOverride = ',')
+        pressSpace(controller)
+        typeWord(controller, "je"); pressSpace(controller)
+        typeWord(controller, "me"); pressSpace(controller)
+        typeWord(controller, "permets"); pressSpace(controller)
+    }
+
+    @Test fun punctuatedGreetingsOfferBothCompleteLearnedBranches() {
+        val controller = punctuationController()
+        repeat(10) { trainGreeting(controller, "monsieur"); trainGreeting(controller, "madame") }
+        controller.onContextReset()
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        val values = controller.currentSuggestions().map { it.candidate }
+        assertTrue(values.toString(), "monsieur, je me permets" in values)
+        assertTrue(values.toString(), "madame, je me permets" in values)
+        assertTrue(values.none { ",," in it || " ," in it })
+    }
+
+    @Test fun punctuatedCommaAfterSpaceIsRetainedWithoutDuplicateLearning() {
+        val controller = punctuationController()
+        repeat(10) { trainGreeting(controller, "monsieur", punctuationAfterSpace = true) }
+        controller.onContextReset()
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "monsieur, je me permets" })
+    }
+
+    @Test fun punctuatedAcceptedPhraseKeepsCommaAndContinuesLearning() {
+        val controller = punctuationController()
+        repeat(10) {
+            controller.onContextReset()
+            typeWord(controller, "Bonjour"); pressSpace(controller)
+            controller.onSuggestionCommitted("monsieur, je me")
+            typeWord(controller, "permets"); pressSpace(controller)
+        }
+        controller.onContextReset()
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "monsieur, je me permets" })
+    }
+
+    @Test fun punctuatedSentenceEndingDoesNotLearnAcrossSentences() {
+        val controller = punctuationController()
+        repeat(10) {
+            controller.onContextReset()
+            typeWord(controller, "Bonjour"); pressPeriod(controller)
+            typeWord(controller, "monsieur"); pressSpace(controller)
+            typeWord(controller, "je"); pressSpace(controller)
+        }
+        controller.onContextReset()
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().none { it.candidate.startsWith("monsieur") })
+    }
+
+    @Test fun punctuatedLongPressCapitalKeepsFirstNameSurnameTransition() {
+        val controller = punctuationController()
+        repeat(5) {
+            controller.onContextReset()
+            typeWord(controller, "Emmanuel"); pressSpace(controller)
+            typeWord(controller, "c")
+            controller.onCharacterCommitted("C", null, replacesPreviousCharacter = true)
+            typeWord(controller, "astel"); pressSpace(controller)
+        }
+        controller.onContextReset()
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel" })
+        typeWord(controller, "c")
+        assertTrue(waitForPersonalCompletion(controller, "Castel"))
+    }
+
+    @Test fun punctuatedRepeatedPersonalCapitalizationSurvivesLowercaseDictionaryAlternative() {
+        val controller = punctuationController()
+        fakeRepository.addTestEntry("castel", 20000)
+        repeat(5) {
+            controller.onContextReset()
+            typeWord(controller, "Emmanuel"); pressSpace(controller)
+            typeWord(controller, "Castel"); pressSpace(controller)
+        }
+        controller.onContextReset()
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel" })
+    }
+
+    @Test fun finalSignsAfterTypedSpaceAreLearnedWithoutCountingTheWordTwice() {
+        val context = RuntimeEnvironment.getApplication()
+        val controller = punctuationController(frenchSpacing = true)
+        repeat(10) {
+            controller.onContextReset()
+            val buffer = android.text.SpannableStringBuilder().apply { android.text.Selection.setSelection(this, 0) }
+            val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+                override fun getEditable(): android.text.Editable = buffer
+            }
+            for (word in listOf("Emmanuel", "Castel")) {
+                word.forEach { ch -> input.commitText(ch.toString(), 1); controller.onCharacterCommitted(ch.toString(), input) }
+                controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, input)
+            }
+            controller.onBoundaryKey(KeyEvent.KEYCODE_UNKNOWN, null, input, boundaryCharOverride = '?')
+            assertEquals("Emmanuel Castel\u202f?", buffer.toString())
+        }
+        assertEquals(10, store.getUsage("fr-FR", "emmanuel", "Castel")?.count)
+        controller.onContextReset()
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel\u202f?" })
+    }
+
+    @Test fun acceptedSentenceEndingDoesNotTeachACrossSentenceTransition() {
+        val controller = punctuationController(frenchSpacing = true)
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        controller.onSuggestionCommitted("Castel\u202f!")
+        typeWord(controller, "Bonjour"); pressSpace(controller)
+        assertEquals(null, store.getUsage("fr-FR", "castel", "Bonjour"))
+        assertEquals(1, store.getUsage("fr-FR", "emmanuel", "Castel")?.count)
+    }
+
+    @Test fun punctuatedPersonalCaseDoesNotDependOnPreviousWordCapitalization() {
+        val controller = punctuationController()
+        fakeRepository.addTestEntry("castel", 20000)
+        repeat(5) {
+            controller.onContextReset()
+            typeWord(controller, "emmanuel"); pressSpace(controller)
+            typeWord(controller, "Castel"); pressSpace(controller)
+        }
+        controller.onContextReset()
+        typeWord(controller, "emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel" })
+    }
+
+    @Test fun frenchExclamationKeepsLearnedSurname() {
+        val context = RuntimeEnvironment.getApplication()
+        val controller = punctuationController(frenchSpacing = true)
+        fakeRepository.addTestEntry("castel", 20000)
+        repeat(5) {
+            controller.onContextReset()
+            val buffer = android.text.SpannableStringBuilder().apply { android.text.Selection.setSelection(this, 0) }
+            val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+                override fun getEditable(): android.text.Editable = buffer
+            }
+            "Emmanuel".forEach { ch -> input.commitText(ch.toString(), 1); controller.onCharacterCommitted(ch.toString(), input) }
+            controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, input)
+            "Castel".forEach { ch -> input.commitText(ch.toString(), 1); controller.onCharacterCommitted(ch.toString(), input) }
+            controller.onBoundaryKey(KeyEvent.KEYCODE_UNKNOWN, null, input, boundaryCharOverride = '!')
+            assertEquals("Emmanuel Castel\u202f!", buffer.toString())
+        }
+        assertEquals(5, store.getUsage("fr-FR", "emmanuel", "Castel")?.count)
+        controller.onContextReset()
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel" })
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel\u202f!" })
+    }
+
+    @Test fun whatsappFormattingMarkersKeepPersonalTransitionLearning() {
+        val context = RuntimeEnvironment.getApplication()
+        val controller = punctuationController()
+        fakeRepository.addTestEntry("castel", 20000)
+        rocks.pkb.plektra.SettingsManager.setNavModeCtrlHoldEnabled(context, false)
+        val router = rocks.pkb.plektra.inputmethod.InputEventRouter(context,
+            rocks.pkb.plektra.core.NavModeController(context, rocks.pkb.plektra.core.ModifierStateController(300L)))
+        router.editorInfoProvider = { android.view.inputmethod.EditorInfo().apply { packageName = "com.whatsapp" } }
+        router.suggestionController = controller
+        repeat(5) {
+            controller.onContextReset()
+            val buffer = android.text.SpannableStringBuilder().apply { android.text.Selection.setSelection(this, 0) }
+            val input = object : android.view.inputmethod.BaseInputConnection(android.view.View(context), true) {
+                override fun getEditable(): android.text.Editable = buffer
+            }
+            fun italic() {
+                router.handleCtrlModifiedKey(KeyEvent.KEYCODE_I,
+                    KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_I, 0, KeyEvent.META_CTRL_ON),
+                    input, emptyMap(), false, false, true,
+                    clearCtrlOneShot = {}, updateStatusBar = {}, callSuper = { false }, toggleMinimalUi = {})
+            }
+            italic()
+            "Emmanuel".forEach { ch -> input.commitText(ch.toString(), 1); controller.onCharacterCommitted(ch.toString(), input) }
+            controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, input)
+            "Castel".forEach { ch -> input.commitText(ch.toString(), 1); controller.onCharacterCommitted(ch.toString(), input) }
+            italic()
+            controller.onBoundaryKey(KeyEvent.KEYCODE_SPACE, null, input)
+            assertEquals("_Emmanuel Castel_ ", buffer.toString())
+        }
+        assertEquals(5, store.getUsage("fr-FR", "emmanuel", "Castel")?.count)
+        controller.onContextReset()
+        typeWord(controller, "Emmanuel"); pressSpace(controller)
+        assertTrue(controller.currentSuggestions().toString(), controller.currentSuggestions().any { it.candidate == "Castel" })
+    }
+
+    private fun waitForPersonalCompletion(controller: SuggestionController, value: String): Boolean {
+        repeat(100) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (controller.currentSuggestions().any { it.candidate == value }) return true
+            Thread.sleep(10)
+        }
+        return false
     }
 
         private fun newController(): SuggestionController {

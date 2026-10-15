@@ -185,8 +185,8 @@ class MultiWordPromotionEngine(
         return words.zipWithNext().all { (previousWord, nextWord) ->
             val usage = nextWordPredictor.getUsage(
                 locale = locale,
-                previousWord = previousWord,
-                nextWord = nextWord
+                previousWord = PunctuatedPhrase.lexical(previousWord),
+                nextWord = PunctuatedPhrase.lexical(nextWord)
             )
 
             if (usage == null) {

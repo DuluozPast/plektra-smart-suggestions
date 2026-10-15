@@ -1887,6 +1887,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             updateNavModeStatusIcon(isActive)
         }
         inputEventRouter = InputEventRouter(this, navModeController).apply {
+            editorInfoProvider = { currentInputEditorInfo }
+            typingLocaleProvider = { getLocaleFromSubtype() }
             onCommitText = { markSelectionUpdateSkipAfterCommit() }
         }
         typingSoundPlayer = TypingSoundPlayer(this).apply { reload() }
@@ -3545,6 +3547,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 "move_word_left" -> "← word"
                 "move_word_right" -> "word →"
                 "expand_selection_word_left" -> "Sel word ←"
+                "format_bold" -> getString(R.string.formatting_bold)
+                "format_italic" -> getString(R.string.formatting_italic)
+                "format_underline" -> getString(R.string.formatting_underline)
                 "expand_selection_word_right" -> "Sel word →"
                 "page_start" -> "Start"
                 "page_end" -> "End"
@@ -4831,7 +4836,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 clearCtrlOneShot = { ctrlOneShot = false },
                 updateStatusBar = { updateStatusBarText() },
                 callSuper = { false },
-                toggleMinimalUi = { keyboardVisibilityController.toggleSlimMode() }
+                toggleMinimalUi = { keyboardVisibilityController.toggleSlimMode() },
+                allowFormatting = false
             )
             if (handled) {
                 updateEmojiSearchExternalSelectionSnapshot(initialInputConnection)
@@ -6296,11 +6302,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             val currentWord = wordBeforeCursor + wordAfterCursor
 
             val deleteBefore = wordBeforeCursor.length
-            val deleteAfter = wordAfterCursor.length
+            val deleteAfter = wordAfterCursor.length + rocks.pkb.plektra.core.suggestions.PunctuatedPhrase.overlappingAfter(suggestion, after.substring(end))
             val replacement = rocks.pkb.plektra.core.suggestions.CasingHelper.applyCasing(
                 suggestion, currentWord, forceLeadingCapital
             )
-            val shouldAppendSpace = !replacement.endsWith("'")
+            val shouldAppendSpace = !replacement.endsWith("'") && after.getOrNull(deleteAfter)?.isWhitespace() != true
 
             ic.deleteSurroundingText(deleteBefore, deleteAfter)
             val textToCommit = if (shouldAppendSpace) "$replacement " else replacement

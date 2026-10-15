@@ -1599,4 +1599,12 @@ QWERTZ σε φυσικό QWERTY
     <string name="app_enter_behaviour_send_shift_side">Πλήκτρο Shift για αποστολή</string>
     <string name="app_enter_behaviour_shift_left">Αριστερό Shift</string>
     <string name="app_enter_behaviour_shift_right">Δεξί Shift</string>
+    <string name="formatting_shortcuts_title">Συντομεύσεις μορφοποίησης Fn</string>
+    <string name="formatting_shortcuts_description">Εκτός πλοήγησης: G/I/S για γαλλική πληκτρολόγηση, B/I/U για άλλες γλώσσες (έντονα/πλάγια/υπογράμμιση). Το WhatsApp χρησιμοποιεί σύμβολα, οι άλλοι επεξεργαστές εγγενείς συντομεύσεις.</string>
+    <string name="formatting_reddit_title">Reddit: λειτουργία Markdown</string>
+    <string name="formatting_reddit_description">Ενεργοποιήστε μόνο αν υποστηρίζονται **έντονα** και *πλάγια*. Διαφορετικά χρησιμοποιούνται εγγενείς συντομεύσεις.</string>
+    <string name="formatting_bold">Έντονα</string>
+    <string name="formatting_italic">Πλάγια</string>
+    <string name="formatting_underline">Υπογράμμιση</string>
+    <string name="formatting_unavailable">Αυτή η μορφοποίηση δεν διατίθεται σε αυτή την εφαρμογή μηνυμάτων.</string>
 </resources>
