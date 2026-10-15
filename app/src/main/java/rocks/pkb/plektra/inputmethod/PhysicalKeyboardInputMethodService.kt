@@ -2552,6 +2552,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 }
             } else if (SettingsManager.isKeyboardThemePreferenceKey(key)) {
                 Handler(Looper.getMainLooper()).post {
+                    // *A rename or title toggle must repaint even if colours and suggestions are unchanged.*
+                    invalidateRenderedStatusSnapshot()
                     updateStatusBarText()
                     themeRotationScheduler?.refreshAndSchedule()
                 }

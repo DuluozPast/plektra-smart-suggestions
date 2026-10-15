@@ -3026,6 +3026,15 @@ class StatusBarController(
         }
         val activeTheme = activeThemeSettings(isFullSoftwareKeyboardMode)
         val activeColors = activeTheme.toKeyboardThemeColors()
+        // *Use the currently rendered target/scope, never the global theme when a local cycle applies.*
+        val (themeLocale, themeLayout) = activeInputStyle()
+        variationBarView?.themeName = if (SettingsManager.isKeyboardThemeNameShown(context)) {
+            rocks.pkb.plektra.KeyboardThemeNameResolver.resolve(context,
+                if (isFullSoftwareKeyboardMode) SettingsManager.KeyboardThemeTarget.SOFTWARE
+                else SettingsManager.KeyboardThemeTarget.HARDWARE,
+                themeLocale, themeLayout, activeTheme)
+        } else null
+
         val softwareThemeSettings = if (isFullSoftwareKeyboardMode) activeTheme else softwareTheme()
         variationBarView?.onVariationSelectedListener = onVariationSelectedListener
         variationBarView?.onCursorMovedListener = onCursorMovedListener
