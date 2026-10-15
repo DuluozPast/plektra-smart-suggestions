@@ -244,6 +244,7 @@ internal object BackupPreferenceContract {
             "keyboard_theme_hardware" to PreferenceValueType.STRING,
             "keyboard_theme_software" to PreferenceValueType.STRING,
             "keyboard_theme_saved_themes" to PreferenceValueType.STRING,
+            "keyboard_theme_show_name" to PreferenceValueType.BOOLEAN,
             "keyboard_theme_rotation_names_hardware" to PreferenceValueType.STRING,
             "keyboard_theme_rotation_anchor_hardware" to PreferenceValueType.LONG,
             "keyboard_theme_rotation_names_software" to PreferenceValueType.STRING,
