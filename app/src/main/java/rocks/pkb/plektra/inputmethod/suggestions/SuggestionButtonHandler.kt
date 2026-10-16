@@ -74,22 +74,6 @@ object SuggestionButtonHandler {
         suggestion: String,
         forceLeadingCapital: Boolean
     ): ReplacementResult? {
-        fun ensureTrailingSpaceAfterSuggestion(): Boolean {
-            val beforeAfterCommit = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-            if (beforeAfterCommit.endsWith(" ")) {
-                return true
-            }
-            inputConnection.commitText(" ", 1)
-            val afterSecondTry = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-            if (afterSecondTry.endsWith(" ")) {
-                return true
-            }
-            inputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SPACE))
-            inputConnection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SPACE))
-            val afterKeyEvent = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-            return afterKeyEvent.endsWith(" ")
-        }
-
         val before = inputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty()
         val after = inputConnection.getTextAfterCursor(64, 0)?.toString().orEmpty()
         fun isBoundaryChar(ch: Char, prev: Char?, next: Char?): Boolean {
@@ -129,37 +113,7 @@ object SuggestionButtonHandler {
         val deleteBefore = wordBeforeCursor.length
         val deleteAfter = wordAfterCursor.length + rocks.pkb.plektra.core.suggestions.PunctuatedPhrase.overlappingAfter(suggestion, after.substring(end))
         val replacement = CasingHelper.applyCasing(suggestion, currentWord, forceLeadingCapital)
-        val nextChar = after.getOrNull(deleteAfter)
-        val normalizedNextChar = nextChar?.let { Punctuation.normalizeApostrophe(it) }
-        val nextIsWhitespace = normalizedNextChar?.isWhitespace() == true
-        val shouldAppendSpace = !replacement.endsWith("'") &&
-            !nextIsWhitespace
-
-        val deleted = inputConnection.deleteSurroundingText(deleteBefore, deleteAfter)
-        if (deleted) {
-            Log.d(TAG, "Deleted ${deleteBefore + deleteAfter} chars ('$currentWord') before inserting suggestion")
-        } else {
-            Log.w(TAG, "Unable to delete surrounding word; inserting anyway")
-        }
-
-        val committed = inputConnection.commitText(replacement, 1)
-        if (committed && shouldAppendSpace) {
-            val committedWithSpace = inputConnection.commitText(" ", 1)
-            val spaced = if (committedWithSpace) {
-                val textBefore = inputConnection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-                if (textBefore.endsWith(" ")) true else ensureTrailingSpaceAfterSuggestion()
-            } else {
-                ensureTrailingSpaceAfterSuggestion()
-            }
-            if (spaced) {
-                AutoSpaceTracker.markSuggestionAutoSpace(inputConnection)
-                Log.d(TAG, "Suggestion auto-space marked")
-            } else {
-                Log.w(TAG, "Suggestion space could not be enforced")
-            }
-        }
-        val textToCommit = if (shouldAppendSpace) "$replacement " else replacement
-        Log.d(TAG, "Suggestion inserted as '$textToCommit' (committed=$committed)")
+        val committed = SuggestionCommitter.commit(inputConnection, replacement, deleteBefore, deleteAfter, after)
         if (committed) {
             DebugCaptureStore.recordAutoCorrectionCommit(
                 before = currentWord,

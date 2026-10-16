@@ -935,11 +935,19 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="auto_space_punctuation_dialog_instruction">Scegli i segni che rimuovono uno spazio automatico prima o aggiungono uno spazio subito dopo.</string>
     <string name="auto_space_punctuation_help_text">Rimuovi prima riguarda solo gli spazi automatici. Aggiungi dopo inserisce subito uno spazio. Premere poi Spazio non lo duplica. Il trattino medio e la parentesi chiusa si selezionano separatamente.</string>
     <string name="formatting_shortcuts_title">Scorciatoie di formattazione Fn</string>
-    <string name="formatting_shortcuts_description">Fuori dal modo Navigazione: G/I/S per il francese; B/I/U per le altre lingue di scrittura (grassetto/corsivo/sottolineato). WhatsApp usa marcatori; gli altri editor, scorciatoie native.</string>
+    <string name="formatting_shortcuts_description">Fuori dal modo Navigazione: G/I/S per il francese; B/I/U per le altre lingue di scrittura (grassetto/corsivo/sottolineato). WhatsApp / Telegram usa marcatori; gli altri editor, scorciatoie native.</string>
     <string name="formatting_reddit_title">Reddit: modalità Markdown</string>
     <string name="formatting_reddit_description">Attivare solo se il campo accetta **grassetto** e *corsivo*. Altrimenti vengono usate le scorciatoie native.</string>
     <string name="formatting_bold">Grassetto</string>
     <string name="formatting_italic">Corsivo</string>
     <string name="formatting_underline">Sottolineato</string>
     <string name="formatting_unavailable">Questa formattazione non è disponibile in questa app di messaggistica.</string>
+
+    <string name="delete_calibration_title">Calibra il gesto di cancellazione</string>
+    <string name="delete_calibration_summary">Scegli zona iniziale e movimento con cinque scorrimenti verso sinistra.</string>
+    <string name="delete_calibration_help">Scorri cinque volte da destra a sinistra dalla zona più comoda per il pollice (ad esempio da H verso S). Nessuna parola viene cancellata durante la calibrazione. Il salvataggio attiva il rilevamento nativo dei gesti.</string>
+    <string name="delete_calibration_save">Salva calibrazione</string>
+    <string name="delete_calibration_restart">Ricomincia</string>
+    <string name="delete_calibration_reset">Ripristina gesto predefinito</string>
+    <string name="enter_send_rejected">Il campo di testo ha rifiutato Invio. Scegli un altro metodo nelle impostazioni del tasto Invio per questa app.</string>
 </resources>

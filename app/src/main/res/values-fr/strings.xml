@@ -886,11 +886,19 @@ Chaque touche peut être configurée comme Keycode, Action, Native Ctrl ou Aucun
     <string name="auto_space_punctuation_dialog_instruction">Choisissez les signes qui retirent un espace automatique avant ou ajoutent immédiatement un espace après.</string>
     <string name="auto_space_punctuation_help_text">Retirer avant concerne uniquement un espace automatique. Ajouter après insère immédiatement un espace. Appuyer ensuite sur Espace ne le double pas. Le tiret demi-cadratin et la parenthèse fermante se règlent séparément.</string>
     <string name="formatting_shortcuts_title">Raccourcis de mise en forme Fn</string>
-    <string name="formatting_shortcuts_description">Hors mode Nav : G/I/S en français ; B/I/U pour les autres langues de saisie (gras/italique/souligné). WhatsApp utilise des marqueurs ; les autres éditeurs reçoivent les raccourcis natifs.</string>
+    <string name="formatting_shortcuts_description">Hors mode Nav : G/I/S en français ; B/I/U pour les autres langues de saisie (gras/italique/souligné). WhatsApp / Telegram utilise des marqueurs ; les autres éditeurs reçoivent les raccourcis natifs.</string>
     <string name="formatting_reddit_title">Reddit : mode Markdown</string>
     <string name="formatting_reddit_description">Activer seulement dans un éditeur acceptant **gras** et *italique*. Sinon, les raccourcis natifs sont utilisés.</string>
     <string name="formatting_bold">Gras</string>
     <string name="formatting_italic">Italique</string>
     <string name="formatting_underline">Souligné</string>
     <string name="formatting_unavailable">Cette mise en forme est indisponible dans cette messagerie.</string>
+
+    <string name="delete_calibration_title">Calibrer le swipe d’effacement</string>
+    <string name="delete_calibration_summary">Choisir la zone de départ et le mouvement avec cinq balayages vers la gauche.</string>
+    <string name="delete_calibration_help">Faites cinq balayages de droite à gauche, depuis la zone qui convient à votre pouce (par exemple de H vers S). Aucun mot ne sera effacé pendant la calibration. Enregistrer active la détection native des gestes.</string>
+    <string name="delete_calibration_save">Enregistrer la calibration</string>
+    <string name="delete_calibration_restart">Recommencer</string>
+    <string name="delete_calibration_reset">Rétablir le geste par défaut</string>
+    <string name="enter_send_rejected">L’éditeur a refusé la demande d’envoi. Choisissez une autre méthode dans les réglages de la touche Entrée par application.</string>
 </resources>

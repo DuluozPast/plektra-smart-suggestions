@@ -40,7 +40,7 @@ class SuggestionProvisionalSpaceTest {
         if (text.length == 1) PunctuationAfterSpace.afterCommit(context, input, text[0])
     }
     @Test fun closingSignsRemoveOnlySuggestionSpaceWithoutForcingAfterSpace() {
-        ".,;:!?)]}".forEach {
+        ".…,;:!?)]}".forEach {
             AutoSpaceTracker.clear(); input = Buffer(context); accepted(); type(it.toString())
             assertEquals("voudrais$it", input.value)
         }
@@ -115,6 +115,28 @@ class SuggestionProvisionalSpaceTest {
         val router = InputEventRouter(context, NavModeController(context, ModifierStateController(300L)))
         assertTrue(router.handleBoundaryText(context, ")", input, true, false, AutoCorrectionManager(context), {}))
         assertEquals("voudrais) ", input.value)
+    }
+    @Test fun existingSeparatorMovesBeforeCaretWhenSuggestionIsAccepted() {
+        input.commitText("voud suite", 1); input.setSelection(4, 4)
+        SuggestionButtonHandler.createSuggestionClickListener("voudrais", input,
+            shouldDisableAutoCapitalize = true).onClick(View(context))
+        input.commitText("demain ", 1)
+        assertEquals("voudrais demain suite", input.value)
+    }
+    @Test fun threeTypedDotsHaveNoInterveningAutomaticSpaces() {
+        SettingsManager.setSpaceAfterPunctuation(context, ".")
+        accepted(); type("."); type("."); type("."); type("demain")
+        assertEquals("voudrais... demain", input.value)
+    }
+    @Test fun unicodeEllipsisUsesTheRealBoundaryRouter() {
+        accepted()
+        val router = InputEventRouter(context, NavModeController(context, ModifierStateController(300L)))
+        assertTrue('…' in Punctuation.BOUNDARY)
+        // Without an after-space preference the router prepares spacing and lets
+        // its caller commit the character, as the real alternate-symbol path does.
+        val handled = router.handleBoundaryText(context, "…", input, true, false, AutoCorrectionManager(context), {})
+        if (!handled) input.commitText("…", 1)
+        assertEquals("voudrais…", input.value)
     }
     private class Buffer(context: Context) : BaseInputConnection(View(context), true) {
         private val buffer = SpannableStringBuilder().apply { Selection.setSelection(this, 0) }

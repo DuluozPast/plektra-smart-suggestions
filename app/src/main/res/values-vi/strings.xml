@@ -884,11 +884,19 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="auto_space_punctuation_dialog_instruction">Chọn các dấu cần xóa khoảng trắng tự động ở trước hoặc thêm khoảng trắng ngay sau dấu.</string>
     <string name="auto_space_punctuation_help_text">Xóa trước chỉ áp dụng cho khoảng trắng tự động. Thêm sau chèn khoảng trắng ngay lập tức. Nhấn phím cách tiếp theo không tạo khoảng trắng kép. Có thể chọn riêng dấu gạch ngang ngắn và dấu ngoặc đóng.</string>
     <string name="formatting_shortcuts_title">Phím tắt định dạng Fn</string>
-    <string name="formatting_shortcuts_description">Ngoài chế độ điều hướng: G/I/S khi nhập tiếng Pháp; B/I/U cho ngôn ngữ nhập khác (đậm/nghiêng/gạch chân). WhatsApp dùng ký hiệu; trình soạn thảo khác nhận phím tắt gốc.</string>
+    <string name="formatting_shortcuts_description">Ngoài chế độ điều hướng: G/I/S khi nhập tiếng Pháp; B/I/U cho ngôn ngữ nhập khác (đậm/nghiêng/gạch chân). WhatsApp / Telegram dùng ký hiệu; trình soạn thảo khác nhận phím tắt gốc.</string>
     <string name="formatting_reddit_title">Reddit: chế độ Markdown</string>
     <string name="formatting_reddit_description">Chỉ bật khi trình soạn thảo hỗ trợ **in đậm** và *in nghiêng*. Nếu không sẽ dùng phím tắt gốc.</string>
     <string name="formatting_bold">In đậm</string>
     <string name="formatting_italic">In nghiêng</string>
     <string name="formatting_underline">Gạch chân</string>
     <string name="formatting_unavailable">Ứng dụng nhắn tin này không hỗ trợ định dạng này.</string>
+
+    <string name="delete_calibration_title">Hiệu chỉnh thao tác vuốt xóa</string>
+    <string name="delete_calibration_summary">Chọn vùng bắt đầu và chuyển động bằng năm lần vuốt sang trái.</string>
+    <string name="delete_calibration_help">Vuốt từ phải sang trái năm lần, bắt đầu ở vùng thuận tiện cho ngón cái (ví dụ từ H sang S). Không có từ nào bị xóa khi hiệu chỉnh. Lưu sẽ bật nhận diện cử chỉ gốc.</string>
+    <string name="delete_calibration_save">Lưu hiệu chỉnh</string>
+    <string name="delete_calibration_restart">Bắt đầu lại</string>
+    <string name="delete_calibration_reset">Khôi phục cử chỉ mặc định</string>
+    <string name="enter_send_rejected">Trình soạn thảo từ chối gửi. Chọn cách gửi khác trong cài đặt phím Enter cho ứng dụng.</string>
 </resources>

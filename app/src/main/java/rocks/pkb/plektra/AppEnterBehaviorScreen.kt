@@ -56,6 +56,8 @@ private val testedEnterBehaviorPackages = setOf(
 
 private val favoriteEnterBehaviorApps = listOf(
     WHATSAPP_PACKAGE_NAME,
+    "com.openai.chatgpt",
+    "com.reddit.frontpage",
     "org.telegram.messenger",
     "org.thoughtcrime.securesms",
     DISCORD_PACKAGE_NAME,

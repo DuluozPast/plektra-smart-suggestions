@@ -1826,11 +1826,19 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="app_enter_behaviour_shift_left">Left Shift</string>
     <string name="app_enter_behaviour_shift_right">Right Shift</string>
     <string name="formatting_shortcuts_title">Fn formatting shortcuts</string>
-    <string name="formatting_shortcuts_description">Outside Nav Mode: French input uses Fn+G/I/S; other input languages use Fn+B/I/U for bold/italic/underline. WhatsApp uses markers; other editors receive native shortcuts.</string>
+    <string name="formatting_shortcuts_description">Outside Nav Mode: French input uses Fn+G/I/S; other input languages use Fn+B/I/U for bold/italic/underline. WhatsApp / Telegram uses markers; other editors receive native shortcuts.</string>
     <string name="formatting_reddit_title">Reddit: Markdown mode</string>
     <string name="formatting_reddit_description">Enable only in an editor accepting **bold** and *italic*. Otherwise native shortcuts are used.</string>
     <string name="formatting_bold">Bold</string>
     <string name="formatting_italic">Italic</string>
     <string name="formatting_underline">Underline</string>
     <string name="formatting_unavailable">This formatting is unavailable in this messaging app.</string>
+
+    <string name="delete_calibration_title">Calibrate word deletion swipe</string>
+    <string name="delete_calibration_summary">Choose the starting area and movement with five leftward swipes.</string>
+    <string name="delete_calibration_help">Swipe right to left five times, starting wherever your thumb feels comfortable (for example H towards S). No words are deleted during calibration. Saving enables native gesture detection.</string>
+    <string name="delete_calibration_save">Save calibration</string>
+    <string name="delete_calibration_restart">Start again</string>
+    <string name="delete_calibration_reset">Restore default gesture</string>
+    <string name="enter_send_rejected">The editor rejected Send. Choose another sending method in the per-app Enter settings.</string>
 </resources>

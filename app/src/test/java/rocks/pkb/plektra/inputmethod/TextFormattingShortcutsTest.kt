@@ -34,6 +34,8 @@ class TextFormattingShortcutsTest {
         SettingsManager.setNavModeCtrlHoldEnabled(context, false)
         input = Buffer(context)
         AutoSpaceTracker.clear()
+        rocks.pkb.plektra.core.PunctuationAfterSpace.clear()
+        rocks.pkb.plektra.core.DeferredPunctuationSpaceTracker.clear()
         SettingsManager.setAutoCapitalizeFirstLetter(context, false)
     }
     private fun editor(app: String = "com.microsoft.office.word") = EditorInfo().apply {
@@ -42,6 +44,15 @@ class TextFormattingShortcutsTest {
     private fun format(action: String, app: String = "com.whatsapp", event: KeyEvent? = null) =
         TextFormattingShortcuts.handle(context, input, editor(app), action, event)
 
+    @Test fun telegramMarkersKeepSuggestionSpaceOutsideBoldAndItalic() {
+        for ((action, marker) in listOf("format_bold" to "**", "format_italic" to "__")) {
+            input = Buffer(context); AutoSpaceTracker.clear()
+            format(action, "org.telegram.messenger")
+            input.commitText("bonjour ", 1); AutoSpaceTracker.markSuggestionAutoSpace(input)
+            format(action, "org.telegram.messenger")
+            assertEquals(marker + "bonjour" + marker + " ", input.value)
+        }
+    }
     @Test fun nativeEditorsReceiveBalancedStandardChords() {
         for ((action, key) in listOf("format_bold" to KeyEvent.KEYCODE_B, "format_italic" to KeyEvent.KEYCODE_I, "format_underline" to KeyEvent.KEYCODE_U)) {
             input.events.clear()
@@ -193,6 +204,49 @@ class TextFormattingShortcutsTest {
         route(KeyEvent.KEYCODE_S, locale = Locale.FRENCH)
         assertEquals(listOf(KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_G,
             KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_U), input.events.map { it.keyCode })
+    }
+
+    private fun automaticPunctuation(sign: Char) {
+        rocks.pkb.plektra.core.PunctuationAfterSpace.beforeTextCommit(input, sign.toString())
+        rocks.pkb.plektra.core.Punctuation.commitFrenchSpacedPunctuation(input, sign)
+        rocks.pkb.plektra.core.PunctuationAfterSpace.afterCommit(context, input, sign)
+    }
+    @Test fun whatsappClosingStylesMoveAutomaticPunctuationSpaceOutsideTheMarker() {
+        SettingsManager.setSpaceAfterPunctuation(context, "?!")
+        for ((action, marker) in listOf("format_bold" to "*", "format_italic" to "_")) {
+            for (sign in "?!") {
+                input = Buffer(context); AutoSpaceTracker.clear(); rocks.pkb.plektra.core.PunctuationAfterSpace.clear()
+                format(action)
+                input.commitText("je suis en train de me fabriquer une véritable machine à écrire, tu vois", 1)
+                automaticPunctuation(sign)
+                format(action)
+                assertEquals(marker + "je suis en train de me fabriquer une véritable machine à écrire, tu vois\u202f" + sign + marker + " ", input.value)
+                assertFalse(rocks.pkb.plektra.core.DeferredPunctuationSpaceTracker.isPending())
+            }
+        }
+    }
+    @Test fun punctuationTrackingDoesNotTrimManualSpacesOrAnotherEditor() {
+        SettingsManager.setSpaceAfterPunctuation(context, "?")
+        format("format_bold"); input.commitText("bonjour", 1); automaticPunctuation('?')
+        input.commitText(" ", 1); format("format_bold")
+        assertEquals("*bonjour\u202f?  *", input.value)
+        input = Buffer(context); format("format_bold"); input.commitText("bonjour", 1); automaticPunctuation('?')
+        input = Buffer(context); input.commitText("*autre? ", 1); format("format_bold")
+        assertEquals("*autre? *", input.value)
+    }
+    @Test fun telegramClosingMarkerAlsoMovesPunctuationSpace() {
+        SettingsManager.setSpaceAfterPunctuation(context, "!")
+        format("format_italic", "org.telegram.messenger")
+        input.commitText("bonjour", 1); automaticPunctuation('!')
+        format("format_italic", "org.telegram.messenger")
+        assertEquals("__bonjour\u202f!__ ", input.value)
+    }
+
+    @Test fun automaticCommaSpaceMovesOutsideWhatsappBoldWithoutOptIn() {
+        format("format_bold"); input.commitText("bonjour", 1)
+        rocks.pkb.plektra.core.Punctuation.commitCommaSpace(input, ',')
+        format("format_bold")
+        assertEquals("*bonjour,* ", input.value)
     }
     private class Buffer(context: Context) : BaseInputConnection(View(context), true) {
         private val text = SpannableStringBuilder().apply { Selection.setSelection(this, 0) }

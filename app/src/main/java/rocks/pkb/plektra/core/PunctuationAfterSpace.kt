@@ -7,7 +7,8 @@ import rocks.pkb.plektra.SettingsManager
 object PunctuationAfterSpace {
     private var connection: InputConnection? = null
     private var lastPunctuation: Char? = null
-    private const val CLOSE_PUNCTUATION = ".,;:!?/\\)]}»›"
+    private var automaticSuffix: String? = null
+    private const val CLOSE_PUNCTUATION = ".…,;:!?/\\)]}»›"
 
     fun beforeTextCommit(input: InputConnection, text: CharSequence): Boolean {
         AutoSpaceTracker.prepareSuggestionSpace(input, text)
@@ -29,9 +30,25 @@ object PunctuationAfterSpace {
         if (!hasSpace && before.lastOrNull() != punctuation) return
         if (!hasSpace && !input.commitText(" ", 1)) return
         DeferredPunctuationSpaceTracker.clear()
-        connection = input
-        lastPunctuation = punctuation
+        recordAutoSpace(input, punctuation)
     }
 
-    fun clear() { connection = null; lastPunctuation = null }
+    /** Record a separator just committed by a punctuation path, including the comma shortcut. */
+    fun recordAutoSpace(input: InputConnection, punctuation: Char) {
+        connection = input
+        lastPunctuation = punctuation
+        automaticSuffix = input.getTextBeforeCursor(128, 0)?.toString()?.takeIf { it.endsWith("$punctuation ") }
+    }
+
+    /** Move only our verified automatic trailing space, never the French space before the sign.
+     * The connection and bounded suffix must still match; manual spaces are left untouched. */
+    fun takeAutoSpaceForFormatting(input: InputConnection): Boolean {
+        val suffix = automaticSuffix
+        val matches = connection === input && suffix != null &&
+            input.getTextBeforeCursor(128, 0)?.toString() == suffix
+        clear()
+        return matches && input.deleteSurroundingText(1, 0)
+    }
+
+    fun clear() { connection = null; lastPunctuation = null; automaticSuffix = null }
 }

@@ -884,11 +884,19 @@ Ctrl-ярлики застосунків із урахуванням розкл�
     <string name="auto_space_punctuation_dialog_instruction">Виберіть знаки, перед якими видаляється автоматичний пробіл або після яких пробіл додається відразу.</string>
     <string name="auto_space_punctuation_help_text">Видалення перед знаком стосується лише автоматичних пробілів. Додавання після знака вставляє пробіл відразу. Наступне натискання Пробілу не подвоює його. Коротке тире та закривальна дужка вибираються окремо.</string>
     <string name="formatting_shortcuts_title">Сполучення Fn для форматування</string>
-    <string name="formatting_shortcuts_description">Поза режимом навігації: G/I/S для французької мови введення, B/I/U для інших (жирний/курсив/підкреслений). WhatsApp використовує розмітку, інші редактори — стандартні сполучення.</string>
+    <string name="formatting_shortcuts_description">Поза режимом навігації: G/I/S для французької мови введення, B/I/U для інших (жирний/курсив/підкреслений). WhatsApp / Telegram використовує розмітку, інші редактори — стандартні сполучення.</string>
     <string name="formatting_reddit_title">Reddit: режим Markdown</string>
     <string name="formatting_reddit_description">Увімкніть лише в редакторі з підтримкою **жирного** та *курсиву*. Інакше використовуються стандартні сполучення.</string>
     <string name="formatting_bold">Жирний</string>
     <string name="formatting_italic">Курсив</string>
     <string name="formatting_underline">Підкреслений</string>
     <string name="formatting_unavailable">Це форматування недоступне в цьому месенджері.</string>
+
+    <string name="delete_calibration_title">Калібрування жесту видалення</string>
+    <string name="delete_calibration_summary">Виберіть початкову область і рух п’ятьма проведеннями ліворуч.</string>
+    <string name="delete_calibration_help">П’ять разів проведіть справа наліво зі зручної для великого пальця області (наприклад від H до S). Під час калібрування слова не видаляються. Збереження вмикає вбудоване розпізнавання жестів.</string>
+    <string name="delete_calibration_save">Зберегти калібрування</string>
+    <string name="delete_calibration_restart">Почати знову</string>
+    <string name="delete_calibration_reset">Відновити стандартний жест</string>
+    <string name="enter_send_rejected">Редактор відхилив надсилання. Виберіть інший спосіб у налаштуваннях клавіші Enter для програми.</string>
 </resources>

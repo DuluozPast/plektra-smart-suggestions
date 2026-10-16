@@ -731,6 +731,16 @@ import kotlinx.coroutines.delay
                 }
             }
 
+            Surface(modifier = Modifier.fillMaxWidth().clickable {
+                DeleteSwipeCalibration.start(context)
+                context.startActivity(Intent(context, TrackpadCalibrationActivity::class.java).putExtra("delete_swipe", true))
+            }) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(stringResource(R.string.delete_calibration_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.delete_calibration_summary), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()

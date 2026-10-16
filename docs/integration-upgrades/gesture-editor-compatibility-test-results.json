@@ -1,0 +1,66 @@
+{
+  "totals": {
+    "tests": 147,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "rocks.pkb.plektra.core.PunctuationAfterSpaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.SuggestionProvisionalSpaceTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.SuggestionControllerNextWordTest",
+      "tests": "49",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.TextInputControllerTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.EditorSendPolicyTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.LanguageSwitchServiceE2ETest",
+      "tests": "0",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.suggestions.SuggestionCommitterTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.TextFormattingShortcutsTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ]
+}

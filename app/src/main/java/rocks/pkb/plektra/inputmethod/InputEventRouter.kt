@@ -420,6 +420,8 @@ class InputEventRouter(
         }
 
         if (keyCode in swipeToDeleteKeyCodes) {
+            // Calibration must not let the device firmware delete words either.
+            if (rocks.pkb.plektra.DeleteSwipeCalibration.active(context)) return EditableFieldRoutingResult.Consume
             val swipeToDeleteEnabled = SettingsManager.getSwipeToDelete(context)
             val swipeToDeleteProvider = SettingsManager.getSwipeToDeleteProvider(context)
             if (
@@ -1397,7 +1399,8 @@ return EditableFieldRoutingResult.CallSuper
             if (ctrlOneShot && !ctrlLatchFromNavMode) clearCtrlOneShot()
             val formattingEditor = editorInfoProvider()
             val packageName = formattingEditor?.packageName
-            val markerEdit = packageName == "com.whatsapp" || packageName == "com.whatsapp.w4b" ||
+            val markerEdit = packageName in setOf("com.whatsapp", "com.whatsapp.w4b",
+                "org.telegram.messenger", "org.telegram.messenger.web", "org.thunderdog.challegram") ||
                 packageName == "com.reddit.frontpage" && SettingsManager.getRedditMarkdownFormatting(context)
             val replacesSelection = !inputConnection.getSelectedText(0).isNullOrEmpty()
             val handled = TextFormattingShortcuts.handle(context, inputConnection, formattingEditor, formatAction, event)

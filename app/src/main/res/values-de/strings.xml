@@ -1618,11 +1618,19 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="app_enter_behaviour_shift_left">Linke Umschalttaste</string>
     <string name="app_enter_behaviour_shift_right">Rechte Umschalttaste</string>
     <string name="formatting_shortcuts_title">Fn-Formatierungskürzel</string>
-    <string name="formatting_shortcuts_description">Außerhalb des Navigationsmodus: G/I/S bei französischer Eingabe, B/I/U bei anderen Eingabesprachen (fett/kursiv/unterstrichen). WhatsApp nutzt Markierungen, andere Editoren native Tastenkürzel.</string>
+    <string name="formatting_shortcuts_description">Außerhalb des Navigationsmodus: G/I/S bei französischer Eingabe, B/I/U bei anderen Eingabesprachen (fett/kursiv/unterstrichen). WhatsApp / Telegram nutzt Markierungen, andere Editoren native Tastenkürzel.</string>
     <string name="formatting_reddit_title">Reddit: Markdown-Modus</string>
     <string name="formatting_reddit_description">Nur für Editoren aktivieren, die **fett** und *kursiv* unterstützen. Sonst werden native Tastenkürzel verwendet.</string>
     <string name="formatting_bold">Fett</string>
     <string name="formatting_italic">Kursiv</string>
     <string name="formatting_underline">Unterstreichen</string>
     <string name="formatting_unavailable">Diese Formatierung ist in dieser Nachrichten-App nicht verfügbar.</string>
+
+    <string name="delete_calibration_title">Wischgeste zum Löschen kalibrieren</string>
+    <string name="delete_calibration_summary">Startbereich und Bewegung mit fünf Wischgesten nach links festlegen.</string>
+    <string name="delete_calibration_help">Wischen Sie fünfmal von rechts nach links, ausgehend von der für Ihren Daumen passenden Stelle (zum Beispiel von H nach S). Während der Kalibrierung werden keine Wörter gelöscht. Speichern aktiviert die native Gestenerkennung.</string>
+    <string name="delete_calibration_save">Kalibrierung speichern</string>
+    <string name="delete_calibration_restart">Neu beginnen</string>
+    <string name="delete_calibration_reset">Standardgeste wiederherstellen</string>
+    <string name="enter_send_rejected">Der Editor hat Senden abgelehnt. Wählen Sie in den Eingabetasten-Einstellungen dieser App eine andere Sendemethode.</string>
 </resources>

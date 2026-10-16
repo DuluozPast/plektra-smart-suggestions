@@ -227,16 +227,20 @@ class TextInputController(
 
         val pair = smartQuotePair(SettingsManager.getSmartQuotesStyle(context))
         val before = inputConnection.getTextBeforeCursor(240, 0)?.toString().orEmpty()
-        if (!before.endsWith("\"")) {
-            return false
+        // Rich editors may already have converted straight quotes into an English pair.
+        // Recognize that complete pair too; never infer an opening quote from missing context.
+        val openingQuote = when (before.lastOrNull()) {
+            '"' -> '"'
+            '”' -> '“'
+            else -> return false
         }
 
-        val openingIndex = findSmartQuoteOpeningIndex(before)
+        val openingIndex = findSmartQuoteOpeningIndex(before, openingQuote)
         if (openingIndex < 0) {
             return false
         }
         val quotedText = before.substring(openingIndex + 1, before.length - 1)
-        if (quotedText.isBlank() || quotedText.any { it == '\n' || it == '"' }) {
+        if (quotedText.isBlank() || quotedText.any { it == '\n' || it in "\"“”" }) {
             return false
         }
 
@@ -255,14 +259,14 @@ class TextInputController(
             char in setOf('-', '–', '—', '.', ',', ';', ':', '!', '?', ')', ']', '}', '»', '›')
     }
 
-    private fun findSmartQuoteOpeningIndex(textBeforeCursor: String): Int {
+    private fun findSmartQuoteOpeningIndex(textBeforeCursor: String, openingQuote: Char): Int {
         val candidateText = textBeforeCursor.dropLast(1)
-        var index = candidateText.lastIndexOf('"')
+        var index = candidateText.lastIndexOf(openingQuote)
         while (index >= 0) {
             if (hasSmartQuoteOpeningContext(candidateText, index)) {
                 return index
             }
-            index = candidateText.lastIndexOf('"', startIndex = index - 1)
+            index = candidateText.lastIndexOf(openingQuote, startIndex = index - 1)
         }
         return -1
     }

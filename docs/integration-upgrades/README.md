@@ -1,6 +1,8 @@
 # Plektra Smart Suggestions — proposed Integration upgrades
 
-Latest update: [learned punctuation and casing, app-aware Fn formatting, language-aware keys and suggestion-space repair](punctuation-case-and-formatting.md), validated by [489 selected tests](punctuation-case-and-formatting-test-results.json): 487 passed, two existing graphics exclusions, no failures. Earlier theme and search upgrades are retained.
+Latest update (16 October): [delete-swipe calibration, Telegram, smart quotes, configured sending and restored suggestion spaces](gesture-editor-compatibility.md). The final follow-up has [147 passing selected tests](gesture-editor-compatibility-test-results.json); the [earlier broad validation](gesture-editor-compatibility-broad-test-results.json) is reported separately. User phone feedback confirms calibration and the latest space behavior; Reddit comment sending remains unresolved.
+
+Previous update: [learned punctuation and casing, app-aware Fn formatting, language-aware keys and suggestion-space repair](punctuation-case-and-formatting.md), validated by [489 selected tests](punctuation-case-and-formatting-test-results.json): 487 passed, two existing graphics exclusions, no failures. Earlier theme and search upgrades are retained.
 
 Latest theme display update: [optional active-theme title, automatic text contrast and rotation selection repair](theme-title-and-rotation-selection.md), with [397-test validation](theme-title-and-rotation-selection-test-results.json).
 
@@ -134,6 +136,13 @@ The distributed APK is a local experiment. The private signing key is excluded. 
 - Use French G/I/S or standard B/I/U according to input language, while sending native Ctrl+B/I/U to rich-text editors.
 - Adapt markers for WhatsApp/Business and optional Reddit Markdown; keep the navigation grid intact.
 - Move a suggestion's verified automatic space after a closing marker, preserve manual/opening spaces and continue learning across formatting markers.
+
+### 16. Independent delete-swipe calibration and editor compatibility
+
+- Calibrate the leftward word-delete gesture from a comfortable thumb region, independently of suggestion acceptance; preserve saved profiles in backups and translate the controls in all eleven languages.
+- Handle ellipsis and move verified punctuation/suggestion spaces outside closing formatting markers while retaining French nonbreaking spaces.
+- Restore separate word-then-space insertion for rich-editor compatibility and share it between tap and swipe; retain apostrophes and paragraph boundaries.
+- Recognize English curly quote pairs, add Telegram formatting profiles and correct explicit Send action dispatch. ChatGPT and Reddit private-chat sending were confirmed on the phone; Reddit comment sending remains unresolved.
 
 ## Plektra improvements preserved
 

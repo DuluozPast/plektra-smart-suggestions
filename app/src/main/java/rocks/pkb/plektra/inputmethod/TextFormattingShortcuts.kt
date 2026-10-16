@@ -9,6 +9,8 @@ import android.view.inputmethod.InputConnection
 import android.widget.Toast
 import rocks.pkb.plektra.R
 import rocks.pkb.plektra.SettingsManager
+import rocks.pkb.plektra.core.PunctuationAfterSpace
+import rocks.pkb.plektra.core.DeferredPunctuationSpaceTracker
 import rocks.pkb.plektra.core.AutoSpaceTracker
 import java.util.Locale
 
@@ -37,18 +39,19 @@ internal object TextFormattingShortcuts {
                 InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) return true
         val app = editor?.packageName.orEmpty()
         val whatsapp = app == "com.whatsapp" || app == "com.whatsapp.w4b"
+        val telegram = app in setOf("org.telegram.messenger", "org.telegram.messenger.web", "org.thunderdog.challegram")
         val redditMarkdown = app == "com.reddit.frontpage" && SettingsManager.getRedditMarkdownFormatting(context)
-        if (action == "format_underline" && (whatsapp || redditMarkdown)) {
+        if (action == "format_underline" && (whatsapp || redditMarkdown || telegram)) {
             Toast.makeText(context, R.string.formatting_unavailable, Toast.LENGTH_SHORT).show()
             return true
         }
-        if (whatsapp || redditMarkdown) {
+        if (whatsapp || redditMarkdown || telegram) {
             val marker = if (action == "format_bold") { if (whatsapp) "*" else "**" }
-                else if (whatsapp) "_" else "*"
+                else if (telegram) "__" else if (whatsapp) "_" else "*"
             val selected = input.getSelectedText(0)?.toString().orEmpty()
             val closing = selected.isEmpty() && hasOpenMarker(
                 input.getTextBeforeCursor(4096, 0)?.toString().orEmpty().substringAfterLast('\n'),
-                marker, redditMarkdown)
+                marker, redditMarkdown || telegram)
             // *Without a selection each press inserts one marker: open, type, then press again to close.*
             val replacement = if (selected.isEmpty()) marker else {
                 if (selected.length >= marker.length * 2 && selected.startsWith(marker) && selected.endsWith(marker))
@@ -57,7 +60,14 @@ internal object TextFormattingShortcuts {
             }
             input.beginBatchEdit()
             try {
-                val moveSpace = closing && AutoSpaceTracker.takeSuggestionSpaceForFormatting(input)
+                // A punctuation-generated separator is just as provisional as a suggestion separator.
+                // Put it after the closing marker, preserving the nonbreaking space before ? or !.
+                val moveSpace = closing && (AutoSpaceTracker.takeSuggestionSpaceForFormatting(input) ||
+                    PunctuationAfterSpace.takeAutoSpaceForFormatting(input))
+                if (moveSpace) {
+                    PunctuationAfterSpace.clear()
+                    DeferredPunctuationSpaceTracker.clear()
+                }
                 val committed = input.commitText(if (moveSpace) replacement + " " else replacement, 1)
                 if (committed && moveSpace) AutoSpaceTracker.markSuggestionAutoSpace(input)
                 else AutoSpaceTracker.clear()

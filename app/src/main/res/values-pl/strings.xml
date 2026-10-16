@@ -884,11 +884,19 @@ Każdy klawisz można skonfigurować jako Keycode, Akcja, Native Ctrl lub Brak. 
     <string name="auto_space_punctuation_dialog_instruction">Wybierz znaki, przed którymi usuwana jest automatyczna spacja lub po których spacja jest dodawana od razu.</string>
     <string name="auto_space_punctuation_help_text">Usuwanie przed dotyczy tylko automatycznych spacji. Dodawanie po wstawia spację od razu. Ponowne naciśnięcie Spacji jej nie powiela. Półpauzę i nawias zamykający można wybrać osobno.</string>
     <string name="formatting_shortcuts_title">Skróty formatowania Fn</string>
-    <string name="formatting_shortcuts_description">Poza trybem nawigacji: G/I/S przy pisaniu po francusku, B/I/U w innych językach (pogrubienie/kursywa/podkreślenie). WhatsApp używa znaczników, inne edytory standardowych skrótów.</string>
+    <string name="formatting_shortcuts_description">Poza trybem nawigacji: G/I/S przy pisaniu po francusku, B/I/U w innych językach (pogrubienie/kursywa/podkreślenie). WhatsApp / Telegram używa znaczników, inne edytory standardowych skrótów.</string>
     <string name="formatting_reddit_title">Reddit: tryb Markdown</string>
     <string name="formatting_reddit_description">Włącz tylko w edytorze obsługującym **pogrubienie** i *kursywę*. W przeciwnym razie używane są standardowe skróty.</string>
     <string name="formatting_bold">Pogrubienie</string>
     <string name="formatting_italic">Kursywa</string>
     <string name="formatting_underline">Podkreślenie</string>
     <string name="formatting_unavailable">To formatowanie jest niedostępne w tym komunikatorze.</string>
+
+    <string name="delete_calibration_title">Kalibracja gestu usuwania</string>
+    <string name="delete_calibration_summary">Wybierz obszar początkowy i ruch za pomocą pięciu przesunięć w lewo.</string>
+    <string name="delete_calibration_help">Przesuń pięć razy od prawej do lewej, zaczynając w miejscu wygodnym dla kciuka (na przykład od H do S). Podczas kalibracji żadne słowa nie są usuwane. Zapisanie włącza natywne wykrywanie gestów.</string>
+    <string name="delete_calibration_save">Zapisz kalibrację</string>
+    <string name="delete_calibration_restart">Zacznij ponownie</string>
+    <string name="delete_calibration_reset">Przywróć gest domyślny</string>
+    <string name="enter_send_rejected">Edytor odrzucił wysłanie. Wybierz inną metodę w ustawieniach klawisza Enter dla aplikacji.</string>
 </resources>

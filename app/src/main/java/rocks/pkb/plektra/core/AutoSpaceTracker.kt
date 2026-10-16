@@ -61,7 +61,7 @@ object AutoSpaceTracker {
         if (!sameConnection) return
         val before = input.getTextBeforeCursor(128, 0)?.toString().orEmpty()
         if (before != suffix || !before.endsWith(" ")) return
-        val closing = first in ".,;:!?)]}»›”" ||
+        val closing = first in ".…,;:!?)]}»›”" ||
             (first == '"' && hasUnclosedStraightDoubleQuote(input))
         // Opening parentheses and the separating space for the next word are retained.
         if (!closing) { autoSpacePending = false; return }

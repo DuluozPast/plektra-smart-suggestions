@@ -884,11 +884,19 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="auto_space_punctuation_dialog_instruction">Elige los signos que eliminan un espacio automático antes o añaden un espacio inmediatamente después.</string>
     <string name="auto_space_punctuation_help_text">Quitar antes afecta solo a espacios automáticos. Añadir después inserta un espacio inmediatamente. Pulsar Espacio después no lo duplica. La semirraya y el paréntesis de cierre se pueden elegir por separado.</string>
     <string name="formatting_shortcuts_title">Atajos de formato con Fn</string>
-    <string name="formatting_shortcuts_description">Fuera del modo Navegación: G/I/S en francés; B/I/U en los demás idiomas de escritura (negrita/cursiva/subrayado). WhatsApp usa marcadores; los otros editores, atajos nativos.</string>
+    <string name="formatting_shortcuts_description">Fuera del modo Navegación: G/I/S en francés; B/I/U en los demás idiomas de escritura (negrita/cursiva/subrayado). WhatsApp / Telegram usa marcadores; los otros editores, atajos nativos.</string>
     <string name="formatting_reddit_title">Reddit: modo Markdown</string>
     <string name="formatting_reddit_description">Activar solo si el editor admite **negrita** y *cursiva*. En caso contrario se usan atajos nativos.</string>
     <string name="formatting_bold">Negrita</string>
     <string name="formatting_italic">Cursiva</string>
     <string name="formatting_underline">Subrayado</string>
     <string name="formatting_unavailable">Este formato no está disponible en esta aplicación de mensajes.</string>
+
+    <string name="delete_calibration_title">Calibrar gesto de borrado</string>
+    <string name="delete_calibration_summary">Elige la zona inicial y el movimiento con cinco deslizamientos a la izquierda.</string>
+    <string name="delete_calibration_help">Desliza cinco veces de derecha a izquierda desde la zona más cómoda para el pulgar (por ejemplo de H a S). No se borran palabras durante la calibración. Guardar activa la detección nativa de gestos.</string>
+    <string name="delete_calibration_save">Guardar calibración</string>
+    <string name="delete_calibration_restart">Empezar de nuevo</string>
+    <string name="delete_calibration_reset">Restaurar gesto predeterminado</string>
+    <string name="enter_send_rejected">El editor rechazó el envío. Elige otro método en los ajustes de la tecla Intro por aplicación.</string>
 </resources>

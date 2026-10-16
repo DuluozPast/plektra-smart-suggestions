@@ -103,6 +103,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         private const val FACEBOOK_MESSENGER_PACKAGE_NAME = "com.facebook.orca"
         private val MESSENGER_ENTER_BEHAVIOR_PACKAGES = setOf(
             "com.whatsapp",
+            "com.openai.chatgpt",
+            "com.reddit.frontpage",
             CompatibilityWorkarounds.TELEGRAM_PACKAGE_NAME,
             "org.thoughtcrime.securesms",
             DISCORD_PACKAGE_NAME,
@@ -1131,7 +1133,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         outputKeyCodeName: String
     ): Boolean {
         inputConnection.finishComposingText()
-        val now = System.currentTimeMillis()
+        val now = SystemClock.uptimeMillis()
         val down = KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0, 0)
         val up = KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0, 0)
         val downPerformed = inputConnection.sendKeyEvent(down)
@@ -1165,7 +1167,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         outputKeyCodeName: String
     ): Boolean {
         inputConnection.finishComposingText()
-        val now = System.currentTimeMillis()
+        val now = SystemClock.uptimeMillis()
         val metaState = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
         val down = KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0, metaState)
         val up = KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0, metaState)
@@ -1250,6 +1252,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             shouldDisableAutoCapitalize
         ) { updateStatusBarText() }
         val performed = inputConnection.performEditorAction(actionId)
+        if (!performed && consumeOnFailure) {
+            android.widget.Toast.makeText(this, R.string.enter_send_rejected, android.widget.Toast.LENGTH_LONG).show()
+        }
         if (performed || consumeOnFailure) {
             if (consumeCtrlState) {
                 val wasNavModeLatched = ctrlLatchFromNavMode || navModeController.isNavModeActive()
@@ -1288,7 +1293,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     ): Boolean {
         return when (resolveAppEnterSendStrategy(info)) {
             SettingsManager.ENTER_SEND_STRATEGY_EDITOR_ACTION -> {
-                val actionId = resolveEditorAction(info) ?: EditorInfo.IME_ACTION_SEND
+                // Sending is an explicit user intention, even if a multiline editor
+                // advertises Done/Next. Never substitute those unrelated actions.
+                val actionId = EditorSendPolicy.actionId(info)
                 performEnterEditorAction(
                     keyCode = keyCode,
                     actionId = actionId,
@@ -3906,8 +3913,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun isNativeImeTrackpadProviderActive(): Boolean {
-        return SettingsManager.getTrackpadGesturesEnabled(this) &&
-            SettingsManager.getTrackpadProvider(this) == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME
+        return rocks.pkb.plektra.DeleteSwipeCalibration.active(this) ||
+            (SettingsManager.getSwipeToDelete(this) && SettingsManager.getSwipeToDeleteProvider(this) == SettingsManager.SWIPE_TO_DELETE_PROVIDER_NATIVE_IME) ||
+            (SettingsManager.getTrackpadGesturesEnabled(this) &&
+            SettingsManager.getTrackpadProvider(this) == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME)
     }
 
     private fun attachTrackpadDecorViewMotionHook(reason: String) {
@@ -5922,6 +5931,16 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val deltaY = y - start.y
         val upwardDistance = -deltaY
         val leftwardDistance = -deltaX
+        val rangeWidth = start.xRange.max - start.xRange.min
+        val normalizedStart = if (rangeWidth > 0f) ((start.x - start.xRange.min) / rangeWidth).coerceIn(0f, 1f) else Float.NaN
+        // Calibration observes complete left gestures before ordinary recognition and never deletes text.
+        if (rocks.pkb.plektra.DeleteSwipeCalibration.active(this)) {
+            if (phase == "up") rocks.pkb.plektra.DeleteSwipeCalibration.record(this, normalizedStart,
+                leftwardDistance, deltaY, eventTimeUptimeMs - start.eventTimeUptimeMs)
+            nativeTrackpadGestureHandled = true
+            return true
+        }
+        val deleteProfile = rocks.pkb.plektra.DeleteSwipeCalibration.get(this)
         val suggestionThreshold = nativeImeTrackpadSuggestionSwipeThreshold()
         val deleteThreshold = nativeImeTrackpadDeleteSwipeThreshold()
         val durationMs = (eventTimeUptimeMs - start.eventTimeUptimeMs).coerceAtLeast(1L)
@@ -5939,10 +5958,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         )
         val candidateThreshold = if (leftwardDistance > upwardDistance) deleteThreshold else suggestionThreshold
         val direction = when {
-            verticalEnough && mostlyVertical && verticalFastEnough -> NativeTrackpadSwipeDirection.UP
-            leftEnough &&
-                mostlyHorizontal &&
-                horizontalFastEnough &&
+            SettingsManager.getTrackpadGesturesEnabled(this) &&
+                SettingsManager.getTrackpadProvider(this) == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME &&
+                verticalEnough && mostlyVertical && verticalFastEnough -> NativeTrackpadSwipeDirection.UP
+            (deleteProfile?.accepts(normalizedStart, leftwardDistance, deltaY, durationMs)
+                ?: (leftEnough && mostlyHorizontal && horizontalFastEnough)) &&
                 SettingsManager.getSwipeToDelete(this) &&
                 SettingsManager.getSwipeToDeleteProvider(this) == SettingsManager.SWIPE_TO_DELETE_PROVIDER_NATIVE_IME -> NativeTrackpadSwipeDirection.LEFT
             else -> {
@@ -6174,6 +6194,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun acceptSuggestionAtIndex(third: Int) {
+        if (rocks.pkb.plektra.DeleteSwipeCalibration.active(this)) return
         val visibleSuggestions = visibleSuggestionStrings()
 
         // Clear latched UI layers when selecting a suggestion via trackpad.
@@ -6306,11 +6327,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             val replacement = rocks.pkb.plektra.core.suggestions.CasingHelper.applyCasing(
                 suggestion, currentWord, forceLeadingCapital
             )
-            val shouldAppendSpace = !replacement.endsWith("'") && after.getOrNull(deleteAfter)?.isWhitespace() != true
-
-            ic.deleteSurroundingText(deleteBefore, deleteAfter)
-            val textToCommit = if (shouldAppendSpace) "$replacement " else replacement
-            val committed = ic.commitText(textToCommit, 1)
+            val committed = rocks.pkb.plektra.inputmethod.suggestions.SuggestionCommitter.commit(
+                ic, replacement, deleteBefore, deleteAfter, after)
 
             if (committed) {
                 suggestionController.learnCorrection(
@@ -6330,9 +6348,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 source = "UNKNOWN"
             )
 
-            if (committed && shouldAppendSpace) {
-                rocks.pkb.plektra.core.AutoSpaceTracker.markSuggestionAutoSpace(ic)
-            }
 
             // Swipes must notify the same learning/statistics path as suggestion taps.
             // onSuggestionCommitted resets the current prefix and preserves next-word context.

@@ -379,6 +379,7 @@ internal object BackupPreferenceContract {
             "trackpad_swipe_threshold" to PreferenceValueType.FLOAT,
             "trackpad_suggestion_swipe_threshold" to PreferenceValueType.FLOAT,
             "trackpad_delete_swipe_threshold" to PreferenceValueType.FLOAT,
+            "trackpad_delete_calibration" to PreferenceValueType.STRING,
             "trackpad_provider" to PreferenceValueType.STRING,
             "trackpad_shizuku_device" to PreferenceValueType.STRING,
             "trackpad_calibration_enabled" to PreferenceValueType.BOOLEAN,

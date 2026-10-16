@@ -7,11 +7,11 @@ object Punctuation {
     const val NARROW_NO_BREAK_SPACE: Char = '\u202F'
 
     // Boundary punctuation (no apostrophes).
-    const val BOUNDARY: String = ".,;:!?()[]{}\\/\"–"
+    const val BOUNDARY: String = ".…,;:!?()[]{}\\/\"–"
 
     // Auto-space punctuation (no apostrophes). All candidates are opt-in by
     // default so ASCII smileys and quotes stay easy to type.
-    const val AUTO_SPACE_CANDIDATES: String = ".,;:!?\\/\")]}–"
+    const val AUTO_SPACE_CANDIDATES: String = ".…,;:!?\\/\")]}–"
     const val DEFAULT_AUTO_SPACE: String = ""
     const val AUTO_SPACE: String = DEFAULT_AUTO_SPACE
 
@@ -84,6 +84,7 @@ object Punctuation {
         val before = inputConnection.getTextBeforeCursor(16, 0)?.toString().orEmpty()
         if (before.endsWith("$punctuation ")) {
             AutoSpaceTracker.markAutoSpace()
+            PunctuationAfterSpace.recordAutoSpace(inputConnection, punctuation)
             return true
         }
         if (before.endsWith(punctuation)) {
@@ -96,6 +97,7 @@ object Punctuation {
                 inputConnection.commitText(" ", 1)
             }
             AutoSpaceTracker.markAutoSpace()
+            PunctuationAfterSpace.recordAutoSpace(inputConnection, punctuation)
             return true
         }
         val existingSpaceCount = before.takeLastWhile { it == ' ' }.length
@@ -104,6 +106,7 @@ object Punctuation {
         }
         inputConnection.commitText("$punctuation ", 1)
         AutoSpaceTracker.markAutoSpace()
+            PunctuationAfterSpace.recordAutoSpace(inputConnection, punctuation)
         return true
     }
 }

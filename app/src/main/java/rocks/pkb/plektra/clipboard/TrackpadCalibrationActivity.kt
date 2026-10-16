@@ -25,15 +25,21 @@ class TrackpadCalibrationActivity : LocalizedComponentActivity() {
 
         setContent {
             PlektraTheme {
-                TrackpadCalibrationScreen(
-                    onClose = { finish() }
-                )
+                if (intent.getBooleanExtra("delete_swipe", false)) {
+                    DeleteSwipeCalibrationScreen { finish() }
+                } else TrackpadCalibrationScreen(onClose = { finish() })
             }
         }
     }
 
+    override fun onStop() {
+        if (intent.getBooleanExtra("delete_swipe", false)) DeleteSwipeCalibration.cancel(this)
+        super.onStop()
+    }
+
     override fun onDestroy() {
         SettingsManager.cancelTrackpadCalibrationSession(this)
+        if (intent.getBooleanExtra("delete_swipe", false)) DeleteSwipeCalibration.cancel(this)
         super.onDestroy()
     }
 }
@@ -82,7 +88,7 @@ private fun TrackpadCalibrationScreen(
                     }
 
                     SettingsManager.TrackpadCalibrationTarget.RIGHT -> {
-                        // Les 30 gestes sont conservés jusqu'à Enregistrer.
+                        // Keep all 30 samples until Save is pressed.
                     }
                 }
             }
@@ -282,5 +288,35 @@ private fun median(values: List<Float>): Float? {
         (sorted[middle - 1] + sorted[middle]) / 2f
     } else {
         sorted[middle]
+    }
+}
+/** A focused editor keeps the IME active while five natural leftward gestures are sampled. */
+@Composable
+private fun DeleteSwipeCalibrationScreen(onClose: () -> Unit) {
+    val context = LocalContext.current
+    val focus = remember { FocusRequester() }
+    var count by remember { mutableStateOf(DeleteSwipeCalibration.count(context)) }
+    var text by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        focus.requestFocus()
+        while (true) { count = DeleteSwipeCalibration.count(context); delay(200) }
+    }
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text(context.getString(R.string.delete_calibration_title), style = MaterialTheme.typography.headlineSmall)
+        Text(context.getString(R.string.delete_calibration_help))
+        Text("$count / 5", style = MaterialTheme.typography.headlineMedium)
+        BasicTextField(value = text, onValueChange = { text = it },
+            modifier = Modifier.fillMaxWidth().height(80.dp).focusRequester(focus))
+        Button(enabled = count == 5, onClick = { if (DeleteSwipeCalibration.save(context)) onClose() }) {
+            Text(context.getString(R.string.delete_calibration_save))
+        }
+        TextButton(onClick = { DeleteSwipeCalibration.start(context); count = 0; focus.requestFocus() }) {
+            Text(context.getString(R.string.delete_calibration_restart))
+        }
+        TextButton(onClick = { DeleteSwipeCalibration.clear(context); onClose() }) {
+            Text(context.getString(R.string.delete_calibration_reset))
+        }
+        TextButton(onClick = onClose) { Text(context.getString(android.R.string.cancel)) }
     }
 }

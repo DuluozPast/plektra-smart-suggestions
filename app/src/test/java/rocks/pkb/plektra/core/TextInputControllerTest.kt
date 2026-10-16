@@ -513,6 +513,22 @@ class TextInputControllerTest {
         assertEquals("\"Hallo\" ", inputConnection.text)
     }
 
+    @Test fun smartQuotes_convertsEnglishCurlyPairsReturnedByRichEditors() {
+        SettingsManager.setSmartQuotes(context, true)
+        SettingsManager.setSmartQuotesStyle(context, SettingsManager.SMART_QUOTES_STYLE_FRENCH_GUILLEMETS_NARROW_SPACED)
+        val input = FakeInputConnection(context, "Il dit “bonjour à tous”")
+        assertTrue(controller.handleSmartQuoteReplacement(" ", input, false))
+        assertEquals("Il dit «\u202fbonjour à tous\u202f» ", input.text)
+    }
+    @Test fun smartQuotes_doesNotGuessMissingOrEmbeddedCurlyOpeningQuotes() {
+        SettingsManager.setSmartQuotes(context, true)
+        for (text in listOf("bonjour”", "foo“bar”", "“inachevé")) {
+            val input = FakeInputConnection(context, text)
+            assertFalse(controller.handleSmartQuoteReplacement(" ", input, false))
+            assertEquals(text, input.text)
+        }
+    }
+
     private class FakeInputConnection(
         context: Context,
         initialText: String,

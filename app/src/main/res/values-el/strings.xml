@@ -1600,11 +1600,19 @@ QWERTZ σε φυσικό QWERTY
     <string name="app_enter_behaviour_shift_left">Αριστερό Shift</string>
     <string name="app_enter_behaviour_shift_right">Δεξί Shift</string>
     <string name="formatting_shortcuts_title">Συντομεύσεις μορφοποίησης Fn</string>
-    <string name="formatting_shortcuts_description">Εκτός πλοήγησης: G/I/S για γαλλική πληκτρολόγηση, B/I/U για άλλες γλώσσες (έντονα/πλάγια/υπογράμμιση). Το WhatsApp χρησιμοποιεί σύμβολα, οι άλλοι επεξεργαστές εγγενείς συντομεύσεις.</string>
+    <string name="formatting_shortcuts_description">Εκτός πλοήγησης: G/I/S για γαλλική πληκτρολόγηση, B/I/U για άλλες γλώσσες (έντονα/πλάγια/υπογράμμιση). Το WhatsApp / Telegram χρησιμοποιεί σύμβολα, οι άλλοι επεξεργαστές εγγενείς συντομεύσεις.</string>
     <string name="formatting_reddit_title">Reddit: λειτουργία Markdown</string>
     <string name="formatting_reddit_description">Ενεργοποιήστε μόνο αν υποστηρίζονται **έντονα** και *πλάγια*. Διαφορετικά χρησιμοποιούνται εγγενείς συντομεύσεις.</string>
     <string name="formatting_bold">Έντονα</string>
     <string name="formatting_italic">Πλάγια</string>
     <string name="formatting_underline">Υπογράμμιση</string>
     <string name="formatting_unavailable">Αυτή η μορφοποίηση δεν διατίθεται σε αυτή την εφαρμογή μηνυμάτων.</string>
+
+    <string name="delete_calibration_title">Βαθμονόμηση σάρωσης διαγραφής</string>
+    <string name="delete_calibration_summary">Επιλέξτε περιοχή εκκίνησης και κίνηση με πέντε σαρώσεις αριστερά.</string>
+    <string name="delete_calibration_help">Σαρώστε πέντε φορές από δεξιά προς τα αριστερά, από την περιοχή που βολεύει τον αντίχειρά σας (για παράδειγμα από το H προς το S). Δεν διαγράφονται λέξεις κατά τη βαθμονόμηση. Η αποθήκευση ενεργοποιεί την εγγενή ανίχνευση χειρονομιών.</string>
+    <string name="delete_calibration_save">Αποθήκευση βαθμονόμησης</string>
+    <string name="delete_calibration_restart">Επανεκκίνηση</string>
+    <string name="delete_calibration_reset">Επαναφορά προεπιλεγμένης χειρονομίας</string>
+    <string name="enter_send_rejected">Το πεδίο κειμένου απέρριψε την αποστολή. Επιλέξτε άλλη μέθοδο στις ρυθμίσεις Enter ανά εφαρμογή.</string>
 </resources>
