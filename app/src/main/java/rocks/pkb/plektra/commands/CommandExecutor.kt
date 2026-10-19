@@ -18,6 +18,7 @@ import rocks.pkb.plektra.SoftwareKeyboardModeActions
 import rocks.pkb.plektra.core.NavModeController
 import rocks.pkb.plektra.inputmethod.QuickLauncherActivity
 import rikka.shizuku.Shizuku
+import rikka.shizuku.ShizukuRemoteProcess
 
 class CommandExecutor(
     private val context: Context,
@@ -189,10 +190,10 @@ class CommandExecutor(
                     arrayOf("input", "keyevent", keyCode.toString()),
                     null,
                     null
-                ) as Process
+                ) as ShizukuRemoteProcess
                 try {
                     // A hung process must not block every later event queued behind it.
-                    if (process.waitFor(SHELL_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
+                    if (process.waitForTimeout(SHELL_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
                         val exitCode = process.exitValue()
                         if (exitCode != 0) {
                             Log.w(TAG, "Shell keyevent $keyCode exited with $exitCode")
