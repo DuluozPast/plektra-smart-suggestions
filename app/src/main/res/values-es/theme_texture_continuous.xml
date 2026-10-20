@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Imagen continua entre las teclas</string>
+    <string name="theme_texture_per_key">Repetir la muestra en cada tecla</string>
+</resources>

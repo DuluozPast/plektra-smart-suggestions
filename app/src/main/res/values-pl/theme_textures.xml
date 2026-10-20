@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Zdjęcie: kolor lub tekstura</string>
+    <string name="theme_texture_color">Jednolity kolor</string>
+    <string name="theme_texture_matter">Zachowaj teksturę</string>
+    <string name="theme_texture_help">Przesuwaj i powiększaj zdjęcie pod ramką. Przeciągnij róg, aby zmienić wybrany obszar.</string>
+    <string name="theme_texture_sample">Użyj tego obszaru</string>
+    <string name="theme_texture_preview">Podgląd tekstury</string>
+    <string name="theme_texture_cover">Wypełnij</string>
+    <string name="theme_texture_fit">Dopasuj</string>
+    <string name="theme_texture_tile">Powtarzaj</string>
+    <string name="theme_texture_hardware">Klawiatura fizyczna</string>
+    <string name="theme_texture_software">Klawiatura ekranowa</string>
+    <string name="theme_texture_enlargement">Ten obszar jest powiększony ×%1$.1f. Wybierz większy obszar, aby zachować więcej szczegółów.</string>
+    <string name="theme_texture_apply">Zastosuj teksturę</string>
+    <string name="theme_texture_remove">Przywróć jednolity kolor</string>
+    <string name="theme_texture_applied">Tekstura ze zdjęcia</string>
+    <string name="theme_texture_resize">Zmień rozmiar obszaru</string>
+</resources>

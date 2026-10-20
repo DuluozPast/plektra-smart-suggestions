@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Լուսանկար՝ գույն կամ հյուսվածք</string>
+    <string name="theme_texture_color">Միագույն</string>
+    <string name="theme_texture_matter">Պահպանել հյուսվածքը</string>
+    <string name="theme_texture_help">Տեղափոխեք և մեծացրեք լուսանկարը շրջանակի տակ։ Քաշեք անկյունը՝ ընտրված տարածքը փոխելու համար։</string>
+    <string name="theme_texture_sample">Օգտագործել այս տարածքը</string>
+    <string name="theme_texture_preview">Հյուսվածքի նախադիտում</string>
+    <string name="theme_texture_cover">Լրացնել</string>
+    <string name="theme_texture_fit">Տեղավորել</string>
+    <string name="theme_texture_tile">Կրկնել</string>
+    <string name="theme_texture_hardware">Ֆիզիկական ստեղնաշար</string>
+    <string name="theme_texture_software">Էկրանային ստեղնաշար</string>
+    <string name="theme_texture_enlargement">Այս տարածքը մեծացվում է ×%1$.1f անգամ։ Ավելի շատ մանրամասներ պահպանելու համար ընտրեք ավելի մեծ տարածք։</string>
+    <string name="theme_texture_apply">Կիրառել հյուսվածքը</string>
+    <string name="theme_texture_remove">Վերադառնալ միագույնին</string>
+    <string name="theme_texture_applied">Լուսանկարի հյուսվածք</string>
+    <string name="theme_texture_resize">Փոխել ընտրված տարածքի չափը</string>
+</resources>

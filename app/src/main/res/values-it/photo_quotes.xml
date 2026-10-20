@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Disattivato</string>
+    <string name="quote_mode_deferred">Converti una citazione completata</string>
+    <string name="quote_mode_immediate">Virgolette immediate · annidamento francese</string>
+    <string name="quote_immediate_help">In francese: « esterno “interno” ». Vengono modificati solo i delimitatori. In caso di ambiguità, assegna le azioni di apertura, chiusura o virgolette dritte nelle scorciatoie Nav/Fn.</string>
+    <string name="quote_force_open">Inserisci virgolette di apertura</string>
+    <string name="quote_force_close">Inserisci virgolette di chiusura</string>
+    <string name="quote_force_straight">Inserisci virgolette dritte</string>
+    <string name="quote_editor_unavailable">Questo editor non consente di spostare il cursore in sicurezza attorno alla selezione. Il testo citato non è stato sostituito.</string>
+    <string name="theme_photo_title">Colore da una foto</string>
+    <string name="theme_photo_camera">Scatta una foto</string>
+    <string name="theme_photo_gallery">Scegli un’immagine</string>
+    <string name="theme_photo_reuse">Riutilizza l’ultima immagine</string>
+    <string name="theme_photo_help">Ingrandisci e sposta l’immagine sotto il mirino. Il contagocce calcola la media di una piccola area.</string>
+    <string name="theme_photo_use_color">Preleva questo colore</string>
+    <string name="theme_photo_button">Preleva un colore da una foto</string>
+    <string name="theme_photo_error">Impossibile aprire l’immagine o la fotocamera. Prova un’altra immagine.</string>
+    <string name="theme_photo_loading">Caricamento immagine…</string>
+    <string name="theme_photo_reset_view">Reimposta vista</string>
+    <string name="theme_photo_zoom">Zoom</string>
+</resources>

@@ -29,12 +29,12 @@ class SuggestionEngine(
 
 ) {
 
-    private val accentCache: MutableMap<String, String> = mutableMapOf()
+    private val accentCache: MutableMap<String, String> = boundedNormalizationCache()
     private val tag = "SuggestionEngine"
     private companion object {
         const val PERSONAL_PREFIX_PROMOTION_THRESHOLD = 3
     }
-    private val wordNormalizeCache: MutableMap<String, String> = mutableMapOf()
+    private val wordNormalizeCache: MutableMap<String, String> = boundedNormalizationCache()
     private val accentChars = setOf('à', 'è', 'é', 'ì', 'ò', 'ó', 'ù', 'À', 'È', 'É', 'Ì', 'Ò', 'Ó', 'Ù')
 
     // Keyboard layout positions - built dynamically based on layout type
@@ -860,3 +860,10 @@ class SuggestionEngine(
         }
     }
 }
+
+/** Caches are per active engine, not an ever-growing copy of its vocabulary. */
+private fun boundedNormalizationCache(): MutableMap<String, String> = java.util.Collections.synchronizedMap(
+    object : LinkedHashMap<String, String>(512, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean = size > 512
+    }
+)

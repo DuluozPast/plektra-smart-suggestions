@@ -899,4 +899,9 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="delete_calibration_restart">Empezar de nuevo</string>
     <string name="delete_calibration_reset">Restaurar gesto predeterminado</string>
     <string name="enter_send_rejected">El editor rechazó el envío. Elige otro método en los ajustes de la tecla Intro por aplicación.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Memoria insuficiente para el diccionario elegido (%1$s). Se utiliza el diccionario integrado durante esta sesión.</string>
+    <string name="dictionary_memory_unavailable">Memoria insuficiente para cargar el diccionario (%1$s). Las sugerencias de este idioma no están disponibles durante esta sesión.</string>
+    <string name="keyboard_failure_report_title">Diagnóstico del error del teclado</string>
 </resources>

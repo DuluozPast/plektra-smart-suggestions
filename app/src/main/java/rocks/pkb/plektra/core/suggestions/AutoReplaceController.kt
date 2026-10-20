@@ -231,15 +231,14 @@ class AutoReplaceController(
             if (before.endsWith(" ")) {
                 return false
             }
-            connection.commitText(" ", 1)
-            val afterCommit = connection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-            if (afterCommit.endsWith(" ")) {
-                return true
-            }
+            // A true return acknowledges the edit, not an immediate cache refresh.
+            // Retrying after a stale read duplicates the space in asynchronous editors.
+            if (connection.commitText(" ", 1)) return true
+            // One fallback when commitText explicitly rejects the edit. Consume the
+            // original physical boundary: BaseInputConnection may return false after dispatch.
             connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SPACE))
             connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SPACE))
-            val afterKey = connection.getTextBeforeCursor(2, 0)?.toString().orEmpty()
-            return afterKey.endsWith(" ")
+            return true
         }
 
         fun commitBoundary(connection: InputConnection, boundary: Char, settings: SuggestionSettings): Boolean {
@@ -422,6 +421,23 @@ class AutoReplaceController(
         val normalizedLookupWord =
             WordNormalization.normalizeForDictionary(lookupWord, Locale.ROOT)
 
+        // Exact replacements and primary-dictionary case changes have already run.
+        // For an exact known spelling, the safety checks below always reject fuzzy
+        // replacement. Avoid running that expensive search on the input thread.
+        val isKnownWord = knownWordProvider?.invoke(lookupWord) ?: repository.isKnownWord(lookupWord)
+        val isExactKnownWord = repository.topByNormalized(normalizedLookupWord, limit = 8)
+            .any { it.word.equals(lookupWord, ignoreCase = true) }
+        if (isKnownWord && isExactKnownWord) {
+            val boundaryCommitted = commitBoundaryAndReset(tracker, inputConnection, boundaryChar, settings)
+            DebugCaptureStore.recordAutoCorrectionAttempt(
+                before = word,
+                trigger = trigger,
+                outcome = DebugCaptureStore.AutoCorrectionOutcome.SKIPPED,
+                reason = "known_word"
+            )
+            return ReplaceResult(false, boundaryCommitted)
+        }
+
         val hasAccentOnlyVariant = repository
             .topByNormalized(normalizedLookupWord, limit = 8)
             .any { entry ->
@@ -512,13 +528,6 @@ class AutoReplaceController(
         val isRejected = rejectedWords.contains(wordLower)
         
         // Check if word exists in dictionary
-        val isKnownWord = knownWordProvider?.invoke(lookupWord) ?: repository.isKnownWord(lookupWord)
-        val isExactKnownWord = repository
-            .topByNormalized(normalizedLookupWord, limit = 8)
-            .any { entry ->
-                entry.word.equals(lookupWord, ignoreCase = true)
-            }
-
         val isSafeOrthographicFix =
             isOrthographicVariant &&
                     !inputHasDiacritic &&

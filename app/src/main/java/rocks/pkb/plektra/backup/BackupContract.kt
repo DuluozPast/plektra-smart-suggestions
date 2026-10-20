@@ -228,6 +228,7 @@ internal object BackupPreferenceContract {
             "space_after_punctuation" to PreferenceValueType.STRING,
             "smart_quotes" to PreferenceValueType.BOOLEAN,
             "smart_quotes_style" to PreferenceValueType.STRING,
+            "smart_quotes_mode" to PreferenceValueType.STRING,
             "swipe_to_delete" to PreferenceValueType.BOOLEAN,
             "swipe_to_delete_provider" to PreferenceValueType.STRING,
             "tap_haptic_use_system" to PreferenceValueType.BOOLEAN,

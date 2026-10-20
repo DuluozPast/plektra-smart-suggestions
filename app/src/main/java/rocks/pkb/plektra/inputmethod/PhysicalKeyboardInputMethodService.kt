@@ -88,7 +88,7 @@ import rocks.pkb.plektra.backup.LearningOperationGate
  * Input method service specialized for physical keyboards.
  * Handles advanced features such as long press that simulates Alt+key.
  */
-class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibilityKeyBridge.Target {
+class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibilityKeyBridge.Target, ScreenNavKeyBridge.Target {
 
     companion object {
         private const val TAG = "PlektraInputMethod"
@@ -1470,6 +1470,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     private fun visibleSuggestionStrings(): List<String> {
         if (latestSuggestionResults.isEmpty()) return emptyList()
+        if (modifierStateController.capsLockEnabled) {
+            val locale = getLocaleFromSubtype()
+            return latestSuggestionResults.map { it.candidate.uppercase(locale) }
+        }
 
         val hasWordStartSuggestion = latestSuggestionResults.any {
             it.kind == SuggestionKind.NEXT_WORD || it.kind == SuggestionKind.STARTER_WORD
@@ -1878,6 +1882,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         super.onCreate()
         smoothCaretOverlayController = SmoothCaretOverlayController(this)
         ClicksAccessibilityKeyBridge.register(this)
+        ScreenNavKeyBridge.register(this)
         lastSystemLocalesSignature = resources.configuration.locales.toLanguageTags()
         lastImeConfiguration = Configuration(resources.configuration)
         prefs = getSharedPreferences("plektra_prefs", Context.MODE_PRIVATE)
@@ -1902,7 +1907,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         textInputController = TextInputController(
             context = this,
             modifierStateController = modifierStateController,
-            doubleTapThreshold = DOUBLE_TAP_THRESHOLD
+            doubleTapThreshold = DOUBLE_TAP_THRESHOLD,
+            editorPackageNameProvider = { currentInputEditorInfo?.packageName }
         )
         autoCorrectionManager = AutoCorrectionManager(this)
         val suggestionDebugLogging = SettingsManager.isSuggestionDebugLoggingEnabled(this)
@@ -2017,7 +2023,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             if (shiftLayerLatched || altModifierLayerLatched) {
                 shiftLayerLatched = false
                 altModifierLayerLatched = false
-                modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it) }
+                modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it, preserveCapsLock = true) }
                 modifierStateBeforeHold = null
             }
             if (shiftOneShot) {
@@ -2084,7 +2090,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 if (hasLatchedLayer && !keepLayerLatchedAfterVariation) {
                     shiftLayerLatched = false
                     altModifierLayerLatched = false
-                    modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it) }
+                    modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it, preserveCapsLock = true) }
                     modifierStateBeforeHold = null
                 }
                 variationInteractedDuringHold = true
@@ -2269,6 +2275,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         )
         alternateCharacterManager.reloadSymMappings() // Load custom mappings for page 1 if present
         alternateCharacterManager.reloadSymMappings2() // Load custom mappings for page 2 if present
+        alternateCharacterManager.onSmartQuoteRequested = { text, inputConnection ->
+            inputEventRouter.handleImmediateQuote(text, inputConnection,
+                inputContextState.shouldDisableSmartFeatures) { updateStatusBarText() }
+        }
         alternateCharacterManager.onBoundaryTextRequested = { text, inputConnection ->
             handleBoundaryTextBeforeCommit(text, inputConnection)
         }
@@ -2703,8 +2713,29 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         inputConnection: InputConnection?,
         snapshot: StatusBarController.StatusSnapshot
     ): Boolean {
+        if (text != " ") textInputController.resetDoubleSpaceSequence()
         if (liveSpeechEditor != null) cancelSpeechRecognition()
         val ic = inputConnection ?: return false
+        if (!snapshot.shouldDisableSmartFeatures) {
+            if (rocks.pkb.plektra.core.ImmediateQuotePolicy.isQuoteInput(text) && SettingsManager.getSmartQuotesMode(this) == SettingsManager.SMART_QUOTES_IMMEDIATE) {
+                val quote = rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(ic, getLocaleFromSubtype(), packageName = currentInputEditorInfo?.packageName)
+                if (quote.consumed) {
+                    if (quote.selectionChanged) suggestionController.onContextReset()
+                    else quote.committedText?.let { suggestionController.onCharacterCommitted(it, ic) }
+                    if (quote.unsupportedSelection) android.widget.Toast.makeText(this,
+                        R.string.quote_editor_unavailable, android.widget.Toast.LENGTH_SHORT).show()
+                    markSelectionUpdateSkipAfterCommit()
+                    updateStatusBarText()
+                    return true
+                }
+            }
+            if (textInputController.handleSmartQuoteReplacement(text, ic, false)) {
+                suggestionController.onContextReset()
+                markSelectionUpdateSkipAfterCommit()
+                updateStatusBarText()
+                return true
+            }
+        }
         if (PunctuationAfterSpace.beforeTextCommit(ic, text)) {
             updateStatusBarText()
             return true
@@ -2764,9 +2795,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         shouldDisableSuggestions: Boolean = inputContextState.shouldDisableSuggestions,
         shouldDisableAutoCorrect: Boolean = inputContextState.shouldDisableAutoCorrect
     ): Boolean {
+        if (text != " ") textInputController.resetDoubleSpaceSequence()
         if (liveSpeechEditor != null) cancelSpeechRecognition()
         val ic = inputConnection ?: return false
         if (text.length != 1) return false
+        if (inputEventRouter.handleImmediateQuote(text, ic,
+                inputContextState.shouldDisableSmartFeatures) { updateStatusBarText() }) return true
         if (PunctuationAfterSpace.beforeTextCommit(ic, text)) return true
         val boundary = rocks.pkb.plektra.core.Punctuation.normalizeApostrophe(text[0])
         if (boundary == '\'' || boundary !in rocks.pkb.plektra.core.Punctuation.BOUNDARY) {
@@ -2995,6 +3029,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         disableSmoothCaretExperiment()
         if (::smoothCaretOverlayController.isInitialized) smoothCaretOverlayController.release()
         ClicksAccessibilityKeyBridge.unregister(this)
+        ScreenNavKeyBridge.unregister(this)
         clicksPowerShiftTapFilter.reset()
         accidentalKeyPressFilter.reset()
         clicksPowerButtonEventMapper.reset()
@@ -3227,6 +3262,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
      * @param preserveNavMode If true, keeps Ctrl latch active when nav mode is enabled.
      */
     private fun resetModifierStates(preserveNavMode: Boolean = false) {
+        val keepCapsLock = modifierStateController.capsLockEnabled
         shiftLayerLatched = false
         altModifierLayerLatched = false
         lastShiftTapUpTime = 0L
@@ -3241,6 +3277,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             onNavModeCancelled = { navModeController.cancelNotification() }
         )
         
+        // Closing/restarting a keyboard surface clears transient modifiers, not an
+        // explicit Caps Lock. Only the user's Shift action should switch that off.
+        if (keepCapsLock) modifierStateController.capsLockEnabled = true
         symLayoutController.reset()
         alternateCharacterManager.resetTransientState()
         deactivateVariations()
@@ -3557,6 +3596,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 "format_bold" -> getString(R.string.formatting_bold)
                 "format_italic" -> getString(R.string.formatting_italic)
                 "format_underline" -> getString(R.string.formatting_underline)
+                "quote_open" -> getString(R.string.quote_force_open)
+                "quote_close" -> getString(R.string.quote_force_close)
+                "quote_straight" -> getString(R.string.quote_force_straight)
                 "expand_selection_word_right" -> "Sel word →"
                 "page_start" -> "Start"
                 "page_end" -> "End"
@@ -3647,6 +3689,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        if (!restarting && ::textInputController.isInitialized) textInputController.resetDoubleSpaceSequence()
         PunctuationAfterSpace.clear()
         rocks.pkb.plektra.core.AutoSpaceTracker.clear()
         if (!restarting) enterSendHeldShiftKeys.clear()
@@ -4532,6 +4575,51 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         )
     }
 
+
+    override val screenNavLocked: Boolean
+        get() = ::navModeController.isInitialized && navModeController.isNavModeActive()
+
+    override fun breakScreenNavTapSequence() {
+        if (::modifierStateController.isInitialized) modifierStateController.registerNonModifierKey()
+    }
+
+    override fun resetScreenNavKeys() {
+        if (::navModeController.isInitialized) navModeController.exitNavMode()
+        if (::modifierStateController.isInitialized) modifierStateController.clearCtrlState(resetPressedState = true)
+    }
+
+    override fun canRepeatScreenNavKey(event: KeyEvent): Boolean {
+        if (!screenNavLocked) return false
+        val chord = ScreenNavKeyPolicy.chord(ctrlKeyMap[event.keyCode], event.isShiftPressed) ?: return false
+        return chord.keyCode in setOf(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_PAGE_DOWN)
+    }
+
+    override fun dispatchScreenNavKey(event: KeyEvent): Boolean {
+        if (Looper.myLooper() != Looper.getMainLooper() || !::navModeController.isInitialized) return false
+        val connection = currentInputConnection
+        if (connection == null && !ScreenTextSelectorBridge.available) return false
+        val fn = event.keyCode == KeyEvent.KEYCODE_CTRL_LEFT || event.keyCode == KeyEvent.KEYCODE_CTRL_RIGHT
+        if (fn) return navModeController.handleNavModeKey(event.keyCode, event,
+            event.action == KeyEvent.ACTION_DOWN, ctrlKeyMap) { connection }
+        if (!screenNavLocked || event.action != KeyEvent.ACTION_DOWN) return false
+        val mapping = ctrlKeyMap[event.keyCode]
+        if (mapping?.type == "action" && mapping.value == "select_screen_text") {
+            ScreenTextSelectorBridge.open(this)
+            return true
+        }
+        val chord = ScreenNavKeyPolicy.chord(mapping, event.isShiftPressed) ?: return false
+        if (ScreenTextSelectorBridge.active) return ScreenTextSelectorBridge.dispatch(chord)
+        if (connection == null) return false
+        val now = SystemClock.uptimeMillis()
+        val meta = chord.meta
+        connection.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, chord.keyCode, event.repeatCount, meta,
+            android.view.KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_SOFT_KEYBOARD, InputDevice.SOURCE_KEYBOARD))
+        connection.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, chord.keyCode, 0, meta,
+            android.view.KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_SOFT_KEYBOARD, InputDevice.SOURCE_KEYBOARD))
+        return true
+    }
+
     override fun dispatchClicksAccessibilityKeyEvent(event: KeyEvent): Boolean {
         if (currentInputConnection == null || !inputContextState.isEditable) return false
 
@@ -4688,6 +4776,15 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
+        // Input dispatch can enqueue a repeat while a slow boundary is running,
+        // even ahead of an already timestamped key-up. It is not a second tap.
+        // Consume it before timing state, dictionary work or the app's native key listener.
+        if (keyCode_ == KeyEvent.KEYCODE_SPACE && (event_?.repeatCount ?: 0) > 0 &&
+            inputContextState.isEditable && currentInputConnection != null &&
+            !(::navModeController.isInitialized && navModeController.isNavModeActive())) {
+            return true
+        }
+        if (::textInputController.isInitialized) textInputController.observeKeyDown(keyCode_, event_?.repeatCount ?: 0)
         if (keyCode_ == KeyEvent.KEYCODE_SHIFT_LEFT || keyCode_ == KeyEvent.KEYCODE_SHIFT_RIGHT) enterSendHeldShiftKeys.add(keyCode_)
         if (liveSpeechEditor != null && (event_?.unicodeChar?.let { it != 0 } == true ||
             keyCode_ in listOf(KeyEvent.KEYCODE_DEL, KeyEvent.KEYCODE_FORWARD_DEL, KeyEvent.KEYCODE_ENTER,
@@ -5423,6 +5520,15 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val navModeAfter = navModeController.isNavModeActive()
         if (navModeBefore != navModeAfter) {
             suggestionController.onNavModeToggle()
+        }
+
+        // Text spaces belong to the IME, not the app's physical-key auto-period
+        // listener. Modifier shortcuts and mappings already consumed above stay intact.
+        if (routingDecision != InputEventRouter.EditableFieldRoutingResult.Consume &&
+            keyCode == KeyEvent.KEYCODE_SPACE && !altActiveNow && !ctrlActiveNow &&
+            event?.isMetaPressed != true && event?.isSymPressed != true && ic != null) {
+            val accepted = ic.commitText(" ",1)
+            if (accepted) return true
         }
 
         return when (routingDecision) {
@@ -6201,7 +6307,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (shiftLayerLatched || altModifierLayerLatched) {
             shiftLayerLatched = false
             altModifierLayerLatched = false
-            modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it) }
+            modifierStateBeforeHold?.let { modifierStateController.restoreLogicalState(it, preserveCapsLock = true) }
             modifierStateBeforeHold = null
         }
         variationInteractedDuringHold = true
@@ -6325,7 +6431,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             val deleteBefore = wordBeforeCursor.length
             val deleteAfter = wordAfterCursor.length + rocks.pkb.plektra.core.suggestions.PunctuatedPhrase.overlappingAfter(suggestion, after.substring(end))
             val replacement = rocks.pkb.plektra.core.suggestions.CasingHelper.applyCasing(
-                suggestion, currentWord, forceLeadingCapital
+                suggestion, currentWord, forceLeadingCapital,
+                forceUppercase = capsLockEnabled, locale = getLocaleFromSubtype()
             )
             val committed = rocks.pkb.plektra.inputmethod.suggestions.SuggestionCommitter.commit(
                 ic, replacement, deleteBefore, deleteAfter, after)

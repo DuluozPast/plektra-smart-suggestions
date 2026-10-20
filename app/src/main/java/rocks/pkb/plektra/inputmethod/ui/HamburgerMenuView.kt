@@ -61,10 +61,11 @@ class HamburgerMenuView(
                     iconColor = it.textAndIcons,
                     cornerRadiusRatio = it.chromeCornerRadiusRatio,
                     borderColor = it.divider,
-                    borderWidthPx = dpToPx(1f)
+                    borderWidthPx = dpToPx(1f),
+                    texture = it.textures["status_bar_button"]
                 )
             }
-            root?.setBackgroundColor(value?.background ?: Color.BLACK)
+            rocks.pkb.plektra.ThemeTextureBackground.set(root, value?.background ?: Color.BLACK, value?.textures?.get("background"))
             closeButton?.let { applyCloseButtonTheme(it) }
         }
 

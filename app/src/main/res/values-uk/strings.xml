@@ -899,4 +899,9 @@ Ctrl-ярлики застосунків із урахуванням розкл�
     <string name="delete_calibration_restart">Почати знову</string>
     <string name="delete_calibration_reset">Відновити стандартний жест</string>
     <string name="enter_send_rejected">Редактор відхилив надсилання. Виберіть інший спосіб у налаштуваннях клавіші Enter для програми.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Недостатньо пам’яті для вибраного словника (%1$s). У цьому сеансі використовується вбудований словник.</string>
+    <string name="dictionary_memory_unavailable">Недостатньо пам’яті для завантаження словника (%1$s). Підказки цією мовою недоступні в цьому сеансі.</string>
+    <string name="keyboard_failure_report_title">Діагностика помилки клавіатури</string>
 </resources>

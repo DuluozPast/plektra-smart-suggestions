@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Photo: colour or texture</string>
+    <string name="theme_texture_color">Solid colour</string>
+    <string name="theme_texture_matter">Keep the texture</string>
+    <string name="theme_texture_help">Move and zoom the photo beneath the frame. Drag the corner to resize the sampled area.</string>
+    <string name="theme_texture_sample">Use this area</string>
+    <string name="theme_texture_preview">Texture preview</string>
+    <string name="theme_texture_cover">Fill</string>
+    <string name="theme_texture_fit">Fit</string>
+    <string name="theme_texture_tile">Repeat</string>
+    <string name="theme_texture_hardware">Physical keyboard</string>
+    <string name="theme_texture_software">On-screen keyboard</string>
+    <string name="theme_texture_enlargement">This area is enlarged ×%1$.1f. Select a larger area to keep more detail.</string>
+    <string name="theme_texture_apply">Apply texture</string>
+    <string name="theme_texture_remove">Return to solid colour</string>
+    <string name="theme_texture_applied">Photo texture</string>
+    <string name="theme_texture_resize">Resize the sampled area</string>
+</resources>

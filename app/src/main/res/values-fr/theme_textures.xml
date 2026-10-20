@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Photo : couleur ou matière</string>
+    <string name="theme_texture_color">Couleur unie</string>
+    <string name="theme_texture_matter">Conserver la matière</string>
+    <string name="theme_texture_help">Déplacez et zoomez la photo sous le cadre. Faites glisser le coin pour ajuster la zone prélevée.</string>
+    <string name="theme_texture_sample">Utiliser cette zone</string>
+    <string name="theme_texture_preview">Aperçu de la matière</string>
+    <string name="theme_texture_cover">Remplir</string>
+    <string name="theme_texture_fit">Ajuster</string>
+    <string name="theme_texture_tile">Répéter</string>
+    <string name="theme_texture_hardware">Clavier physique</string>
+    <string name="theme_texture_software">Clavier à l’écran</string>
+    <string name="theme_texture_enlargement">Cette zone est agrandie ×%1$.1f. Sélectionnez une zone plus grande pour conserver davantage de détails.</string>
+    <string name="theme_texture_apply">Appliquer la matière</string>
+    <string name="theme_texture_remove">Revenir à la couleur unie</string>
+    <string name="theme_texture_applied">Matière photo</string>
+    <string name="theme_texture_resize">Redimensionner la zone prélevée</string>
+</resources>

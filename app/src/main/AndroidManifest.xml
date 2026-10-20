@@ -238,6 +238,12 @@
                 android:resource="@xml/method" />
         </service>
 
+        <service android:name=".inputmethod.ScreenNavAccessibilityService" android:exported="true"
+            android:label="@string/screen_nav_title" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/screen_nav_accessibility_service" />
+        </service>
+
         <service
             android:name=".inputmethod.ClicksLauncherButtonAccessibilityService"
             android:exported="true"

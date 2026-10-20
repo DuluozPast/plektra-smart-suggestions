@@ -27,9 +27,12 @@ object CasingHelper {
     fun applyCasing(
         candidate: String,
         original: String,
-        forceLeadingCapital: Boolean = false
+        forceLeadingCapital: Boolean = false,
+        forceUppercase: Boolean = false,
+        locale: Locale = Locale.getDefault()
     ): String {
         if (candidate.isEmpty()) return candidate
+        if (forceUppercase) return candidate.uppercase(locale)
         
         // Se il campo richiede capitalizzazione forzata, applica titlecase
         if (forceLeadingCapital) {

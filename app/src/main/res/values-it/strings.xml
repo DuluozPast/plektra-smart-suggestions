@@ -950,4 +950,9 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="delete_calibration_restart">Ricomincia</string>
     <string name="delete_calibration_reset">Ripristina gesto predefinito</string>
     <string name="enter_send_rejected">Il campo di testo ha rifiutato Invio. Scegli un altro metodo nelle impostazioni del tasto Invio per questa app.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Memoria insufficiente per il dizionario selezionato (%1$s). Per questa sessione viene usato il dizionario integrato.</string>
+    <string name="dictionary_memory_unavailable">Memoria insufficiente per caricare il dizionario (%1$s). I suggerimenti per questa lingua non sono disponibili per questa sessione.</string>
+    <string name="keyboard_failure_report_title">Diagnostica errore tastiera</string>
 </resources>

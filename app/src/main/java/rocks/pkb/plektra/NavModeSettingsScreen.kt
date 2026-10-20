@@ -219,6 +219,7 @@ fun NavModeSettingsScreen(
         }
 
         if (navModeEnabled) {
+            ScreenNavAccessibilitySettingsCard()
             val layoutAwareCtrlShortcutsAvailable = !navModeCtrlHoldEnabled
 
             Surface(
@@ -774,8 +775,8 @@ private fun KeyMappingDialog(
                         }
                     } else if (selectedType == "action") {
                         val actions = listOf(
-                            "copy", "paste", "cut", "undo", "format_bold", "format_italic", "format_underline",
-                            "select_all", "expand_selection_left", "expand_selection_right", "expand_selection_up", "expand_selection_down",
+                            "copy", "paste", "cut", "undo", "format_bold", "format_italic", "format_underline", "quote_open", "quote_close", "quote_straight",
+                            "select_screen_text", "select_all", "expand_selection_left", "expand_selection_right", "expand_selection_up", "expand_selection_down",
                             "move_word_left", "move_word_right",
                             "expand_selection_word_left", "expand_selection_word_right",
                             "page_start", "page_end",
@@ -920,10 +921,14 @@ private fun getActionLabel(action: String): String {
         "format_bold" -> stringResource(R.string.formatting_bold)
         "format_italic" -> stringResource(R.string.formatting_italic)
         "format_underline" -> stringResource(R.string.formatting_underline)
+        "quote_open" -> stringResource(R.string.quote_force_open)
+        "quote_close" -> stringResource(R.string.quote_force_close)
+        "quote_straight" -> stringResource(R.string.quote_force_straight)
         "copy" -> stringResource(R.string.nav_mode_action_copy)
         "paste" -> stringResource(R.string.nav_mode_action_paste)
         "cut" -> stringResource(R.string.nav_mode_action_cut)
         "undo" -> stringResource(R.string.nav_mode_action_undo)
+        "select_screen_text" -> stringResource(R.string.nav_mode_action_select_screen_text)
         "select_all" -> stringResource(R.string.nav_mode_action_select_all)
         "expand_selection_left" -> stringResource(R.string.nav_mode_action_expand_selection_left)
         "expand_selection_right" -> stringResource(R.string.nav_mode_action_expand_selection_right)
@@ -963,11 +968,15 @@ private fun getMappingLabelShort(mapping: KeyMappingLoader.CtrlMapping): String?
             "format_bold" -> stringResource(R.string.formatting_bold)
         "format_italic" -> stringResource(R.string.formatting_italic)
         "format_underline" -> stringResource(R.string.formatting_underline)
+        "quote_open" -> stringResource(R.string.quote_force_open)
+        "quote_close" -> stringResource(R.string.quote_force_close)
+        "quote_straight" -> stringResource(R.string.quote_force_straight)
         "copy" -> stringResource(R.string.nav_mode_action_copy)
             "paste" -> stringResource(R.string.nav_mode_action_paste)
             "cut" -> stringResource(R.string.nav_mode_action_cut)
             "undo" -> stringResource(R.string.nav_mode_action_undo)
-            "select_all" -> stringResource(R.string.nav_mode_action_select_all)
+            "select_screen_text" -> stringResource(R.string.nav_mode_action_select_screen_text)
+        "select_all" -> stringResource(R.string.nav_mode_action_select_all)
             "expand_selection_left" -> stringResource(R.string.nav_mode_action_expand_selection_left)
             "expand_selection_right" -> stringResource(R.string.nav_mode_action_expand_selection_right)
             "expand_selection_up" -> stringResource(R.string.nav_mode_action_expand_selection_up)

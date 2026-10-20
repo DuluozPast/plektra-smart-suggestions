@@ -1615,4 +1615,9 @@ QWERTZ σε φυσικό QWERTY
     <string name="delete_calibration_restart">Επανεκκίνηση</string>
     <string name="delete_calibration_reset">Επαναφορά προεπιλεγμένης χειρονομίας</string>
     <string name="enter_send_rejected">Το πεδίο κειμένου απέρριψε την αποστολή. Επιλέξτε άλλη μέθοδο στις ρυθμίσεις Enter ανά εφαρμογή.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Δεν υπάρχει αρκετή μνήμη για το επιλεγμένο λεξικό (%1$s). Για αυτή τη συνεδρία χρησιμοποιείται το ενσωματωμένο λεξικό.</string>
+    <string name="dictionary_memory_unavailable">Δεν υπάρχει αρκετή μνήμη για τη φόρτωση του λεξικού (%1$s). Οι προτάσεις σε αυτή τη γλώσσα δεν είναι διαθέσιμες για αυτή τη συνεδρία.</string>
+    <string name="keyboard_failure_report_title">Διαγνωστικά σφάλματος πληκτρολογίου</string>
 </resources>

@@ -899,4 +899,9 @@ Nav Mode-ը օգտագործում է ստեղնի ֆիզիկական դիրքը
     <string name="delete_calibration_restart">Սկսել նորից</string>
     <string name="delete_calibration_reset">Վերականգնել լռելյայն ժեստը</string>
     <string name="enter_send_rejected">Խմբագրիչը մերժեց ուղարկումը։ Ընտրեք այլ եղանակ հավելվածի Enter ստեղնի կարգավորումներում։</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Ընտրված բառարանի համար հիշողությունը բավարար չէ (%1$s)։ Այս աշխատաշրջանում օգտագործվում է ներկառուցված բառարանը։</string>
+    <string name="dictionary_memory_unavailable">Բառարանը բեռնելու համար հիշողությունը բավարար չէ (%1$s)։ Այս աշխատաշրջանում այս լեզվով առաջարկները հասանելի չեն։</string>
+    <string name="keyboard_failure_report_title">Ստեղնաշարի սխալի ախտորոշում</string>
 </resources>

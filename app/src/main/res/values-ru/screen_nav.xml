@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Режим Nav вне текстовых полей</string>
+    <string name="screen_nav_description">Сначала выделите слово, дважды нажмите Ctrl/Fn и используйте клавиши Nav. Включите эту функцию в специальных возможностях Android. Поддержка зависит от приложения.</string>
+    <string name="screen_nav_service_description">Передаёт клавиши Nav, когда текстовое поле не активно. Назначения клавиш сохраняются.</string>
+    <string name="screen_nav_open_settings">Открыть специальные возможности</string>
+    <string name="screen_nav_enabled">Передача включена</string>
+    <string name="screen_nav_disabled">Передача выключена</string>
+</resources>

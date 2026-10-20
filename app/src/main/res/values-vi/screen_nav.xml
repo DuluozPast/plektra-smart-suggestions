@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Chế độ Nav ngoài ô nhập văn bản</string>
+    <string name="screen_nav_description">Chọn một từ trước, nhấn Ctrl/Fn hai lần rồi dùng các phím Nav quen thuộc. Bật chuyển tiếp tùy chọn này trong Trợ năng Android. Khả năng hỗ trợ tùy ứng dụng.</string>
+    <string name="screen_nav_service_description">Chuyển tiếp phím Nav khi không có ô nhập đang hoạt động. Giữ nguyên thiết lập phím.</string>
+    <string name="screen_nav_open_settings">Mở cài đặt trợ năng</string>
+    <string name="screen_nav_enabled">Đã bật chuyển tiếp</string>
+    <string name="screen_nav_disabled">Đã tắt chuyển tiếp</string>
+</resources>

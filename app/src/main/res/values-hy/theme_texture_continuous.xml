@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Շարունակական պատկեր ստեղների միջև</string>
+    <string name="theme_texture_per_key">Կրկնել նմուշը յուրաքանչյուր ստեղնի վրա</string>
+</resources>

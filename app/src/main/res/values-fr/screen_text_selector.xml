@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Sélecteur de texte</string>
+    <string name="screen_text_instructions">Utilisez vos touches Nav pour sélectionner un passage, puis copiez-le. Cette copie locale est en lecture seule.</string>
+    <string name="screen_text_enable_service">Activez le mode Nav hors des champs de saisie dans Accessibilité Android pour utiliser le sélecteur.</string>
+    <string name="screen_text_unavailable">Aucun texte accessible trouvé sur cet écran.</string>
+    <string name="nav_mode_action_select_screen_text">Sélectionner le texte de l’écran</string>
+    <string name="screen_text_settings_description">Si la sélection native échoue, affectez Sélectionner le texte de l’écran à une touche Nav. Le texte est lu uniquement à votre demande et rien n’est enregistré.</string>
+</resources>

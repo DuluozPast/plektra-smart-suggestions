@@ -248,11 +248,51 @@ class TextFormattingShortcutsTest {
         format("format_bold")
         assertEquals("*bonjour,* ", input.value)
     }
+    @Test fun whatsappFrenchQuoteEdgesAllowItalicAndBoldWithoutChangingInternalFrenchSpacing() {
+        for(app in listOf("com.whatsapp","com.whatsapp.w4b")) {
+            for((action,marker) in listOf("format_italic" to "_","format_bold" to "*")) {
+                input=Buffer(context); AutoSpaceTracker.clear(); rocks.pkb.plektra.core.PunctuationAfterSpace.clear()
+                rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName=app)
+                format(action,app);input.commitText("Bonjour\u202f!",1)
+                format(action,app)
+                rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName=app)
+                assertEquals("« "+marker+"Bonjour\u202f!"+marker+" »",input.value)
+            }
+        }
+    }
+    @Test fun whatsappUnstyledQuotesKeepTheirNarrowNonbreakingSpaces() {
+        rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName="com.whatsapp")
+        input.commitText("Bonjour",1)
+        rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName="com.whatsapp")
+        assertEquals("«\u202fBonjour\u202f»",input.value)
+    }
+    @Test fun closingQuotesAfterFormattedAutomaticPunctuationKeepOnlyOneOutsideSpace() {
+        rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName="com.whatsapp")
+        format("format_italic");input.commitText("Bonjour",1)
+        SettingsManager.setSpaceAfterPunctuation(context,"!");automaticPunctuation('!')
+        format("format_italic")
+        rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input,Locale.FRENCH,packageName="com.whatsapp")
+        assertEquals("« _Bonjour\u202f!_ » ",input.value)
+    }
+    @Test fun deferredQuoteConversionAdaptsOnlyWhatsappStyleEdges() {
+        for(app in listOf("com.whatsapp","net.cozic.joplin")) {
+            input=Buffer(context);input.commitText("\"_Bonjour_\"",1)
+            assertTrue(rocks.pkb.plektra.core.ImmediateQuoteEditor.replacePair(input,input.value,0,
+                "«\u202f","\u202f»"," ",packageName=app).consumed)
+            assertEquals(if(app=="com.whatsapp") "« _Bonjour_ » " else "«\u202f_Bonjour_\u202f» ",input.value)
+        }
+    }
     private class Buffer(context: Context) : BaseInputConnection(View(context), true) {
         private val text = SpannableStringBuilder().apply { Selection.setSelection(this, 0) }
         val events = mutableListOf<KeyEvent>()
         val value get() = text.toString()
         override fun getEditable(): Editable = text
+        override fun getExtractedText(request: android.view.inputmethod.ExtractedTextRequest?, flags: Int) =
+            android.view.inputmethod.ExtractedText().apply {
+                text = this@Buffer.text; startOffset=0
+                selectionStart=Selection.getSelectionStart(this@Buffer.text)
+                selectionEnd=Selection.getSelectionEnd(this@Buffer.text)
+            }
         override fun sendKeyEvent(event: KeyEvent): Boolean { events.add(event); return true }
     }
 }

@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Nav mode outside text fields</string>
+    <string name="screen_nav_description">Select a word in the app first, then double-tap Ctrl/Fn and use your usual Nav keys. Enable this optional relay in Android Accessibility. Support depends on the app.</string>
+    <string name="screen_nav_service_description">Forwards Nav keys when no text field is active. Your key assignments are preserved.</string>
+    <string name="screen_nav_open_settings">Open Accessibility settings</string>
+    <string name="screen_nav_enabled">Relay enabled</string>
+    <string name="screen_nav_disabled">Relay disabled</string>
+</resources>

@@ -49,7 +49,8 @@ internal data class KeyboardThemePreset(
     val keyPopupAttached: Boolean = true,
     val keyPopupTailEnabled: Boolean = true,
     val keyPreviewAfterLongPress: Boolean = false,
-    val keyAlternatesPopupEnabled: Boolean = true
+    val keyAlternatesPopupEnabled: Boolean = true,
+    val textures: Map<String, KeyboardThemeTexture> = emptyMap()
 )
 
 internal data class KeyboardThemeOption(
@@ -108,7 +109,8 @@ internal fun KeyboardThemePreset.toAospThemeOverride(): AospKeyboardView.ThemeOv
         keyPopupAttached = keyPopupAttached,
         keyPopupTailEnabled = keyPopupTailEnabled,
         keyPreviewAfterLongPress = keyPreviewAfterLongPress,
-        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled
+        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled,
+        textures = textures
     )
 
 internal fun KeyboardThemePreset.toKeyboardThemeColors(): KeyboardThemeColors =
@@ -130,7 +132,8 @@ internal fun KeyboardThemePreset.toKeyboardThemeColors(): KeyboardThemeColors =
         keyCornerRadiusRatio = keyCornerRadiusRatio,
         chromeCornerRadiusRatio = chromeCornerRadiusRatio,
         suggestionsHeightScale = suggestionsHeightScale,
-        variationsHeightScale = variationsHeightScale
+        variationsHeightScale = variationsHeightScale,
+        textures = textures
     )
 
 internal fun KeyboardThemePreset.toSettingsTheme(): SettingsManager.KeyboardThemeSettings =
@@ -164,7 +167,8 @@ internal fun KeyboardThemePreset.toSettingsTheme(): SettingsManager.KeyboardThem
         keyPopupAttached = keyPopupAttached,
         keyPopupTailEnabled = keyPopupTailEnabled,
         keyPreviewAfterLongPress = keyPreviewAfterLongPress,
-        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled
+        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled,
+        textures = textures
     )
 
 internal fun SettingsManager.KeyboardThemeSettings.toKeyboardThemePreset(name: String): KeyboardThemePreset =
@@ -199,7 +203,8 @@ internal fun SettingsManager.KeyboardThemeSettings.toKeyboardThemePreset(name: S
         keyPopupAttached = keyPopupAttached,
         keyPopupTailEnabled = keyPopupTailEnabled,
         keyPreviewAfterLongPress = keyPreviewAfterLongPress,
-        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled
+        keyAlternatesPopupEnabled = keyAlternatesPopupEnabled,
+        textures = textures
     )
 
 internal fun SettingsManager.NamedKeyboardTheme.toKeyboardThemeOption(): KeyboardThemeOption {

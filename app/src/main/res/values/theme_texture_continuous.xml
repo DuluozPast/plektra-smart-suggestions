@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Continuous image across keys</string>
+    <string name="theme_texture_per_key">Repeat the sample on each key</string>
+</resources>

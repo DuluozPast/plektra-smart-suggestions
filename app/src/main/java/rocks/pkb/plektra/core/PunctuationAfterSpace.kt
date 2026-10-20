@@ -42,10 +42,14 @@ object PunctuationAfterSpace {
 
     /** Move only our verified automatic trailing space, never the French space before the sign.
      * The connection and bounded suffix must still match; manual spaces are left untouched. */
-    fun takeAutoSpaceForFormatting(input: InputConnection): Boolean {
+    fun hasAutoSpaceForFormatting(input: InputConnection): Boolean {
         val suffix = automaticSuffix
-        val matches = connection === input && suffix != null &&
+        return connection === input && suffix != null &&
             input.getTextBeforeCursor(128, 0)?.toString() == suffix
+    }
+
+    fun takeAutoSpaceForFormatting(input: InputConnection): Boolean {
+        val matches = hasAutoSpaceForFormatting(input)
         clear()
         return matches && input.deleteSurroundingText(1, 0)
     }

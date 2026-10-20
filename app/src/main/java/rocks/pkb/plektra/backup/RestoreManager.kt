@@ -101,7 +101,9 @@ object RestoreManager {
             rocks.pkb.plektra.statistics.TypingStatisticsStore.get(context).flush()
             val snapshot = RestoreSnapshot(context, File(workingDir, "rollback"))
             try {
-                val fileSummary = FileBackupHelper.restoreFiles(context, filesDir)
+                val baseFileSummary = FileBackupHelper.restoreFiles(context, filesDir)
+                val restoredImages = ThemeImageBackup.restore(context, File(extractedDir, ThemeImageBackup.DIRECTORY))
+                val fileSummary = baseFileSummary.copy(restoredFiles = baseFileSummary.restoredFiles + restoredImages)
                 val correctionsRestored = CorrectionUsageBackupHelper.restoreCorrections(context, correctionsDir)
                 if (learningDir.exists()) LearningBackupHelper.importBackup(context, learningDir)
                 val excludedKeys = BackupPreferencePolicy.runtimeDerivedKeys +
@@ -168,7 +170,8 @@ object RestoreManager {
         if (learningDir.exists()) LearningBackupHelper.validateBackup(learningDir)
         val prefs = PreferencesBackupHelper.readPreferencesFromBackup(File(extractedDir, "prefs"))
         val fileCount = FileBackupHelper.validateRestoreFiles(File(extractedDir, "files"))
-        require(prefs.values.any { it.isNotEmpty() } || fileCount > 0) {
+        val imageCount = ThemeImageBackup.validate(File(extractedDir, ThemeImageBackup.DIRECTORY)).size
+        require(prefs.values.any { it.isNotEmpty() } || fileCount > 0 || imageCount > 0) {
             "Backup contains no supported settings or user files"
         }
         return metadata to prefs

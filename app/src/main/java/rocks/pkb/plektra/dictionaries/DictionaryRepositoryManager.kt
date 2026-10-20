@@ -155,11 +155,6 @@ object DictionaryRepositoryManager {
                 return@withContext DownloadResult.HashMismatch
             }
             
-            // Validate dictionary format
-            val dictionaryIndex = tempFile.inputStream().use { input ->
-                validateDictionaryStream(input)
-            }
-            
             // Move to final location
             /*
              * Extended dictionaries have their own filename in the remote repository
@@ -177,19 +172,13 @@ object DictionaryRepositoryManager {
             val activeDictionaryPrefs =
                 context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
             
-            if (destFile.exists()) {
-                destFile.delete()
+            require(destFile.canonicalFile.parentFile == destDir.canonicalFile) { "Invalid dictionary name" }
+            val personalKeys = UserDictionaryStore().personalKeysForBase(
+                context, java.util.Locale.forLanguageTag(item.languageTag))
+            val normalizedWords = tempFile.inputStream().use { input ->
+                DictionaryFileInstaller.install(input, destFile, personalKeys)
             }
-
-            if (!tempFile.renameTo(destFile)) {
-                // Fallback: copy if rename fails
-                tempFile.inputStream().use { input ->
-                    destFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                tempFile.delete()
-            }
+            tempFile.delete()
 
             activeDictionaryPrefs.edit()
                 .putString(languageCode, installedFilename)
@@ -199,7 +188,7 @@ object DictionaryRepositoryManager {
 
             val removedDuplicates = UserDictionaryStore().removeWordsAlreadyInBase(
                 context = context,
-                baseNormalizedWords = dictionaryIndex.normalizedIndex.keys,
+                baseNormalizedWords = normalizedWords,
                 locale = locale
             )
 
@@ -222,10 +211,17 @@ object DictionaryRepositoryManager {
             notifyDictionariesChanged(context)
             Log.i(TAG, "Successfully downloaded and installed ${item.filename}")
             DownloadResult.Success(destFile.name)
+        } catch (oom: OutOfMemoryError) {
+            // Validation expands legacy Extended files in memory; keep the app alive.
+            rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-download-memory", oom)
+            Log.e(TAG, "Not enough memory to validate dictionary", oom)
+            DownloadResult.CopyError
         } catch (e: SerializationException) {
+            rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-download-format", e)
             Log.e(TAG, "Invalid dictionary format for ${item.filename}", e)
             DownloadResult.InvalidFormat
         } catch (e: Exception) {
+            rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-download-io", e)
             Log.e(TAG, "Error downloading ${item.filename}", e)
             DownloadResult.CopyError
         }
@@ -249,22 +245,14 @@ object DictionaryRepositoryManager {
     /**
      * Validates that the stream contains a valid dictionary format.
      */
-    @OptIn(ExperimentalSerializationApi::class)
-    internal fun validateDictionaryStream(input: InputStream): DictionaryIndex {
-        val bytes = input.readBytes()
-        val isJson = bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
-
-        return if (isJson) {
-            val json = Json { ignoreUnknownKeys = true }
-            json.decodeFromString<DictionaryIndex>(bytes.decodeToString())
-        } else {
-            Cbor.decodeFromByteArray<DictionaryIndex>(bytes)
-        }
-    }
-    
     /**
      * Formats file size in human-readable format.
      */
+    internal fun validateDictionaryStream(input: InputStream) {
+        // Backup package validation uses the same bounded reader as installation.
+        StreamingDictionaryValidator.validate(input, emptySet())
+    }
+
     fun formatFileSize(bytes: Long): String {
         val kb = bytes / 1024.0
         val mb = kb / 1024.0

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Aus</string>
+    <string name="quote_mode_deferred">Abgeschlossenes Zitat umwandeln</string>
+    <string name="quote_mode_immediate">Sofortige Anführungszeichen · französische Verschachtelung</string>
+    <string name="quote_immediate_help">Bei französischer Eingabe: « außen “innen” ». Nur die Anführungszeichen werden geändert. Für mehrdeutige Fälle lassen sich öffnende, schließende oder gerade Zeichen in Nav/Fn zuweisen.</string>
+    <string name="quote_force_open">Öffnendes Anführungszeichen einfügen</string>
+    <string name="quote_force_close">Schließendes Anführungszeichen einfügen</string>
+    <string name="quote_force_straight">Gerades Anführungszeichen einfügen</string>
+    <string name="quote_editor_unavailable">Dieser Editor erlaubt keine sichere Cursorbewegung um die Auswahl. Der zitierte Text wurde nicht ersetzt.</string>
+    <string name="theme_photo_title">Farbe aus einem Foto</string>
+    <string name="theme_photo_camera">Foto aufnehmen</string>
+    <string name="theme_photo_gallery">Bild auswählen</string>
+    <string name="theme_photo_reuse">Letztes Bild wiederverwenden</string>
+    <string name="theme_photo_help">Bild unter dem Fadenkreuz verschieben und vergrößern. Die Pipette mittelt einen kleinen Bereich.</string>
+    <string name="theme_photo_use_color">Diese Farbe aufnehmen</string>
+    <string name="theme_photo_button">Farbe aus einem Foto aufnehmen</string>
+    <string name="theme_photo_error">Bild oder Kamera konnte nicht geöffnet werden. Versuche ein anderes Bild.</string>
+    <string name="theme_photo_loading">Bild wird geladen…</string>
+    <string name="theme_photo_reset_view">Ansicht zurücksetzen</string>
+    <string name="theme_photo_zoom">Zoom</string>
+</resources>

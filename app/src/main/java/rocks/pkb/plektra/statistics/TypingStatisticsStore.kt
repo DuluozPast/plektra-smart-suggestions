@@ -62,6 +62,12 @@ class TypingStatisticsStore internal constructor(private val preferences: Shared
         private var application: Context? = null
         private var instance: TypingStatisticsStore? = null
 
+        /** Android preserves firstInstallTime across APK updates; app archives cannot overwrite it. */
+        @Suppress("DEPRECATION")
+        fun installationStartedAt(context: Context): Long = try {
+            context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime.coerceAtLeast(0)
+        } catch (_: android.content.pm.PackageManager.NameNotFoundException) { 0L }
+
         @Synchronized
         fun get(context: Context): TypingStatisticsStore {
             val app = context.applicationContext

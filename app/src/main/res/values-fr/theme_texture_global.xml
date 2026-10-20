@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Une matière sur tout le clavier</string>
+    <string name="theme_texture_global_hint">Un seul cadrage pour toutes les surfaces, puis ajustez le texte et les diviseurs.</string>
+</resources>

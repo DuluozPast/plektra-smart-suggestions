@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_keys_optional_physical">Необязательно при использовании физической клавиатуры. Текущие значения сохранятся, если их не менять.</string>
+</resources>

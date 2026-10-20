@@ -97,7 +97,8 @@ class AospKeyboardView @JvmOverloads constructor(
         val keyWidthScale: Float = 1f,
         val rowGapScale: Float = 1f,
         val distributeHorizontalSpacing: Boolean = true,
-        val ortholinear: Boolean = false
+        val ortholinear: Boolean = false,
+        val textures: Map<String, rocks.pkb.plektra.KeyboardThemeTexture> = emptyMap()
     )
 
     enum class SoftwareLayoutStyle {
@@ -532,6 +533,16 @@ class AospKeyboardView @JvmOverloads constructor(
     }
 
     private val shapedKeyPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var foregroundTexture: rocks.pkb.plektra.KeyboardThemeTexture? = null
+    private val texturePainters = mutableMapOf<String, rocks.pkb.plektra.ThemeTexturePainter>()
+    private val textureRect = RectF()
+    private val texturePath = Path()
+
+    private fun drawThemeTexture(canvas: Canvas, theme: ThemeOverride, role: String, rect: RectF, path: Path) {
+        val texture = theme.textures[role] ?: return
+        texturePainters.getOrPut(role) { rocks.pkb.plektra.ThemeTexturePainter(context, owner = { this }) { invalidate() } }
+            .draw(canvas, rect, path, texture)
+    }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.rgb(238, 238, 238)
         textAlign = Paint.Align.CENTER
@@ -590,6 +601,11 @@ class AospKeyboardView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         themeOverride?.let {
             canvas.drawColor(it.background)
+            if (it.textures["background"] != null) {
+                textureRect.set(0f, 0f, width.toFloat(), height.toFloat())
+                texturePath.reset(); texturePath.addRect(textureRect, Path.Direction.CW)
+                drawThemeTexture(canvas, it, "background", textureRect, texturePath)
+            }
         } ?: drawDrawable(canvas, keyboardBackground, RectF(0f, 0f, width.toFloat(), height.toFloat()))
         prepareKeySurfaces()
         keys.forEach { key ->
@@ -610,7 +626,31 @@ class AospKeyboardView @JvmOverloads constructor(
             } else {
                 drawDrawable(canvas, backgroundFor(key), key.visualRect)
             }
+            if (theme != null) {
+                val role = if (isFunctional(key.spec.type)) "special_key" else "normal_key"
+                val indicatorActive = when (key.spec.type) {
+                    KeyType.SHIFT -> shifted || shiftLocked
+                    KeyType.CTRL -> ctrlLocked || ctrlPressed || ctrlOneShot
+                    KeyType.ALT -> altLocked || altPressed || altOneShot
+                    else -> false
+                }
+                if (theme.textures[role] != null && !indicatorActive) {
+                    textureRect.set(key.visualRect); textureRect.inset(dp(1f).toFloat(), dp(1f).toFloat())
+                    texturePath.reset(); texturePath.addRoundRect(textureRect, keyCornerRadius(theme), keyCornerRadius(theme), Path.Direction.CW)
+                    drawThemeTexture(canvas, theme, role, textureRect, surface?.path ?: texturePath)
+                    if (key == pressedKey) {
+                        shapedKeyPaint.style = Paint.Style.FILL; shapedKeyPaint.color = colorWithAlpha(theme.accent, 100)
+                        canvas.drawPath(surface?.path ?: texturePath, shapedKeyPaint)
+                    }
+                }
+            }
             canvas.restoreToCount(save)
+            foregroundTexture = if (when(key.spec.type) {
+                KeyType.SHIFT -> shifted || shiftLocked
+                KeyType.CTRL -> ctrlLocked || ctrlPressed || ctrlOneShot
+                KeyType.ALT -> altLocked || altPressed || altOneShot
+                else -> false
+            }) null else themeOverride?.textures?.get(if (isFunctional(key.spec.type)) "special_key" else "normal_key")
             val previewIcon = previewIconFor(key)
             if (previewIcon != null) {
                 if (ctrlShortcutDisplay == SettingsManager.SoftwareCtrlShortcutDisplay.CORNER_ICONS) {
@@ -649,12 +689,14 @@ class AospKeyboardView @JvmOverloads constructor(
             }
             if (surface == null) {
                 val baseline = center.y - ctrlLabelOffset - (textPaint.fontMetrics.ascent + textPaint.fontMetrics.descent) / 2f
+                rocks.pkb.plektra.ThemeTextureContrast.paint(textPaint, foregroundTexture, resources.displayMetrics.density)
                 canvas.drawText(label, center.x, baseline, textPaint)
             } else {
                 val offset = inkOffsets.getOrPut(listOf(label, textPaint.textSize, textPaint.typeface)) {
                     val ink = android.graphics.Rect().also { textPaint.getTextBounds(label, 0, label.length, it) }
                     android.graphics.PointF(ink.exactCenterX() - textPaint.measureText(label) / 2f, ink.exactCenterY())
                 }
+                rocks.pkb.plektra.ThemeTextureContrast.paint(textPaint, foregroundTexture, resources.displayMetrics.density)
                 canvas.drawText(label, center.x - offset.x, center.y - offset.y - ctrlLabelOffset, textPaint)
             }
             if (ctrlReference) drawCtrlLetterHint(canvas, key)
@@ -668,6 +710,7 @@ class AospKeyboardView @JvmOverloads constructor(
                 hintPaint.color = themeOverride?.textAndIcons?.let { colorWithAlpha(it, 150) }
                     ?: Color.rgb(156, 164, 172)
                 hintPaint.textAlign = Paint.Align.RIGHT
+                rocks.pkb.plektra.ThemeTextureContrast.paint(hintPaint, foregroundTexture, resources.displayMetrics.density)
                 canvas.drawText(SoftwareKeyboardActionLabels.display(longPressHint), key.visualRect.right - dp(9f), key.visualRect.top + dp(12f), hintPaint)
                 hintPaint.textAlign = Paint.Align.CENTER
             }
@@ -689,6 +732,7 @@ class AospKeyboardView @JvmOverloads constructor(
         hintPaint.textAlign = Paint.Align.CENTER
         hintPaint.textSize = sp(11f)
         hintPaint.color = themeOverride?.textAndIcons ?: Color.rgb(238, 238, 238)
+        rocks.pkb.plektra.ThemeTextureContrast.paint(hintPaint, foregroundTexture, resources.displayMetrics.density)
         canvas.drawText(displayLabel(key.spec), key.visualRect.centerX(), key.visualRect.bottom - dp(5f), hintPaint)
     }
 
@@ -697,6 +741,7 @@ class AospKeyboardView @JvmOverloads constructor(
         hintPaint.color = themeOverride?.textAndIcons?.let { colorWithAlpha(it, 150) }
             ?: Color.rgb(156, 164, 172)
         hintPaint.textAlign = Paint.Align.LEFT
+        rocks.pkb.plektra.ThemeTextureContrast.paint(hintPaint, foregroundTexture, resources.displayMetrics.density)
         canvas.drawText(SoftwareKeyboardActionLabels.display(label),
             key.visualRect.left + dp(9f), key.visualRect.bottom - dp(7f), hintPaint)
     }
@@ -711,6 +756,7 @@ class AospKeyboardView @JvmOverloads constructor(
             hintPaint.textSize -= sp(1f)
         }
         val baseline = center.y - (hintPaint.fontMetrics.ascent + hintPaint.fontMetrics.descent) / 2f
+        rocks.pkb.plektra.ThemeTextureContrast.paint(hintPaint, foregroundTexture, resources.displayMetrics.density)
         canvas.drawText(letter, center.x, baseline, hintPaint)
     }
 
@@ -747,7 +793,7 @@ class AospKeyboardView @JvmOverloads constructor(
         val left = (center.x - iconWidth / 2f).toInt()
         val top = (center.y - iconHeight / 2f).toInt()
         icon.setBounds(left, top, (left + iconWidth).toInt(), (top + iconHeight).toInt())
-        icon.draw(canvas)
+        rocks.pkb.plektra.ThemeTextureContrast.icon(canvas, icon, foregroundTexture, color, resources.displayMetrics.density)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -1886,10 +1932,12 @@ class AospKeyboardView @JvmOverloads constructor(
         } else {
             drawDrawable(canvas, if (popup.hasMoreKeys) previewMoreBackground else previewBackground, rect)
         }
+        foregroundTexture = theme?.textures?.get("key_popup")
         textPaint.textSize = sp(30f)
         textPaint.typeface = Typeface.DEFAULT
         textPaint.color = themeOverride?.textAndIcons ?: Color.rgb(238, 238, 238)
         val baselineOffset = -(textPaint.ascent() + textPaint.descent()) / 2f
+        rocks.pkb.plektra.ThemeTextureContrast.paint(textPaint, foregroundTexture, resources.displayMetrics.density)
         canvas.drawText(popup.label, rect.centerX(), rect.centerY() + baselineOffset, textPaint)
     }
 
@@ -1919,12 +1967,14 @@ class AospKeyboardView @JvmOverloads constructor(
                         drawDrawable(canvas, normalKeyBackground, rect)
                     }
                 }
+                foregroundTexture = theme?.textures?.get(if (index == panel.selectedIndex) "key_popup_selected" else "key_popup")
                 textPaint.textSize = minOf(sp(24f), rect.height() * .5f)
                 textPaint.typeface = Typeface.DEFAULT
                 textPaint.color = theme?.let {
                     if (index == panel.selectedIndex) readableTextColor(it.keyPopupSelected) else it.textAndIcons
                 } ?: if (index == panel.selectedIndex) Color.BLACK else Color.rgb(238, 238, 238)
                 val baselineOffset = -(textPaint.ascent() + textPaint.descent()) / 2f
+                rocks.pkb.plektra.ThemeTextureContrast.paint(textPaint, foregroundTexture, resources.displayMetrics.density)
                 canvas.drawText(choice.label, rect.centerX(), rect.centerY() + baselineOffset, textPaint)
             }
         }
@@ -1952,12 +2002,14 @@ class AospKeyboardView @JvmOverloads constructor(
                     drawDrawable(canvas, normalKeyBackground, rect)
                 }
             }
+            foregroundTexture = theme?.textures?.get(if (index == panel.selectedLayerIndex) "key_popup_selected" else "key_popup")
             textPaint.textSize = previewTextSize(choice.label, rect)
             textPaint.typeface = Typeface.DEFAULT
             textPaint.color = theme?.let {
                 if (index == panel.selectedLayerIndex) readableTextColor(it.keyPopupSelected) else it.textAndIcons
             } ?: if (index == panel.selectedLayerIndex) Color.BLACK else Color.rgb(238, 238, 238)
             val baselineOffset = -(textPaint.ascent() + textPaint.descent()) / 2f
+            rocks.pkb.plektra.ThemeTextureContrast.paint(textPaint, foregroundTexture, resources.displayMetrics.density)
             canvas.drawText(choice.label, rect.centerX(), rect.centerY() + baselineOffset, textPaint)
         }
     }
@@ -2074,6 +2126,7 @@ class AospKeyboardView @JvmOverloads constructor(
             style = Paint.Style.FILL
         }
         canvas.drawPath(path, fillPaint)
+        drawThemeTexture(canvas, theme, if (selected) "key_popup_selected" else "key_popup", rect, path)
         val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = theme.divider
             style = Paint.Style.STROKE

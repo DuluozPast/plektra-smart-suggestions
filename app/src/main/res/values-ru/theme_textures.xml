@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Фото: цвет или текстура</string>
+    <string name="theme_texture_color">Сплошной цвет</string>
+    <string name="theme_texture_matter">Сохранить текстуру</string>
+    <string name="theme_texture_help">Перемещайте и увеличивайте фото под рамкой. Потяните за угол, чтобы изменить выбранную область.</string>
+    <string name="theme_texture_sample">Использовать эту область</string>
+    <string name="theme_texture_preview">Предпросмотр текстуры</string>
+    <string name="theme_texture_cover">Заполнить</string>
+    <string name="theme_texture_fit">Вписать</string>
+    <string name="theme_texture_tile">Повторять</string>
+    <string name="theme_texture_hardware">Физическая клавиатура</string>
+    <string name="theme_texture_software">Экранная клавиатура</string>
+    <string name="theme_texture_enlargement">Эта область увеличена в %1$.1f раза. Выберите область побольше, чтобы сохранить больше деталей.</string>
+    <string name="theme_texture_apply">Применить текстуру</string>
+    <string name="theme_texture_remove">Вернуть сплошной цвет</string>
+    <string name="theme_texture_applied">Текстура из фото</string>
+    <string name="theme_texture_resize">Изменить размер области</string>
+</resources>

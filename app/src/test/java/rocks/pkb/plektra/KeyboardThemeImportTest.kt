@@ -26,6 +26,27 @@ class KeyboardThemeImportTest {
     }
 
     @Test
+    fun draftDoesNotRequireTheLedVisibilitySettingWhichHasNoDraftEditorControl() {
+        assertFalse(DRAFT_SHOW_LEDS in keyboardThemeDraftMissingFields(emptySet(), true))
+        assertFalse(DRAFT_SHOW_LEDS in keyboardThemeDraftMissingFields(emptySet(), false))
+        val photoDraftFields = setOf(DRAFT_BACKGROUND, DRAFT_NORMAL_KEY, DRAFT_SPECIAL_KEY,
+            DRAFT_SUGGESTION, DRAFT_STATUS_BUTTON, DRAFT_KEY_POPUP, DRAFT_KEY_POPUP_SELECTED,
+            DRAFT_TEXT_ICONS, DRAFT_CURSOR_SWIPE, DRAFT_LED_ACTIVE, DRAFT_LED_LOCKED,
+            DRAFT_LED_INACTIVE, DRAFT_ACCENT, DRAFT_DIVIDER)
+        assertTrue(keyboardThemeDraftMissingFields(photoDraftFields, physicalKeyboard = true).isEmpty())
+    }
+
+    @Test
+    fun physicalKeyboardDraftCanKeepVirtualKeyDefaultsWithoutFillingTheKeysTab() {
+        val populated = KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS - KEYBOARD_THEME_VIRTUAL_KEY_FIELDS
+        assertTrue(keyboardThemeDraftMissingFields(populated, physicalKeyboard = true).isEmpty())
+        assertEquals(KEYBOARD_THEME_VIRTUAL_KEY_FIELDS,
+            keyboardThemeDraftMissingFields(populated, physicalKeyboard = false))
+        assertEquals(setOf(DRAFT_TEXT_ICONS),
+            keyboardThemeDraftMissingFields(populated - DRAFT_TEXT_ICONS, physicalKeyboard = true))
+    }
+
+    @Test
     fun exportedTheme_roundTripsThroughStrictImport() {
         val theme = distinctTheme(0xFF102030.toInt())
 

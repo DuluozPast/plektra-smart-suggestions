@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Ảnh: màu hoặc họa tiết</string>
+    <string name="theme_texture_color">Màu đơn</string>
+    <string name="theme_texture_matter">Giữ họa tiết</string>
+    <string name="theme_texture_help">Di chuyển và phóng to ảnh bên dưới khung. Kéo góc để điều chỉnh vùng lấy mẫu.</string>
+    <string name="theme_texture_sample">Dùng vùng này</string>
+    <string name="theme_texture_preview">Xem trước họa tiết</string>
+    <string name="theme_texture_cover">Lấp đầy</string>
+    <string name="theme_texture_fit">Vừa khung</string>
+    <string name="theme_texture_tile">Lặp lại</string>
+    <string name="theme_texture_hardware">Bàn phím vật lý</string>
+    <string name="theme_texture_software">Bàn phím trên màn hình</string>
+    <string name="theme_texture_enlargement">Vùng này được phóng to ×%1$.1f. Chọn vùng lớn hơn để giữ nhiều chi tiết hơn.</string>
+    <string name="theme_texture_apply">Áp dụng họa tiết</string>
+    <string name="theme_texture_remove">Trở về màu đơn</string>
+    <string name="theme_texture_applied">Họa tiết từ ảnh</string>
+    <string name="theme_texture_resize">Đổi kích thước vùng lấy mẫu</string>
+</resources>

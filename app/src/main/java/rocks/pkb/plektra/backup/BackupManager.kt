@@ -74,8 +74,9 @@ object BackupManager {
             val learningComponents = LearningBackupHelper.export(
                 context, File(workingDir, "learning")
             )
+            val themeImageComponents = ThemeImageBackup.snapshot(context, File(workingDir, ThemeImageBackup.DIRECTORY))
             val components = (
-                    prefComponents +
+                    themeImageComponents + prefComponents +
                             fileComponents +
                             correctionComponents +
                             learningComponents
@@ -163,6 +164,7 @@ object PreferencesBackupHelper {
         json.put("name", prefName)
         val entries = JSONObject()
         prefs.all.forEach { (key, value) ->
+            if ("$prefName:$key" in BackupPreferencePolicy.localOnlyKeys) return@forEach
             val requiresTypingSoundPack = prefName == "plektra_prefs" && (
                 key in typingSoundPackPreferenceKeys ||
                     key == SettingsManager.KEY_TYPING_SOUND_MODE &&
@@ -278,7 +280,7 @@ object PreferencesBackupHelper {
 
             entries.forEach { (key, value) ->
                 val qualifiedKey = "$prefName:$key"
-                if (excludedKeys.contains(qualifiedKey)) {
+                if (excludedKeys.contains(qualifiedKey) || qualifiedKey in BackupPreferencePolicy.localOnlyKeys) {
                     skipped.add(qualifiedKey)
                     return@forEach
                 }
@@ -529,7 +531,7 @@ object FileBackupHelper {
     }
 
     internal fun managedRestoreRoots(): Set<String> =
-        allowedFiles + allowedDirectories + SettingsManager.TYPING_SOUND_CUSTOM_DIR
+        allowedFiles + allowedDirectories + SettingsManager.TYPING_SOUND_CUSTOM_DIR + ThemeImageBackup.DIRECTORY
 
     fun snapshotInternalFiles(
         context: Context,

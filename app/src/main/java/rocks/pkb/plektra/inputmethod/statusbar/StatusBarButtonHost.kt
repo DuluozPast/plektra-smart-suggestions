@@ -239,13 +239,16 @@ class StatusBarButtonHost(
             }
         }
         val theme = themeOverride ?: return
-        (view.getTag(rocks.pkb.plektra.R.id.tag_badge_view) as? TextView)?.setTextColor(theme.iconColor)
+        val contrastTexture = if (recordingColors.containsKey(view) || ((state ?: buttonStates[view]) as? ButtonState.MinimalUiState)?.isActive == true) null else theme.texture
+        val foreground = rocks.pkb.plektra.ThemeTextureContrast.color(theme.iconColor, contrastTexture)
+        (view.getTag(rocks.pkb.plektra.R.id.tag_badge_view) as? TextView)?.let { rocks.pkb.plektra.ThemeTextureContrast.text(it, theme.iconColor, contrastTexture) }
         val height = view.layoutParams?.height?.takeIf { it > 0 }
             ?: view.height.takeIf { it > 0 }
             ?: fallbackHeight?.takeIf { it > 0 }
         if (height != null) {
             val active = state is ButtonState.MinimalUiState && state.isActive
             val normalColor = recordingColors[view] ?: if (active) theme.pressedColor else theme.normalColor
+            val surfaceTexture = if (active || recordingColors.containsKey(view)) null else theme.texture
             val background = StatusBarButtonStyles.createButtonDrawable(
                 heightPx = height,
                 normalColor = normalColor,
@@ -256,7 +259,7 @@ class StatusBarButtonHost(
             )
             KeyboardBarRowGeometry.setStyle(view, KeyboardBarRowGeometry.Style(
                 normalColor, theme.pressedColor, height * theme.cornerRadiusRatio,
-                theme.borderColor, theme.borderWidthPx, background),
+                theme.borderColor, theme.borderWidthPx, background, surfaceTexture),
                 fallbackLeft = outerEdges[view] == StatusBarButtonPosition.LEFT,
                 fallbackRight = outerEdges[view] == StatusBarButtonPosition.RIGHT)
         }
@@ -267,9 +270,15 @@ class StatusBarButtonHost(
                 if (effectiveState is ButtonState.ModifierState && modifierIcons != null) {
                     view.clearColorFilter()
                     modifierIcons.setIndicatorColors(theme.activeIndicatorColor, theme.lockedIndicatorColor)
-                } else view.setColorFilter(theme.iconColor)
+                } else {
+                    val source = (view.drawable as? rocks.pkb.plektra.ThemeContrastIcon)?.source ?: view.drawable
+                    view.clearColorFilter()
+                    if (source != null && contrastTexture?.foreground != null) {
+                        view.setImageDrawable(rocks.pkb.plektra.ThemeContrastIcon(source, contrastTexture, foreground, context.resources.displayMetrics.density))
+                    } else { view.setImageDrawable(source); view.setColorFilter(foreground) }
+                }
             }
-            is TextView -> view.setTextColor(theme.iconColor)
+            is TextView -> rocks.pkb.plektra.ThemeTextureContrast.text(view, theme.iconColor, contrastTexture)
         }
     }
 

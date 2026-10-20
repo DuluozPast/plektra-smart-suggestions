@@ -22,6 +22,7 @@ class PlektraApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        KeyboardFailureReport.install(this)
         if (!DirectBootKeyboardConfig.isUserUnlocked(this)) {
             val receiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {

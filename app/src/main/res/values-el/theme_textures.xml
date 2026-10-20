@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Φωτογραφία: χρώμα ή υφή</string>
+    <string name="theme_texture_color">Ενιαίο χρώμα</string>
+    <string name="theme_texture_matter">Διατήρηση υφής</string>
+    <string name="theme_texture_help">Μετακινήστε και μεγεθύνετε τη φωτογραφία κάτω από το πλαίσιο. Σύρετε τη γωνία για να αλλάξετε την επιλεγμένη περιοχή.</string>
+    <string name="theme_texture_sample">Χρήση αυτής της περιοχής</string>
+    <string name="theme_texture_preview">Προεπισκόπηση υφής</string>
+    <string name="theme_texture_cover">Γέμισμα</string>
+    <string name="theme_texture_fit">Προσαρμογή</string>
+    <string name="theme_texture_tile">Επανάληψη</string>
+    <string name="theme_texture_hardware">Φυσικό πληκτρολόγιο</string>
+    <string name="theme_texture_software">Πληκτρολόγιο οθόνης</string>
+    <string name="theme_texture_enlargement">Αυτή η περιοχή μεγεθύνεται ×%1$.1f. Επιλέξτε μεγαλύτερη περιοχή για περισσότερες λεπτομέρειες.</string>
+    <string name="theme_texture_apply">Εφαρμογή υφής</string>
+    <string name="theme_texture_remove">Επιστροφή σε ενιαίο χρώμα</string>
+    <string name="theme_texture_applied">Υφή φωτογραφίας</string>
+    <string name="theme_texture_resize">Αλλαγή μεγέθους περιοχής</string>
+</resources>

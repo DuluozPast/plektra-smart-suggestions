@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Фото: колір або текстура</string>
+    <string name="theme_texture_color">Суцільний колір</string>
+    <string name="theme_texture_matter">Зберегти текстуру</string>
+    <string name="theme_texture_help">Переміщуйте й збільшуйте фото під рамкою. Потягніть за кут, щоб змінити вибрану область.</string>
+    <string name="theme_texture_sample">Використати цю область</string>
+    <string name="theme_texture_preview">Перегляд текстури</string>
+    <string name="theme_texture_cover">Заповнити</string>
+    <string name="theme_texture_fit">Вмістити</string>
+    <string name="theme_texture_tile">Повторювати</string>
+    <string name="theme_texture_hardware">Фізична клавіатура</string>
+    <string name="theme_texture_software">Екранна клавіатура</string>
+    <string name="theme_texture_enlargement">Цю область збільшено в %1$.1f раза. Виберіть більшу область, щоб зберегти більше деталей.</string>
+    <string name="theme_texture_apply">Застосувати текстуру</string>
+    <string name="theme_texture_remove">Повернути суцільний колір</string>
+    <string name="theme_texture_applied">Текстура з фото</string>
+    <string name="theme_texture_resize">Змінити розмір області</string>
+</resources>

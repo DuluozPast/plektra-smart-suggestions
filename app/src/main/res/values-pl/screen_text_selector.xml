@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Wybór tekstu</string>
+    <string name="screen_text_instructions">Zaznacz fragment klawiszami Nav i skopiuj go. Lokalna kopia jest tylko do odczytu.</string>
+    <string name="screen_text_enable_service">Włącz Nav poza polami tekstowymi w ustawieniach ułatwień dostępu Androida.</string>
+    <string name="screen_text_unavailable">Na tym ekranie nie znaleziono dostępnego tekstu.</string>
+    <string name="nav_mode_action_select_screen_text">Zaznacz tekst z ekranu</string>
+    <string name="screen_text_settings_description">Jeśli zwykłe zaznaczanie nie działa, przypisz Zaznacz tekst z ekranu do klawisza Nav. Tekst jest odczytywany tylko na żądanie i nie jest zapisywany.</string>
+</resources>

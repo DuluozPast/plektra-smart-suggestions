@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Mode Nav hors des champs de saisie</string>
+    <string name="screen_nav_description">Sélectionnez d’abord un mot dans l’application, puis verrouillez Ctrl/Fn par double appui et utilisez vos touches Nav habituelles. Activez ce relais optionnel dans Accessibilité Android. La compatibilité dépend de l’application.</string>
+    <string name="screen_nav_service_description">Transmet les commandes Nav quand aucun champ de saisie n’est actif. Vos affectations de touches sont conservées.</string>
+    <string name="screen_nav_open_settings">Ouvrir les réglages d’accessibilité</string>
+    <string name="screen_nav_enabled">Relais activé</string>
+    <string name="screen_nav_disabled">Relais désactivé</string>
+</resources>

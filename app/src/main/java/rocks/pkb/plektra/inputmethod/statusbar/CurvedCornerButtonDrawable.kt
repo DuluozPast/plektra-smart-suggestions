@@ -21,10 +21,16 @@ internal class CurvedCornerButtonDrawable(
     private var borderColor: Int?,
     private val borderWidth: Int,
     val leftEdge: Boolean,
-    val rightEdge: Boolean = !leftEdge
+    val rightEdge: Boolean = !leftEdge,
+    private var texture: rocks.pkb.plektra.KeyboardThemeTexture? = null
 ) : Drawable() {
     private var drawableAlpha = 255
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val texturePainter = rocks.pkb.plektra.ThemeTexturePainter(view.context, owner = { view }) { invalidateSelf() }
+    private val textureBounds = RectF()
+    fun updateTexture(value: rocks.pkb.plektra.KeyboardThemeTexture?) {
+        if (texture != value) { texture = value; invalidateSelf() }
+    }
     private val standaloneGeometry = KeyboardBarGeometry(view.context)
     private var geometry = standaloneGeometry
     private var surface: KeyboardBarGeometry.PreparedSurface? = null
@@ -106,6 +112,14 @@ internal class CurvedCornerButtonDrawable(
         paint.color = if (state.contains(android.R.attr.state_pressed)) pressedColor else normalColor
         paint.alpha = android.graphics.Color.alpha(paint.color) * drawableAlpha / 255
         canvas.drawPath(buttonPath, paint)
+        if (texture != null) {
+            textureBounds.set(bounds)
+            texturePainter.draw(canvas, textureBounds, buttonPath, texture, drawableAlpha)
+            if (state.contains(android.R.attr.state_pressed)) {
+                paint.color = pressedColor; paint.alpha = 100 * drawableAlpha / 255
+                canvas.drawPath(buttonPath, paint)
+            }
+        }
         if (borderColor != null && borderWidth > 0) {
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = borderWidth.toFloat()

@@ -25,6 +25,7 @@ import kotlin.math.pow
 interface DictionaryRepository {
     val isReady: Boolean
     val isLoadStarted: Boolean
+    fun releaseResources() {}
     suspend fun loadIfNeeded()
     suspend fun refreshUserEntries()
     fun addUserEntryQuick(word: String)
@@ -115,7 +116,7 @@ class AndroidDictionaryRepository(
     private val prefixCache: MutableMap<String, MutableList<DictionaryEntry>> = mutableMapOf()
     private val normalizedIndex: MutableMap<String, MutableList<DictionaryEntry>> = mutableMapOf()
     @Volatile
-    private var compactV31Reader: CompactDictionaryV31Reader? = null
+    private var compactV31Reader: StaticDictionaryReader? = null
     @Volatile private var symSpell: SymSpell? = null
     @Volatile private var symSpellBuilt: Boolean = false
     @Volatile private var topCommonEntriesCache: List<DictionaryEntry>? = null
@@ -123,6 +124,8 @@ class AndroidDictionaryRepository(
     @Volatile override var isReady: Boolean = false
         internal set
     @Volatile private var loadStarted: Boolean = false
+    @Volatile private var loadBlocked: Boolean = false
+    @Volatile private var retired: Boolean = false
     
     override val isLoadStarted: Boolean
         get() = loadStarted
@@ -132,148 +135,190 @@ class AndroidDictionaryRepository(
     private val scaledFrequencyMax = 1600.0
 
     override suspend fun loadIfNeeded() {
-        if (isReady) return
+        if (isReady || loadBlocked || retired) return
         // Must not run on main thread
         if (Looper.myLooper() == Looper.getMainLooper()) return
         coroutineContext.ensureActive()
         loadMutex.withLock {
-            if (isReady) return
+            if (isReady || loadBlocked || retired) return
             synchronized(this) {
                 if (isReady || loadStarted) return
                 loadStarted = true
             }
             try {
-                val startTime = System.currentTimeMillis()
+                // An Extended dictionary may fit on its own but exceed the heap when
+                // several languages are active. Release partial indexes before trying
+                // the bundled dictionary; never change the user's saved selection.
+                val loaded = loadDictionaryWithMemoryFallback(
+                    selected = { loadContents(bundledOnly = false) },
+                    clear = { clearAfterMemoryFailure() },
+                    bundled = { loadContents(bundledOnly = true) },
+                    onFallback = { recovered ->
+                        Log.w(tag, "Dictionary memory limit for ${baseLocale.language}; bundled fallback=$recovered")
+                        android.os.Handler(Looper.getMainLooper()).post {
+                            android.widget.Toast.makeText(context,
+                                context.getString(if (recovered) rocks.pkb.plektra.R.string.dictionary_memory_fallback
+                                    else rocks.pkb.plektra.R.string.dictionary_memory_unavailable,
+                                    baseLocale.getDisplayLanguage(Locale.getDefault())),
+                                android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+                loadBlocked = !loaded
+            } catch (cancelled: CancellationException) {
+                clearAfterMemoryFailure()
+                throw cancelled
+            } finally {
+                synchronized(this) { loadStarted = false }
+            }
+        }
+    }
 
-                // Move legacy local dictionaries into the custom folder to isolate imports.
-                migrateLegacyLocalDictionaries()
+    @Synchronized override fun releaseResources() {
+        // An obsolete repository can never publish a late load after cancellation.
+        retired = true
+        isReady = false
+        compactV31Reader?.close()
+        compactV31Reader = null
+    }
 
-                // Determine paths for custom and bundled dictionaries
-                val customDir = File(context.filesDir, "dictionaries_serialized/custom").apply { mkdirs() }
+    private fun clearAfterMemoryFailure() {
+        prefixCache.clear()
+        normalizedIndex.clear()
+        topCommonEntriesCache = null
+        topCommonEntriesWithoutUserCache = null
+        symSpell = null
+        symSpellBuilt = false
+        compactV31Reader?.close()
+        compactV31Reader = null
+        isReady = false
+    }
 
-                val activeDictionaryPrefs =
-                    context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
+    private suspend fun loadContents(bundledOnly: Boolean) {
+        val startTime = System.currentTimeMillis()
 
-                val activeFilename = activeDictionaryPrefs.getString(
-                    baseLocale.language,
-                    "${baseLocale.language}_base.dict"
-                ) ?: "${baseLocale.language}_base.dict"
+        // Move legacy local dictionaries into the custom folder to isolate imports.
+        migrateLegacyLocalDictionaries()
 
-                val compactV31Filename =
-                    activeFilename.removeSuffix(".dict") + "_v31.dict"
+        // Determine paths for custom and bundled dictionaries
+        val customDir = File(context.filesDir, "dictionaries_serialized/custom").apply { mkdirs() }
 
-                val compactV31File =
-                    File(customDir, compactV31Filename)
+        val activeDictionaryPrefs =
+            context.getSharedPreferences("active_dictionaries", Context.MODE_PRIVATE)
 
-                if (compactV31File.exists() && compactV31Reader == null) {
-                    compactV31Reader =
-                        CompactDictionaryV31Reader(compactV31File)
+        val activeFilename = activeDictionaryPrefs.getString(
+            baseLocale.language,
+            "${baseLocale.language}_base.dict"
+        ) ?: "${baseLocale.language}_base.dict"
 
-                    Log.i(
-                        tag,
-                        "V3.1 reader ready for locale=${baseLocale.language} " +
-                                "dictionary=$activeFilename " +
-                                "words=${compactV31Reader?.wordCount} " +
-                                "normalized=${compactV31Reader?.normalizedCount} " +
-                                "prefixes=${compactV31Reader?.prefixCount}"
-                    )
-                }
+        val compactV31Filename =
+            activeFilename.removeSuffix(".dict") + "_v31.dict"
 
-                /*
+        val compactV31File =
+            File(customDir, compactV31Filename)
+
+        if (!bundledOnly && compactV31File.exists() && compactV31Reader == null) {
+            compactV31Reader =
+                CompactDictionaryV31Reader(compactV31File)
+
+            Log.i(
+                tag,
+                "V3.1 reader ready for locale=${baseLocale.language} " +
+                        "dictionary=$activeFilename " +
+                        "words=${compactV31Reader?.wordCount} " +
+                        "normalized=${compactV31Reader?.normalizedCount} " +
+                        "prefixes=${compactV31Reader?.prefixCount}"
+            )
+        }
+
+        /*
  * Legacy V1 dictionary is only required when no V3.1
  * memory-mapped dictionary exists.
  */
-                if (compactV31Reader == null) {
-                    val customFile =
-                        File(customDir, activeFilename)
+        if (compactV31Reader == null) {
+            val customFile =
+                File(customDir, activeFilename)
 
-                    coroutineContext.ensureActive()
+            coroutineContext.ensureActive()
 
-                    val serializedPath =
-                        "common/dictionaries_serialized/${baseLocale.language}_base.dict"
+            val serializedPath =
+                "common/dictionaries_serialized/${baseLocale.language}_base.dict"
 
-                    val loadedSerialized =
-                        when {
-                            customFile.exists() -> {
-                                Log.i(
-                                    tag,
-                                    "Loading CUSTOM dictionary from ${customFile.absolutePath}"
-                                )
+            val loadedSerialized =
+                when {
+                    !bundledOnly && customFile.exists() -> {
+                        Log.i(
+                            tag,
+                            "Loading CUSTOM dictionary from ${customFile.absolutePath}"
+                        )
 
-                                loadSerializedFromFile(customFile)
-                            }
-
-                            else -> {
-                                Log.i(
-                                    tag,
-                                    "Loading BUNDLED dictionary from assets: $serializedPath"
-                                )
-
-                                loadSerializedFromAssets(serializedPath)
-                            }
-                        }
-
-                    if (!loadedSerialized) {
-                        Log.i(tag, "No usable base dictionary for ${baseLocale.language}; loading user words only")
-                        prefixCache.clear(); normalizedIndex.clear()
-                        symSpell = null; symSpellBuilt = false
-                        topCommonEntriesCache = null; topCommonEntriesWithoutUserCache = null
+                        loadSerializedFromFile(customFile)
                     }
 
-                    val loadTime =
-                        System.currentTimeMillis() - startTime
+                    else -> {
+                        Log.i(
+                            tag,
+                            "Loading BUNDLED dictionary from assets: $serializedPath"
+                        )
 
-                    Log.i(
-                        tag,
-                        "Loaded legacy dictionary (.dict) in ${loadTime}ms - " +
-                                "normalizedIndex=${normalizedIndex.size} " +
-                                "prefixCache=${prefixCache.size}"
-                    )
-                } else {
-                    Log.i(
-                        tag,
-                        "V3.1 active: skipping legacy CBOR dictionary load " +
-                                "for locale=${baseLocale.language}"
-                    )
-                }
-                coroutineContext.ensureActive()
-                // Optional default user entries (editable copy stored in app files dir, fallback to asset)
-                val defaultUserEntries = loadUserDefaults()
-                if (defaultUserEntries.isNotEmpty()) {
-                    index(defaultUserEntries, keepExisting = true)
+                        loadSerializedFromAssets(serializedPath)
+                    }
                 }
 
-                // Always add user entries
-                val userEntries = userDictionaryStore.loadUserEntries(context)
-                if (userEntries.isNotEmpty()) {
-                    index(userEntries, keepExisting = true)
-                }
-
-                coroutineContext.ensureActive()
-
-                if (compactV31Reader == null) {
-                    buildSymSpell()
-                }
-
-                isReady = true
-
-            } catch (ce: CancellationException) {
-                synchronized(this) { loadStarted = false }
-                throw ce
-            } catch (oom: OutOfMemoryError) {
-                Log.e(tag, "OutOfMemory while loading dictionary; clearing and falling back", oom)
-                synchronized(this) { loadStarted = false }
-                prefixCache.clear()
-                normalizedIndex.clear()
-                topCommonEntriesCache = null
-                topCommonEntriesWithoutUserCache = null
-                symSpell = null
-                symSpellBuilt = false
-                isReady = false
-                // Rethrow to let caller handle failure
-                throw oom
+            if (!loadedSerialized) {
+                Log.i(tag, "No usable base dictionary for ${baseLocale.language}; loading user words only")
+                prefixCache.clear(); normalizedIndex.clear()
+                symSpell = null; symSpellBuilt = false
+                topCommonEntriesCache = null; topCommonEntriesWithoutUserCache = null
             }
+
+            val loadTime =
+                System.currentTimeMillis() - startTime
+
+            Log.i(
+                tag,
+                "Loaded legacy dictionary (.dict) in ${loadTime}ms - " +
+                        "normalizedIndex=${normalizedIndex.size} " +
+                        "prefixCache=${prefixCache.size}"
+            )
+        } else {
+            Log.i(
+                tag,
+                "V3.1 active: skipping legacy CBOR dictionary load " +
+                        "for locale=${baseLocale.language}"
+            )
         }
+        coroutineContext.ensureActive()
+        // Optional default user entries (editable copy stored in app files dir, fallback to asset)
+        val defaultUserEntries = loadUserDefaults()
+        if (defaultUserEntries.isNotEmpty()) {
+            index(defaultUserEntries, keepExisting = true)
+        }
+
+        // Always add user entries
+        val userEntries = userDictionaryStore.loadUserEntries(context)
+        if (userEntries.isNotEmpty()) {
+            index(userEntries, keepExisting = true)
+        }
+
+        coroutineContext.ensureActive()
+
+        if (compactV31Reader == null) {
+            buildSymSpell()
+        }
+
+        // Publish readiness only after warmup and the memory check. A query must
+        // not race a failed warmup that clears partially loaded indexes.
+        computeTopCommonEntries(limit = 48, includeUserEntries = false)
+        computeTopCommonEntries(limit = 48, includeUserEntries = true)
+        val runtime = Runtime.getRuntime()
+        val headroom = runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory())
+        if (!hasTypingMemoryReserve(runtime.maxMemory(), headroom)) {
+            throw OutOfMemoryError("Dictionary leaves insufficient typing headroom")
+        }
+        coroutineContext.ensureActive()
+        if (retired) { clearAfterMemoryFailure(); return }
+        isReady = true
     }
 
     override fun ensureLoadScheduled(background: () -> Unit) {
@@ -497,6 +542,7 @@ class AndroidDictionaryRepository(
          * from each bucket is sufficient to recover the globally common words
          * while keeping this path very small.
          */
+        reader.commonEntries(limit)?.let { entries -> return entries.map { it.toDictionaryEntry() } }
         val candidateLimitPerPrefix = maxOf(limit, 8)
 
         val candidates = ArrayList<DictionaryEntry>(
@@ -552,82 +598,46 @@ class AndroidDictionaryRepository(
             return cached.take(limit)
         }
 
-        val candidates =
-            mutableListOf<DictionaryEntry>()
+        return computeTopCommonEntries(limit, includeUserEntries)
+    }
 
-        /*
-         * Dynamic USER entries remain in normalizedIndex.
-         */
-        if (includeUserEntries) {
-            normalizedIndex.values
-                .asSequence()
-                .flatten()
-                .filter {
-                    it.source == SuggestionSource.USER
-                }
-                .forEach {
-                    candidates.add(it)
-                }
+    private fun computeTopCommonEntries(limit: Int, includeUserEntries: Boolean): List<DictionaryEntry> {
+        // Keep only the 48 best starters while scanning. Sorting a full Extended
+        // dictionary here duplicates a large portion of its index during preload.
+        val candidates = sequence {
+            if (includeUserEntries) {
+                yieldAll(normalizedIndex.values.asSequence().flatten()
+                    .filter { it.source == SuggestionSource.USER })
+            }
+            if (compactV31Reader != null) {
+                yieldAll(topCommonEntriesV31(48))
+            } else {
+                yieldAll(normalizedIndex.values.asSequence().mapNotNull { entries ->
+                    entries.asSequence().filter { it.source == SuggestionSource.MAIN }
+                        .maxByOrNull { effectiveFrequency(it) }
+                })
+            }
         }
-
-        /*
-         * MAIN dictionary.
-         */
-        if (compactV31Reader != null) {
-            candidates.addAll(
-                topCommonEntriesV31(48)
-            )
-        } else {
-            normalizedIndex.values
-                .asSequence()
-                .mapNotNull { entries ->
-                    entries
-                        .filter {
-                            it.source == SuggestionSource.MAIN
-                        }
-                        .maxByOrNull {
-                            effectiveFrequency(it)
-                        }
+        val ranking = compareByDescending<DictionaryEntry> { it.source == SuggestionSource.USER }
+            .thenByDescending { effectiveFrequency(it) }.thenBy { it.word.length }
+        val computed = mutableListOf<DictionaryEntry>()
+        candidates.filter {
+            it.word.length > 1 && it.source != SuggestionSource.DEFAULT_USER &&
+                (includeUserEntries || it.source != SuggestionSource.USER) &&
+                it.word.any { char -> char.isLetter() } &&
+                it.word.none { char -> !char.isLetter() && char != '\'' }
+        }.forEach { entry ->
+            val normalized = entry.word.lowercase(baseLocale)
+            if (computed.none { it.word.lowercase(baseLocale) == normalized }) {
+                val position = computed.indexOfFirst { ranking.compare(entry, it) < 0 }
+                if (position >= 0) {
+                    computed.add(position, entry)
+                    if (computed.size > 48) computed.removeAt(48)
+                } else if (computed.size < 48) {
+                    computed.add(entry)
                 }
-                .forEach {
-                    candidates.add(it)
-                }
+            }
         }
-
-        val computed =
-            candidates
-                .asSequence()
-                .filter {
-                    it.word.length > 1 &&
-                            it.source != SuggestionSource.DEFAULT_USER &&
-                            (
-                                    includeUserEntries ||
-                                            it.source != SuggestionSource.USER
-                                    ) &&
-                            it.word.any { char ->
-                                char.isLetter()
-                            } &&
-                            it.word.none { char ->
-                                !char.isLetter() &&
-                                        char != '\''
-                            }
-                }
-                .distinctBy {
-                    it.word.lowercase(baseLocale)
-                }
-                .sortedWith(
-                    compareByDescending<DictionaryEntry> {
-                        it.source == SuggestionSource.USER
-                    }
-                        .thenByDescending {
-                            effectiveFrequency(it)
-                        }
-                        .thenBy {
-                            it.word.length
-                        }
-                )
-                .take(48)
-                .toList()
 
         if (includeUserEntries) {
             topCommonEntriesCache = computed
@@ -710,7 +720,7 @@ class AndroidDictionaryRepository(
         return DictionaryEntry(
             word = word,
             frequency = frequency,
-            source = SuggestionSource.MAIN
+            source = SuggestionSource.values()[source]
         )
     }
 
@@ -732,7 +742,7 @@ class AndroidDictionaryRepository(
         for (length in maxPrefixLength downTo 1) {
             SuggestionWorkCancellation.check()
             val entries =
-                reader.prefixEntries(normalizedPrefix.take(length))
+                reader.prefixEntries(normalizedPrefix.take(length), maxSize)
 
             for (compactEntry in entries) {
             SuggestionWorkCancellation.check()
@@ -816,12 +826,14 @@ class AndroidDictionaryRepository(
             val bucket =
                 prefixCache[normalizedPrefix.take(length)] ?: continue
 
+            var dynamicCount = 0
             for (entry in bucket) {
             SuggestionWorkCancellation.check()
                 if (entry.source == SuggestionSource.MAIN) {
                     continue
                 }
 
+                if (dynamicCount++ >= maxSize) break
                 val key =
                     entry.word.lowercase(baseLocale)
 
@@ -857,7 +869,7 @@ class AndroidDictionaryRepository(
                 val bucket =
                     prefixCache[normalizedPrefix.take(length)] ?: continue
 
-                for (entry in bucket) {
+                for (entry in bucket.take(maxSize)) {
             SuggestionWorkCancellation.check()
                     val key =
                         entry.word.lowercase(baseLocale)
@@ -941,19 +953,21 @@ class AndroidDictionaryRepository(
         val candidates =
             LinkedHashMap<String, CompactDictionaryV31Reader.WordEntry>()
 
-        fun addEntries(
-            entries: List<CompactDictionaryV31Reader.WordEntry>
-        ) {
-            for (entry in entries) {
+        val candidateLimit = maxSuggestions.coerceAtLeast(1)
+        fun addEntry(entry: CompactDictionaryV31Reader.WordEntry) {
             SuggestionWorkCancellation.check()
-                val current = candidates[entry.normalized]
-
-                if (
-                    current == null ||
-                    entry.frequency > current.frequency
-                ) {
-                    candidates[entry.normalized] = entry
-                }
+            val distance = editDistanceAtMostTwo(normalizedTerm, entry.normalized)
+            if (distance > 2) return
+            val old = candidates[entry.normalized]
+            if (old != null && old.frequency >= entry.frequency) return
+            candidates[entry.normalized] = entry
+            if (candidates.size > candidateLimit) {
+                val worst = candidates.values.maxWithOrNull(
+                    compareBy<CompactDictionaryV31Reader.WordEntry> {
+                        editDistanceAtMostTwo(normalizedTerm, it.normalized)
+                    }.thenBy { -it.frequency }
+                )!!
+                candidates.remove(worst.normalized)
             }
         }
 
@@ -982,9 +996,7 @@ class AndroidDictionaryRepository(
         }
 
         // Exact normalized candidate.
-        addEntries(
-            reader.normalizedEntries(normalizedTerm)
-        )
+        reader.normalizedEntries(normalizedTerm).forEach(::addEntry)
 
         /*
          * V3.1 SymSpell index was generated from the first
@@ -1021,9 +1033,7 @@ class AndroidDictionaryRepository(
 
         for (deleteKey in deletes) {
             SuggestionWorkCancellation.check()
-            addEntries(
-                reader.symDeleteEntries(deleteKey)
-            )
+            reader.visitDeleteEntries(deleteKey, (normalizedTerm.length - 2).coerceAtLeast(0), normalizedTerm.length + 2, ::addEntry)
         }
 
         /*
@@ -1257,13 +1267,17 @@ class AndroidDictionaryRepository(
         Log.i(tag, "Attempting to load serialized dictionary from assets: $path")
         return try {
             coroutineContext.ensureActive()
-            assets.open(path).use { input ->
-                decodeSerializedDictionary(input)
-            }
+            val reader = DiskDictionaryReader.open(context, baseLocale) { assets.open(path) }
+            try {
+                coroutineContext.ensureActive()
+                synchronized(this) { if (retired) reader.close() else compactV31Reader = reader }
+            } catch (error: Throwable) { reader.close(); throw error }
             true
         } catch (e: java.io.FileNotFoundException) {
             Log.w(tag, "Serialized dictionary file not found: $path - ${e.message}")
             false
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: SerializationException) {
             Log.e(tag, "Failed to deserialize dictionary from $path: ${e.message}", e)
             false
@@ -1278,10 +1292,14 @@ class AndroidDictionaryRepository(
         Log.i(tag, "Attempting to load serialized dictionary from file: ${file.absolutePath}")
         return try {
             coroutineContext.ensureActive()
-            FileInputStream(file).use { input ->
-                decodeSerializedDictionary(input)
-            }
+            val reader = DiskDictionaryReader.open(context, baseLocale) { FileInputStream(file) }
+            try {
+                coroutineContext.ensureActive()
+                synchronized(this) { if (retired) reader.close() else compactV31Reader = reader }
+            } catch (error: Throwable) { reader.close(); throw error }
             true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: SerializationException) {
             Log.e(tag, "Failed to deserialize dictionary from file: ${e.message}", e)
             false

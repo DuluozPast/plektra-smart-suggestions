@@ -1,5 +1,7 @@
 # Plektra Smart Suggestions — proposed Integration upgrades
 
+Latest update (20 October): [Extended dictionary loading, photo themes, preserved Caps Lock and optional screen-text selection](docs/integration-upgrades/dictionaries-photos-screen-selection.md). The selected validation report and remaining phone checks are documented with the change.
+
 This contribution branch ports the custom Pastiera Integration improvements onto Plektra nightly `v26.10-nightly.11.184948Z`. It is a review and testing branch, not an official Plektra release. The Android project retains its normal structure, including `app`, `gradle`, the wrapper, resources and tests.
 
 ## Changes compared with the original Plektra baseline

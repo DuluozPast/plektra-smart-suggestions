@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="theme_texture_intensity">Інтенсивність фотографії</string>
+<string name="theme_texture_edit_existing">Налаштувати поточну текстуру</string>
+</resources>

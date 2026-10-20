@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Desactivado</string>
+    <string name="quote_mode_deferred">Convertir una cita terminada</string>
+    <string name="quote_mode_immediate">Comillas inmediatas · anidación francesa</string>
+    <string name="quote_immediate_help">En francés: « exterior “interior” ». Solo se modifican las comillas. Para casos ambiguos, asigna las acciones de apertura, cierre o comillas rectas en los atajos Nav/Fn.</string>
+    <string name="quote_force_open">Insertar comillas de apertura</string>
+    <string name="quote_force_close">Insertar comillas de cierre</string>
+    <string name="quote_force_straight">Insertar comillas rectas</string>
+    <string name="quote_editor_unavailable">Este editor no permite mover el cursor de forma segura alrededor de la selección. El texto citado no se ha sustituido.</string>
+    <string name="theme_photo_title">Color desde una foto</string>
+    <string name="theme_photo_camera">Tomar una foto</string>
+    <string name="theme_photo_gallery">Elegir una imagen</string>
+    <string name="theme_photo_reuse">Reutilizar la última imagen</string>
+    <string name="theme_photo_help">Amplía y mueve la imagen bajo la mira. El cuentagotas calcula la media de una zona pequeña.</string>
+    <string name="theme_photo_use_color">Tomar este color</string>
+    <string name="theme_photo_button">Tomar un color de una foto</string>
+    <string name="theme_photo_error">No se puede abrir la imagen o la cámara. Prueba con otra imagen.</string>
+    <string name="theme_photo_loading">Cargando imagen…</string>
+    <string name="theme_photo_reset_view">Restablecer vista</string>
+    <string name="theme_photo_zoom">Zoom</string>
+</resources>

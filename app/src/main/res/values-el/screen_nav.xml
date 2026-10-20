@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Λειτουργία Nav εκτός πεδίων κειμένου</string>
+    <string name="screen_nav_description">Επιλέξτε πρώτα μια λέξη, πατήστε δύο φορές Ctrl/Fn και χρησιμοποιήστε τα πλήκτρα Nav. Ενεργοποιήστε την προαιρετική προώθηση στην Προσβασιμότητα Android. Η υποστήριξη εξαρτάται από την εφαρμογή.</string>
+    <string name="screen_nav_service_description">Προωθεί τα πλήκτρα Nav όταν κανένα πεδίο κειμένου δεν είναι ενεργό. Διατηρεί τις αντιστοιχίσεις σας.</string>
+    <string name="screen_nav_open_settings">Άνοιγμα ρυθμίσεων προσβασιμότητας</string>
+    <string name="screen_nav_enabled">Η προώθηση είναι ενεργή</string>
+    <string name="screen_nav_disabled">Η προώθηση είναι ανενεργή</string>
+</resources>

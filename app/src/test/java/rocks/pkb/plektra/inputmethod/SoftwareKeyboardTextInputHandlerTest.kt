@@ -63,6 +63,7 @@ class SoftwareKeyboardTextInputHandlerTest {
         assertEquals(1, normalBoundaryCalls)
         assertEquals(0, doubleSpaceHandledCalls)
 
+        org.robolectric.shadows.ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(100))
         val handled = SoftwareKeyboardTextInputHandler.handleSpaceInput(
             textInputController = textInputController,
             inputConnection = inputConnection,

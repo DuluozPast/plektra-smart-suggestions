@@ -52,6 +52,7 @@ class TextInputControllerTest {
         )
         if (!firstHandled) inputConnection.commitText(" ", 1)
 
+        org.robolectric.shadows.ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(100))
         val secondHandled = controller.handleDoubleSpaceToPeriod(
             keyCode = KeyEvent.KEYCODE_SPACE,
             inputConnection = inputConnection,
@@ -530,36 +531,20 @@ class TextInputControllerTest {
     }
 
     private class FakeInputConnection(
-        context: Context,
-        initialText: String,
-        initialAfterCursor: String = ""
+        context: Context, initialText: String, initialAfterCursor: String = ""
     ) : BaseInputConnection(View(context), true) {
-        private val buffer = StringBuilder(initialText)
-        private val afterCursor = StringBuilder(initialAfterCursor)
-
-        val text: String
-            get() = buffer.toString() + afterCursor.toString()
-
-        override fun getTextBeforeCursor(n: Int, flags: Int): CharSequence {
-            return buffer.takeLast(n)
+        init {
+            val value = requireNotNull(editable)
+            value.append(initialText).append(initialAfterCursor)
+            android.text.Selection.setSelection(value, initialText.length)
         }
-
-        override fun getTextAfterCursor(n: Int, flags: Int): CharSequence {
-            return afterCursor.take(n)
-        }
-
-        override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
-            val deleteStart = (buffer.length - beforeLength).coerceAtLeast(0)
-            buffer.delete(deleteStart, buffer.length)
-            if (afterLength > 0) {
-                afterCursor.delete(0, afterLength.coerceAtMost(afterCursor.length))
+        val text: String get() = editable.toString()
+        override fun getExtractedText(request: android.view.inputmethod.ExtractedTextRequest?, flags: Int): android.view.inputmethod.ExtractedText =
+            android.view.inputmethod.ExtractedText().apply {
+                text = editable
+                startOffset = 0
+                selectionStart = android.text.Selection.getSelectionStart(editable)
+                selectionEnd = android.text.Selection.getSelectionEnd(editable)
             }
-            return true
-        }
-
-        override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
-            buffer.append(text ?: "")
-            return true
-        }
     }
 }

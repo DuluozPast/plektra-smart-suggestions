@@ -180,7 +180,11 @@ class SuggestionController(
         if (newLocale == currentLocale && !forceReload) return
         val preserveInputContext = forceReload && newLocale == currentLocale
         val preservedWord = tracker.currentWord
-        if (forceReload) dictionaryRepositoryCache.clear()
+        if (forceReload) {
+            dictionaryLoadGate.cancelExcept(emptyList())
+            dictionaryRepositoryCache.values.forEach { it.releaseResources() }
+            dictionaryRepositoryCache.clear()
+        }
         
         // Cancel previous load job if still running to prevent conflicts
         currentLoadJob?.cancel()
@@ -214,7 +218,8 @@ class SuggestionController(
         }
         autoReplaceController = createAutoReplaceController()
         extraSuggestionEngines.clear()
-        
+        pruneInactiveDictionaries(activeExtraLocales())
+
         // Recreate tracker to use new engine (tracker captures suggestionEngine in closure)
         tracker = CurrentWordTracker(
             onWordChanged = { word ->
@@ -255,7 +260,25 @@ class SuggestionController(
     private val latestSuggestions: AtomicReference<List<SuggestionResult>> = AtomicReference(emptyList())
     // Dedicated IO scope so dictionary preload never blocks the main thread.
     private val loadScope = CoroutineScope(Dispatchers.IO)
-    private val suggestionScope = CoroutineScope(Dispatchers.Default)
+    private val dictionaryLoadGate = DictionaryLoadGate(loadScope) { error ->
+        Log.e("PlektraIME", "Dictionary load failed; suspended until dictionaries are reloaded", error)
+    }
+    @Volatile private var extraSuggestionsSuspended = false
+    private val suggestionScope = CoroutineScope(Dispatchers.Default +
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.CoroutineExceptionHandler { _, error ->
+            // A failing search must not terminate the IME process. Keep the error
+            // for diagnosis, then suspend secondary searches for this controller.
+            extraSuggestionsSuspended = true
+            rocks.pkb.plektra.KeyboardFailureReport.record(appContext, "suggestion-search", error)
+            cursorHandler.post {
+                activeExtraSuggestionEngines() // Drop failed secondary repositories from the cache.
+                latestSuggestions.set(emptyList())
+                suggestionsListener?.invoke(emptyList())
+                android.widget.Toast.makeText(appContext,
+                    appContext.getString(rocks.pkb.plektra.R.string.keyboard_failure_report_title),
+                    android.widget.Toast.LENGTH_LONG).show()
+            }
+        })
     private var currentLoadJob: Job? = null
     private var suggestionJob: Job? = null
     private val cursorHandler = Handler(Looper.getMainLooper())
@@ -1036,6 +1059,8 @@ class SuggestionController(
          * that each language reloads its current Basic or Extended dictionary the next
          * time it is used.
          */
+        dictionaryLoadGate.cancelExcept(emptyList())
+        dictionaryRepositoryCache.values.forEach { it.releaseResources() }
         dictionaryRepositoryCache.clear()
 
         // Recreate every component that depends on the primary repository.
@@ -1190,6 +1215,13 @@ class SuggestionController(
     }
 
     fun destroy() {
+        // Stop searches from an obsolete IME/controller retaining old dictionaries.
+        suggestionScope.coroutineContext[Job]?.cancel()
+        dictionaryLoadGate.cancelExcept(emptyList())
+        extraSuggestionEngines.clear()
+        dictionaryLoadGate.cancelExcept(emptyList())
+        dictionaryRepositoryCache.values.forEach { it.releaseResources() }
+        dictionaryRepositoryCache.clear()
         finishTypingStatistics()
         currentLoadJob?.cancel()
         suggestionJob?.cancel()
@@ -1932,6 +1964,7 @@ class SuggestionController(
     }
 
     private fun activeExtraLocales(): List<Locale> {
+        if (extraSuggestionsSuspended) return emptyList()
         val primaryLanguage = currentLocale.language.lowercase(Locale.ROOT)
         return activeSuggestionLocalesProvider?.invoke().orEmpty()
             .filter { it.language.isNotBlank() }
@@ -1939,8 +1972,19 @@ class SuggestionController(
             .distinctBy { it.toLanguageTag().lowercase(Locale.ROOT) }
     }
 
+    private fun pruneInactiveDictionaries(extraLocales: List<Locale>) {
+        // Installed files are independent from active repositories. Deselecting a
+        // language must release its cached heap and cancel any pending heavy load.
+        val retainedKeys = (listOf(currentLocale) + extraLocales).map { dictionaryCacheKey(it) }.toSet()
+        val retained = dictionaryRepositoryCache.filterKeys { it in retainedKeys }.values.toList()
+        dictionaryLoadGate.cancelExcept(retained)
+        dictionaryRepositoryCache.filterKeys { it !in retainedKeys }.values.forEach { it.releaseResources() }
+        dictionaryRepositoryCache.keys.retainAll(retainedKeys)
+    }
+
     private fun activeExtraSuggestionEngines(): List<SuggestionLanguageEngine> {
         val activeLocales = activeExtraLocales()
+        pruneInactiveDictionaries(activeLocales)
         val activeTags = activeLocales.map { it.toLanguageTag() }.toSet()
         extraSuggestionEngines.keys
             .filterNot { it in activeTags }
@@ -1972,7 +2016,7 @@ class SuggestionController(
             pendingExtraRefreshAfterLoad = true
         }
         if (!repository.isReady && !repository.isLoadStarted) {
-            loadScope.launch {
+            dictionaryLoadGate.launchOnce(repository) {
                 try {
                     repository.loadIfNeeded()
 
@@ -1999,7 +2043,7 @@ class SuggestionController(
                 } catch (_: CancellationException) {
                     // Cancelled due to rapid switches; safe to ignore.
                 } catch (e: Exception) {
-                    Log.e("PlektraIME", "Failed to load extra dictionary", e)
+                    throw e // The load gate records failures and prevents retry storms.
                 }
             }
         }
@@ -2164,7 +2208,7 @@ class SuggestionController(
 
         if (repository.isLoadStarted) return
 
-        currentLoadJob = loadScope.launch {
+        val scheduledJob = dictionaryLoadGate.launchOnce(repository) {
             try {
                 repository.loadIfNeeded()
 
@@ -2189,9 +2233,10 @@ class SuggestionController(
             } catch (_: CancellationException) {
                 // Cancelled due to rapid switches; safe to ignore.
             } catch (e: Exception) {
-                Log.e("PlektraIME", "Failed to load dictionary", e)
+                throw e // The load gate records failures and prevents retry storms.
             }
         }
+        if (scheduledJob != null) currentLoadJob = scheduledJob
     }
 
     private fun refreshSuggestionsAfterDictionaryReady(repository: DictionaryRepository) {

@@ -1,6 +1,8 @@
 # Plektra Smart Suggestions — contribution branch
 
-Latest update (16 October): [delete-swipe calibration, Telegram, smart quotes, configured sending and restored suggestion spaces](docs/integration-upgrades/gesture-editor-compatibility.md). The final follow-up has [147 passing selected tests](docs/integration-upgrades/gesture-editor-compatibility-test-results.json); the [earlier broad validation](docs/integration-upgrades/gesture-editor-compatibility-broad-test-results.json) is reported separately. User phone feedback confirms calibration and the latest space behavior; Reddit comment sending remains unresolved.
+Latest update (20 October): [Extended dictionary loading, photo themes, preserved Caps Lock and optional screen-text selection](docs/integration-upgrades/dictionaries-photos-screen-selection.md). The selected validation report and remaining phone checks are documented with the change.
+
+Previous update (16 October): [delete-swipe calibration, Telegram, smart quotes, configured sending and restored suggestion spaces](docs/integration-upgrades/gesture-editor-compatibility.md). The final follow-up has [147 passing selected tests](docs/integration-upgrades/gesture-editor-compatibility-test-results.json); the [earlier broad validation](docs/integration-upgrades/gesture-editor-compatibility-broad-test-results.json) is reported separately. User phone feedback confirms calibration and the latest space behavior; Reddit comment sending remains unresolved.
 
 Previous update: [learned punctuation and casing, app-aware Fn formatting, language-aware keys and suggestion-space repair](docs/integration-upgrades/punctuation-case-and-formatting.md), validated by [489 selected tests](docs/integration-upgrades/punctuation-case-and-formatting-test-results.json): 487 passed, two existing graphics exclusions, no failures. Earlier theme and search upgrades are retained.
 

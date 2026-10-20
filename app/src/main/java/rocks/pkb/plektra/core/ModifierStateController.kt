@@ -130,8 +130,17 @@ class ModifierStateController(
         )
     }
 
-    fun restoreLogicalState(captured: LogicalState) {
-        shiftStateMachine.restore(captured.shiftState)
+    fun restoreLogicalState(captured: LogicalState) = restoreLogicalState(captured, preserveCapsLock = false)
+
+    fun restoreLogicalState(captured: LogicalState, preserveCapsLock: Boolean) {
+        // A temporary variation layer must not undo a lock toggled after its snapshot,
+        // nor resurrect a lock the user explicitly switched off in the meantime.
+        val restoredShift = when {
+            preserveCapsLock && capsLockEnabled -> ShiftState.CAPS
+            preserveCapsLock && captured.shiftState == ShiftState.CAPS -> ShiftState.OFF
+            else -> captured.shiftState
+        }
+        shiftStateMachine.restore(restoredShift)
         ctrlState.oneShot = captured.ctrlOneShot
         ctrlState.latchActive = captured.ctrlLatchActive
         ctrlState.latchFromNavMode = captured.ctrlLatchFromNavMode

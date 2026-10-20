@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Off</string>
+    <string name="quote_mode_deferred">Convert completed quotes</string>
+    <string name="quote_mode_immediate">Immediate quotes · French nesting</string>
+    <string name="quote_immediate_help">French input: « outer “inner” ». Only quote edges are edited. For ambiguous contexts, assign the opening, closing or straight-quote actions in Nav/Fn shortcuts.</string>
+    <string name="quote_force_open">Insert opening quote</string>
+    <string name="quote_force_close">Insert closing quote</string>
+    <string name="quote_force_straight">Insert straight quote</string>
+    <string name="quote_editor_unavailable">This editor cannot safely move around the selection. The quoted text has not been replaced.</string>
+    <string name="theme_photo_title">Colour from a photo</string>
+    <string name="theme_photo_camera">Take a photo</string>
+    <string name="theme_photo_gallery">Choose an image</string>
+    <string name="theme_photo_reuse">Reuse the last image</string>
+    <string name="theme_photo_help">Zoom and move the image under the crosshair. The eyedropper averages a small area.</string>
+    <string name="theme_photo_use_color">Pick this colour</string>
+    <string name="theme_photo_button">Pick a colour from a photo</string>
+    <string name="theme_photo_error">Unable to open this image or camera. Try another image.</string>
+    <string name="theme_photo_loading">Loading image…</string>
+    <string name="theme_photo_reset_view">Reset view</string>
+    <string name="theme_photo_zoom">Zoom</string>
+</resources>

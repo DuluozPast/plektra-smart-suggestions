@@ -107,15 +107,8 @@ fun TextInputSettingsScreen(
     var autoSpacePunctuationDialogVisible by remember { mutableStateOf(false) }
     var autoSpacePunctuationHelpVisible by remember { mutableStateOf(false) }
 
-    var smartQuotes by remember {
-        mutableStateOf(SettingsManager.getSmartQuotes(context))
-    }
-
-    var smartQuotesStyle by remember {
-        mutableStateOf(SettingsManager.getSmartQuotesStyle(context))
-    }
-
-    var smartQuotesExpanded by remember { mutableStateOf(false) }
+    var smartQuotesMode by remember { mutableStateOf(SettingsManager.getSmartQuotesMode(context)) }
+    var smartQuotesStyle by remember { mutableStateOf(SettingsManager.getSmartQuotesStyle(context)) }
 
     var clearAltOnSpace by remember {
         mutableStateOf(SettingsManager.getClearAltOnSpace(context))
@@ -469,27 +462,10 @@ fun TextInputSettingsScreen(
                     SettingsManager.setMidWordQuoteToApostrophe(context, enabled)
                 }
             )
-            SettingsDropdownSwitchRow(
-                title = stringResource(R.string.smart_quotes_title),
-                checked = smartQuotes,
-                linkId = SettingLinkIds.TEXT_INPUT_SMART_QUOTES,
-                onCheckedChange = { enabled ->
-                    smartQuotes = enabled
-                    SettingsManager.setSmartQuotes(context, enabled)
-                    if (!enabled) {
-                        smartQuotesExpanded = false
-                    }
-                },
-                expanded = smartQuotesExpanded,
-                onExpandedChange = { smartQuotesExpanded = it },
-                value = smartQuotesStyleLabel(smartQuotesStyle),
-                options = smartQuoteStyleOptions(),
-                optionLabel = ::smartQuotesStyleLabel,
-                onOptionSelected = { style ->
-                    smartQuotesStyle = style
-                    SettingsManager.setSmartQuotesStyle(context, style)
-                    smartQuotesExpanded = false
-                }
+            SmartQuoteModeSettings(
+                mode = smartQuotesMode, style = smartQuotesStyle,
+                onModeChanged = { smartQuotesMode = it; SettingsManager.setSmartQuotesMode(context, it) },
+                onStyleChanged = { smartQuotesStyle = it; SettingsManager.setSmartQuotesStyle(context, it) }
             )
 
             SettingsSectionHeader(text = stringResource(R.string.text_input_section_keyboard_behavior))

@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class IntegrationLearningMigrationTest {
-    @Test fun restoresIntegrationPreferencesAndRealNumericLearningCounts() = runBlocking {
+    @Test fun restoresIntegrationLearningWithoutReplacingLocalWordTotals() = runBlocking {
         org.robolectric.shadows.ShadowLog.stream = System.out
         val context = rocks.pkb.plektra.test.ShortPathContext.wrap(RuntimeEnvironment.getApplication())
         LearningOperationGate.prepareForRestore = null
@@ -24,11 +24,12 @@ class IntegrationLearningMigrationTest {
         javaClass.classLoader!!.getResourceAsStream("integration-learning-fixture.zip")!!.use { input ->
             archive.outputStream().use { input.copyTo(it) }
         }
+        SettingsManager.getPreferences(context).edit().putLong("typing_statistics_manual_words", 350L).commit()
         val result = RestoreManager.restore(context, Uri.fromFile(archive))
         assertTrue(result.toString(), result is RestoreResult.Success)
         val prefs = SettingsManager.getPreferences(context)
         assertTrue(prefs.getBoolean("multi_word_suggestions_enabled", false))
-        assertEquals(200L, prefs.getLong("typing_statistics_manual_words", 0))
+        assertEquals(350L, prefs.getLong("typing_statistics_manual_words", 0))
         assertTrue(prefs.getBoolean("trackpad_calibration_enabled", false))
         UserNGramStore(context).use { store ->
             val numbers = store.predict("fr-FR", "a", 3)

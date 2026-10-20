@@ -22,6 +22,10 @@ fun TypingStatisticsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val counts by store.snapshot.collectAsState()
     val locale = context.resources.configuration.locales[0]
     val format = remember(locale) { NumberFormat.getIntegerInstance(locale) }
+    val installedAt = remember(context.applicationContext) { TypingStatisticsStore.installationStartedAt(context) }
+    val installationDate = remember(installedAt, locale) {
+        java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, locale).format(java.util.Date(installedAt))
+    }
     Scaffold(topBar = {
         Surface(tonalElevation = 1.dp) {
             Row(modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
@@ -37,6 +41,11 @@ fun TypingStatisticsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     }) { padding ->
         Column(modifier = modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
             .padding(16.dp)) {
+            if (installedAt > 0) {
+                Text(stringResource(R.string.typing_statistics_since_installation, installationDate),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp))
+            }
             StatisticsCountRow(stringResource(R.string.typing_statistics_total_words), format.format(counts.totalWords))
             HorizontalDivider()
             StatisticsCountRow(stringResource(R.string.typing_statistics_manual_words), format.format(counts.manualWords))

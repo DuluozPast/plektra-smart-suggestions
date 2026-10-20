@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Wyłączone</string>
+    <string name="quote_mode_deferred">Zamień ukończony cytat</string>
+    <string name="quote_mode_immediate">Natychmiastowe cudzysłowy · francuskie zagnieżdżanie</string>
+    <string name="quote_immediate_help">Podczas pisania po francusku: « zewnętrzny “wewnętrzny” ». Zmieniane są tylko cudzysłowy. W razie wątpliwości przypisz działania otwarcia, zamknięcia lub prostego cudzysłowu w skrótach Nav/Fn.</string>
+    <string name="quote_force_open">Wstaw cudzysłów otwierający</string>
+    <string name="quote_force_close">Wstaw cudzysłów zamykający</string>
+    <string name="quote_force_straight">Wstaw prosty cudzysłów</string>
+    <string name="quote_editor_unavailable">Ten edytor nie pozwala bezpiecznie przesunąć kursora wokół zaznaczenia. Cytowany tekst nie został zastąpiony.</string>
+    <string name="theme_photo_title">Kolor ze zdjęcia</string>
+    <string name="theme_photo_camera">Zrób zdjęcie</string>
+    <string name="theme_photo_gallery">Wybierz obraz</string>
+    <string name="theme_photo_reuse">Użyj ostatniego obrazu</string>
+    <string name="theme_photo_help">Powiększ i przesuń obraz pod celownikiem. Pipeta uśrednia kolor małego obszaru.</string>
+    <string name="theme_photo_use_color">Pobierz ten kolor</string>
+    <string name="theme_photo_button">Pobierz kolor ze zdjęcia</string>
+    <string name="theme_photo_error">Nie można otworzyć obrazu lub aparatu. Spróbuj innego obrazu.</string>
+    <string name="theme_photo_loading">Wczytywanie obrazu…</string>
+    <string name="theme_photo_reset_view">Resetuj widok</string>
+    <string name="theme_photo_zoom">Powiększenie</string>
+</resources>

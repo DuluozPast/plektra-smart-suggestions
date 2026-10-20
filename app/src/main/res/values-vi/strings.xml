@@ -899,4 +899,9 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="delete_calibration_restart">Bắt đầu lại</string>
     <string name="delete_calibration_reset">Khôi phục cử chỉ mặc định</string>
     <string name="enter_send_rejected">Trình soạn thảo từ chối gửi. Chọn cách gửi khác trong cài đặt phím Enter cho ứng dụng.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Không đủ bộ nhớ cho từ điển đã chọn (%1$s). Sử dụng từ điển tích hợp cho phiên này.</string>
+    <string name="dictionary_memory_unavailable">Không đủ bộ nhớ để tải từ điển (%1$s). Gợi ý cho ngôn ngữ này không khả dụng trong phiên này.</string>
+    <string name="keyboard_failure_report_title">Chẩn đoán lỗi bàn phím</string>
 </resources>

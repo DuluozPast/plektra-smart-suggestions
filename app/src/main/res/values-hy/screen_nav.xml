@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Nav ռեժիմը տեքստային դաշտերից դուրս</string>
+    <string name="screen_nav_description">Նախ ընտրեք բառ, կրկնակի սեղմեք Ctrl/Fn և օգտագործեք ձեր Nav ստեղները։ Միացրեք այս ընտրովի փոխանցումը Android-ի մատչելիության կարգավորումներում։ Աջակցությունը կախված է հավելվածից։</string>
+    <string name="screen_nav_service_description">Փոխանցում է Nav ստեղները, երբ տեքստային դաշտն ակտիվ չէ։ Ձեր ստեղների նշանակումները պահպանվում են։</string>
+    <string name="screen_nav_open_settings">Բացել մատչելիության կարգավորումները</string>
+    <string name="screen_nav_enabled">Փոխանցումը միացված է</string>
+    <string name="screen_nav_disabled">Փոխանցումն անջատված է</string>
+</resources>

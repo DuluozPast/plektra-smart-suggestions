@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Единое изображение на клавишах</string>
+    <string name="theme_texture_per_key">Повторять образец на каждой клавише</string>
+</resources>

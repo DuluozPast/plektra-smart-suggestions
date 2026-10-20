@@ -68,7 +68,11 @@ internal object TextFormattingShortcuts {
                     PunctuationAfterSpace.clear()
                     DeferredPunctuationSpaceTracker.clear()
                 }
-                val committed = input.commitText(if (moveSpace) replacement + " " else replacement, 1)
+                val beforeMarker = input.getTextBeforeCursor(2, 0)?.toString()
+                val quoteSeparator = whatsapp && !closing && selected.isEmpty() &&
+                    beforeMarker == "«\u202f" && input.deleteSurroundingText(1, 0)
+                val prefix = if (quoteSeparator) " " else ""
+                val committed = input.commitText(prefix + replacement + if (moveSpace) " " else "", 1)
                 if (committed && moveSpace) AutoSpaceTracker.markSuggestionAutoSpace(input)
                 else AutoSpaceTracker.clear()
             } finally { input.endBatchEdit() }

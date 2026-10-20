@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Ένα υλικό για όλο το πληκτρολόγιο</string>
+    <string name="theme_texture_global_hint">Μία περικοπή για όλες τις επιφάνειες. Έπειτα ρυθμίστε το κείμενο και τα διαχωριστικά.</string>
+</resources>

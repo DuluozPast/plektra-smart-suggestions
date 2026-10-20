@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Un material para todo el teclado</string>
+    <string name="theme_texture_global_hint">Un solo recorte para todas las superficies. Después ajusta el texto y los separadores.</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Désactivé</string>
+    <string name="quote_mode_deferred">Convertir une citation terminée</string>
+    <string name="quote_mode_immediate">Guillemets immédiats · imbrication française</string>
+    <string name="quote_immediate_help">En français : « extérieur “intérieur” ». Seuls les guillemets sont modifiés. En cas d’ambiguïté, affectez les actions ouvrant, fermant ou droit dans les raccourcis Nav/Fn.</string>
+    <string name="quote_force_open">Insérer un guillemet ouvrant</string>
+    <string name="quote_force_close">Insérer un guillemet fermant</string>
+    <string name="quote_force_straight">Insérer un guillemet droit</string>
+    <string name="quote_editor_unavailable">Cet éditeur ne permet pas de déplacer sûrement le curseur autour de la sélection. Le texte cité n’a pas été remplacé.</string>
+    <string name="theme_photo_title">Couleur depuis une photo</string>
+    <string name="theme_photo_camera">Prendre une photo</string>
+    <string name="theme_photo_gallery">Choisir une image</string>
+    <string name="theme_photo_reuse">Réutiliser la dernière image</string>
+    <string name="theme_photo_help">Zoomez et déplacez l’image sous le viseur. La pipette fait la moyenne d’une petite zone.</string>
+    <string name="theme_photo_use_color">Prélever cette couleur</string>
+    <string name="theme_photo_button">Prélever une couleur dans une photo</string>
+    <string name="theme_photo_error">Impossible d’ouvrir cette image ou l’appareil photo. Essayez une autre image.</string>
+    <string name="theme_photo_loading">Chargement de l’image…</string>
+    <string name="theme_photo_reset_view">Réinitialiser la vue</string>
+    <string name="theme_photo_zoom">Zoom</string>
+</resources>

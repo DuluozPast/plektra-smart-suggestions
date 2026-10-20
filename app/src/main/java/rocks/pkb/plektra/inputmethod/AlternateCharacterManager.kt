@@ -34,6 +34,13 @@ class AlternateCharacterManager(
     var onNormalCharCommitted: ((String) -> Unit)? = null
     // Callback invoked before mapped punctuation is committed.
     var onBoundaryTextRequested: ((String, InputConnection) -> Boolean)? = null
+    // A handled quote has already been committed/tracked by the main input pipeline.
+    // Do not subsequently emit the original Alt character callback.
+    var onSmartQuoteRequested: ((String, InputConnection) -> Boolean)? = null
+
+    private fun handleSmartQuote(text: String, input: InputConnection): Boolean =
+        rocks.pkb.plektra.core.ImmediateQuotePolicy.isQuoteInput(text) &&
+            onSmartQuoteRequested?.invoke(text, input) == true
 
     companion object {
         private const val TAG = "AlternateCharacterManager"
@@ -269,6 +276,7 @@ class AlternateCharacterManager(
         }
 
         if (normalChar.isNotEmpty()) {
+            if (handleSmartQuote(normalChar, inputConnection)) return true
             if (handleBoundaryTextBeforeCommit(normalChar, inputConnection)) {
                 normalChar.firstOrNull()?.let { onAltCharInserted?.invoke(it) }
                 return true
@@ -326,6 +334,7 @@ class AlternateCharacterManager(
     ): Boolean {
         val altChar = (mappingsOverride ?: altModifierMappings)[keyCode]
         return if (altChar != null) {
+            if (handleSmartQuote(altChar, inputConnection)) return true
             if (handleBoundaryTextBeforeCommit(altChar, inputConnection)) {
                 altChar.firstOrNull()?.let { onAltCharInserted?.invoke(it) }
                 return true
@@ -483,6 +492,12 @@ class AlternateCharacterManager(
                                 inputConnection.deleteSurroundingText(1, 0)
                             }
 
+                            if (handleSmartQuote(symChar, inputConnection)) {
+                                insertedNormalChars.remove(keyCode)
+                                keyPressWasShifted.remove(keyCode)
+                                longPressRunnables.remove(keyCode)
+                                return@Runnable
+                            }
                             if (handleBoundaryTextBeforeCommit(symChar, inputConnection)) {
                                 onAltCharInserted?.invoke(symChar[0])
                                 insertedNormalChars.remove(keyCode)
@@ -574,6 +589,12 @@ class AlternateCharacterManager(
                                 inputConnection.deleteSurroundingText(1, 0)
                             }
 
+                            if (handleSmartQuote(altChar, inputConnection)) {
+                                insertedNormalChars.remove(keyCode)
+                                keyPressWasShifted.remove(keyCode)
+                                longPressRunnables.remove(keyCode)
+                                return@Runnable
+                            }
                             if (handleBoundaryTextBeforeCommit(altChar, inputConnection)) {
                                 altChar.firstOrNull()?.let { onAltCharInserted?.invoke(it) }
                                 insertedNormalChars.remove(keyCode)

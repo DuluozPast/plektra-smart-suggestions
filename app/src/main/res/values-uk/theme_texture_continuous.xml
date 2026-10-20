@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Суцільне зображення між клавішами</string>
+    <string name="theme_texture_per_key">Повторювати зразок на кожній клавіші</string>
+</resources>

@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Modalità Nav fuori dai campi di testo</string>
+    <string name="screen_nav_description">Seleziona prima una parola, poi premi due volte Ctrl/Fn e usa i soliti tasti Nav. Attiva questo relè facoltativo in Accessibilità Android. Il supporto dipende dall’app.</string>
+    <string name="screen_nav_service_description">Inoltra i tasti Nav quando nessun campo di testo è attivo. Le assegnazioni restano invariate.</string>
+    <string name="screen_nav_open_settings">Apri impostazioni di accessibilità</string>
+    <string name="screen_nav_enabled">Relè attivo</string>
+    <string name="screen_nav_disabled">Relè disattivato</string>
+</resources>

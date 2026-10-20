@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Անջատված</string>
+    <string name="quote_mode_deferred">Փոխարկել ավարտված մեջբերումը</string>
+    <string name="quote_mode_immediate">Անմիջական չակերտներ · ֆրանսերեն ներդրում</string>
+    <string name="quote_immediate_help">Ֆրանսերեն մուտքագրման համար՝ « արտաքին “ներքին” »։ Փոխվում են միայն չակերտները։ Անորոշ դեպքում Nav/Fn դյուրանցումներում նշանակեք բացող, փակող կամ ուղիղ չակերտների գործողությունները։</string>
+    <string name="quote_force_open">Տեղադրել բացող չակերտ</string>
+    <string name="quote_force_close">Տեղադրել փակող չակերտ</string>
+    <string name="quote_force_straight">Տեղադրել ուղիղ չակերտ</string>
+    <string name="quote_editor_unavailable">Այս խմբագրիչը չի թույլատրում անվտանգ տեղափոխում ընտրված տեքստի շուրջ։ Մեջբերված տեքստը չի փոխարինվել։</string>
+    <string name="theme_photo_title">Գույն լուսանկարից</string>
+    <string name="theme_photo_camera">Լուսանկարել</string>
+    <string name="theme_photo_gallery">Ընտրել պատկեր</string>
+    <string name="theme_photo_reuse">Կրկին օգտագործել վերջին պատկերը</string>
+    <string name="theme_photo_help">Մեծացրեք և տեղափոխեք պատկերը նշանի տակ։ Գունաչափը հաշվում է փոքր հատվածի միջին գույնը։</string>
+    <string name="theme_photo_use_color">Վերցնել այս գույնը</string>
+    <string name="theme_photo_button">Վերցնել գույն լուսանկարից</string>
+    <string name="theme_photo_error">Չհաջողվեց բացել պատկերը կամ տեսախցիկը։ Փորձեք այլ պատկեր։</string>
+    <string name="theme_photo_loading">Պատկերը բեռնվում է…</string>
+    <string name="theme_photo_reset_view">Վերակայել տեսքը</string>
+    <string name="theme_photo_zoom">Մեծացում</string>
+</resources>

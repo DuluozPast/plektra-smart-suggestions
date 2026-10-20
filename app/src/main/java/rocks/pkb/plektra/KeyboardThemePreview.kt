@@ -110,8 +110,9 @@ private fun createHardwareKeyboardThemePreviewView(
     theme: KeyboardThemePreset
 ): LinearLayout {
     val root = LinearLayout(context).apply {
+        setTag(R.id.theme_texture_frame, true)
         orientation = LinearLayout.VERTICAL
-        setBackgroundColor(theme.background)
+        rocks.pkb.plektra.ThemeTextureBackground.set(this, theme.background, theme.textures["background"])
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -146,7 +147,7 @@ private fun createHardwareKeyboardThemePreviewView(
 }
 
 private fun updateHardwareKeyboardThemePreviewView(view: android.view.View, theme: KeyboardThemePreset) {
-    view.setBackgroundColor(theme.background)
+    rocks.pkb.plektra.ThemeTextureBackground.set(view, theme.background, theme.textures.get("background"))
     val colors = theme.toKeyboardThemeColors()
     (view.getTag(R.id.keyboard_theme_preview_suggestions_bar) as? FullSuggestionsBar)?.apply {
         themeOverride = colors
@@ -180,12 +181,12 @@ private fun createVirtualKeyboardThemePreviewView(
     val colors = theme.toKeyboardThemeColors()
     val previewHeightPx = virtualKeyboardPreviewHeightPx(context, theme)
     val frame = BottomAnchoredKeyboardPreviewFrame(context).apply {
-        setBackgroundColor(theme.background)
+        rocks.pkb.plektra.ThemeTextureBackground.set(this, theme.background, theme.textures["background"])
         desiredPreviewHeightPx = previewHeightPx
     }
     val root = AdditiveVerticalKeyboardPreviewLayout(context).apply {
         orientation = LinearLayout.VERTICAL
-        setBackgroundColor(theme.background)
+        rocks.pkb.plektra.ThemeTextureBackground.set(this, theme.background, theme.textures["background"])
         layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             previewHeightPx
@@ -234,7 +235,7 @@ private fun createVirtualKeyboardThemePreviewView(
             0,
             dpToPx(context, SOFTWARE_PREVIEW_KEYBOARD_BOTTOM_PADDING_DP)
         )
-        setBackgroundColor(theme.background)
+        rocks.pkb.plektra.ThemeTextureBackground.set(this, theme.background, theme.textures["background"])
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             virtualKeyboardSurfaceHeightPx(context, theme)
@@ -278,9 +279,9 @@ private fun updateVirtualKeyboardThemePreviewView(view: android.view.View, theme
     val root = (frame?.contentRoot ?: view) as? LinearLayout ?: return
     val colors = theme.toKeyboardThemeColors()
     val previewHeightPx = virtualKeyboardPreviewHeightPx(root.context, theme)
-    frame?.setBackgroundColor(theme.background)
+    rocks.pkb.plektra.ThemeTextureBackground.set(frame, theme.background, theme.textures.get("background"))
     frame?.desiredPreviewHeightPx = previewHeightPx
-    root.setBackgroundColor(theme.background)
+    rocks.pkb.plektra.ThemeTextureBackground.set(root, theme.background, theme.textures.get("background"))
     root.layoutParams = (root.layoutParams as? FrameLayout.LayoutParams)?.apply {
         width = ViewGroup.LayoutParams.MATCH_PARENT
         height = previewHeightPx

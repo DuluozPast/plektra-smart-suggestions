@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Մեկ նյութ ամբողջ ստեղնաշարի համար</string>
+    <string name="theme_texture_global_hint">Մեկ կտրվածք բոլոր մակերեսների համար, ապա կարգավորեք տեքստն ու բաժանարարները։</string>
+</resources>

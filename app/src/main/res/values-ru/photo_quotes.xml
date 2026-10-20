@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Выключено</string>
+    <string name="quote_mode_deferred">Преобразовать завершённую цитату</string>
+    <string name="quote_mode_immediate">Кавычки сразу · французская вложенность</string>
+    <string name="quote_immediate_help">Для французского ввода: « снаружи “внутри” ». Меняются только кавычки. В неоднозначных случаях назначьте открывающую, закрывающую или прямую кавычку в сочетаниях Nav/Fn.</string>
+    <string name="quote_force_open">Вставить открывающую кавычку</string>
+    <string name="quote_force_close">Вставить закрывающую кавычку</string>
+    <string name="quote_force_straight">Вставить прямую кавычку</string>
+    <string name="quote_editor_unavailable">Этот редактор не позволяет безопасно переместить курсор вокруг выделения. Текст цитаты не заменён.</string>
+    <string name="theme_photo_title">Цвет из фотографии</string>
+    <string name="theme_photo_camera">Сделать фото</string>
+    <string name="theme_photo_gallery">Выбрать изображение</string>
+    <string name="theme_photo_reuse">Использовать последнее изображение</string>
+    <string name="theme_photo_help">Масштабируйте и перемещайте изображение под прицелом. Пипетка усредняет небольшую область.</string>
+    <string name="theme_photo_use_color">Выбрать этот цвет</string>
+    <string name="theme_photo_button">Взять цвет из фотографии</string>
+    <string name="theme_photo_error">Не удалось открыть изображение или камеру. Попробуйте другое изображение.</string>
+    <string name="theme_photo_loading">Загрузка изображения…</string>
+    <string name="theme_photo_reset_view">Сбросить вид</string>
+    <string name="theme_photo_zoom">Масштаб</string>
+</resources>

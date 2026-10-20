@@ -17,7 +17,8 @@ object StatusBarButtonStyles {
         val borderColor: Int? = null,
         val borderWidthPx: Int = 0,
         val activeIndicatorColor: Int = iconColor,
-        val lockedIndicatorColor: Int = iconColor
+        val lockedIndicatorColor: Int = iconColor,
+        val texture: rocks.pkb.plektra.KeyboardThemeTexture? = null
     )
 
     fun createButtonDrawable(

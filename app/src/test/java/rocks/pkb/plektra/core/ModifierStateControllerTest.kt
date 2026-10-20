@@ -321,4 +321,13 @@ class ModifierStateControllerTest {
         assertFalse(controller.altOneShot)
         assertFalse(controller.altLatchActive)
     }
+    @Test fun restoringASuggestionLayerCannotResurrectAnExplicitlyUnlockedCapsLock() {
+        val controller = ModifierStateController(500L)
+        controller.capsLockEnabled = true
+        val captured = controller.captureLogicalState()
+        controller.capsLockEnabled = false
+        controller.restoreLogicalState(captured, preserveCapsLock = true)
+        assertFalse(controller.capsLockEnabled)
+    }
+
 }

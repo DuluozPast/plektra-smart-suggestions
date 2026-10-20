@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Вимкнено</string>
+    <string name="quote_mode_deferred">Перетворити завершену цитату</string>
+    <string name="quote_mode_immediate">Лапки одразу · французька вкладеність</string>
+    <string name="quote_immediate_help">Для французького введення: « зовні “всередині” ». Змінюються лише лапки. У неоднозначних випадках призначте відкривальні, закривальні або прямі лапки в комбінаціях Nav/Fn.</string>
+    <string name="quote_force_open">Вставити відкривальні лапки</string>
+    <string name="quote_force_close">Вставити закривальні лапки</string>
+    <string name="quote_force_straight">Вставити прямі лапки</string>
+    <string name="quote_editor_unavailable">Цей редактор не дозволяє безпечно перемістити курсор навколо виділення. Текст цитати не замінено.</string>
+    <string name="theme_photo_title">Колір із фотографії</string>
+    <string name="theme_photo_camera">Зробити фото</string>
+    <string name="theme_photo_gallery">Вибрати зображення</string>
+    <string name="theme_photo_reuse">Використати останнє зображення</string>
+    <string name="theme_photo_help">Масштабуйте й переміщуйте зображення під прицілом. Піпетка усереднює невелику ділянку.</string>
+    <string name="theme_photo_use_color">Вибрати цей колір</string>
+    <string name="theme_photo_button">Взяти колір із фотографії</string>
+    <string name="theme_photo_error">Не вдалося відкрити зображення або камеру. Спробуйте інше зображення.</string>
+    <string name="theme_photo_loading">Завантаження зображення…</string>
+    <string name="theme_photo_reset_view">Скинути вигляд</string>
+    <string name="theme_photo_zoom">Масштаб</string>
+</resources>

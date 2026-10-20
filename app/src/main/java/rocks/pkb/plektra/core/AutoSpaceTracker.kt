@@ -63,6 +63,10 @@ object AutoSpaceTracker {
         if (before != suffix || !before.endsWith(" ")) return
         val closing = first in ".…,;:!?)]}»›”" ||
             (first == '"' && hasUnclosedStraightDoubleQuote(input))
+        // The first manual Space after a suggestion must not erase the origin of
+        // its existing separator: a second rapid Space replaces both trailing spaces.
+        // The formatting suffix has already been cleared, so a manual space is not trimmed.
+        if (text.toString() == " ") return
         // Opening parentheses and the separating space for the next word are retained.
         if (!closing) { autoSpacePending = false; return }
         autoSpacePending = false

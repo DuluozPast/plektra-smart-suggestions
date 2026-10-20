@@ -899,4 +899,9 @@ Nav Mode использует физическое положение клави
     <string name="delete_calibration_restart">Начать заново</string>
     <string name="delete_calibration_reset">Восстановить стандартный жест</string>
     <string name="enter_send_rejected">Редактор отклонил отправку. Выберите другой способ в настройках клавиши Enter для приложения.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Недостаточно памяти для выбранного словаря (%1$s). В этом сеансе используется встроенный словарь.</string>
+    <string name="dictionary_memory_unavailable">Недостаточно памяти для загрузки словаря (%1$s). Подсказки на этом языке недоступны в этом сеансе.</string>
+    <string name="keyboard_failure_report_title">Диагностика ошибки клавиатуры</string>
 </resources>

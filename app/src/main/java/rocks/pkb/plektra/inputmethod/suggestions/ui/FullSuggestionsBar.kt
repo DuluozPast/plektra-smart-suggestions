@@ -64,6 +64,7 @@ class FullSuggestionsBar(
     private var hamburgerMenuView: HamburgerMenuView? = null
     private var lastMinimalUiActive: Boolean? = null
     private var lastSlots: List<String?> = emptyList()
+    private var capsLockActive = false
     private var lastSuggestionsBold: Boolean? = null
     private var assets: AssetManager? = null
     private var imeServiceClass: Class<*>? = null
@@ -105,7 +106,8 @@ class FullSuggestionsBar(
                     borderColor = it.statusButtonBorder,
                     activeIndicatorColor = it.ledActive,
                     lockedIndicatorColor = it.ledLocked,
-                    borderWidthPx = dpToPx(1f)
+                    borderWidthPx = dpToPx(1f),
+                    texture = it.textures["status_bar_button"]
                 )
             }
             if (lastSlots.isNotEmpty()) lastSlots = emptyList()
@@ -328,6 +330,7 @@ class FullSuggestionsBar(
     }
 
     fun updateModifierIndicators(snapshot: StatusBarController.StatusSnapshot) {
+        capsLockActive = snapshot.capsLockEnabled
         val next = ModifierButtonFactory.active(snapshot)
         if (activeModifiers == next) return
         activeModifiers = next
@@ -618,7 +621,7 @@ class FullSuggestionsBar(
         KeyboardBarRowGeometry.setStyle(view, KeyboardBarRowGeometry.Style(
             themeOverride?.suggestion ?: DEFAULT_SUGGESTION_COLOR, themeOverride?.accent ?: PRESSED_BLUE,
             targetHeightPx * (themeOverride?.chromeCornerRadiusRatio ?: 0f),
-            themeOverride?.divider, dpToPx(1f), buildSuggestionBackground()))
+            themeOverride?.divider, dpToPx(1f), buildSuggestionBackground(), themeOverride?.textures?.get("suggestion")))
     }
 
     private fun renderSlots(
@@ -717,7 +720,7 @@ class FullSuggestionsBar(
                 }
                 includeFontPadding = false
                 minHeight = 0
-                setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
+                rocks.pkb.plektra.ThemeTextureContrast.text(this, themeOverride?.textAndIcons ?: Color.WHITE, themeOverride?.textures?.get("suggestion"))
                 setTypeface(null, if (SettingsManager.getSuggestionsBold(context))
                     android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
                 maxLines = 1
@@ -764,7 +767,8 @@ class FullSuggestionsBar(
                             inputConnection,
                             listener,
                             shouldDisableSuggestions,
-                            onSuggestionCommitted
+                            onSuggestionCommitted,
+                            capsLockActive = { capsLockActive }
                         )
                         setOnClickListener { view ->
                             resetActionMode()

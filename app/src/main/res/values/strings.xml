@@ -1841,4 +1841,9 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="delete_calibration_restart">Start again</string>
     <string name="delete_calibration_reset">Restore default gesture</string>
     <string name="enter_send_rejected">The editor rejected Send. Choose another sending method in the per-app Enter settings.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Not enough memory for the selected dictionary (%1$s). Using the bundled dictionary for this session.</string>
+    <string name="dictionary_memory_unavailable">Not enough memory to load the dictionary (%1$s). Suggestions for this language are unavailable for this session.</string>
+    <string name="keyboard_failure_report_title">Keyboard error diagnostic</string>
 </resources>

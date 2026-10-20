@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Ein Material für die ganze Tastatur</string>
+    <string name="theme_texture_global_hint">Ein Bildausschnitt für alle Flächen. Passe danach Text und Trennlinien an.</string>
+</resources>

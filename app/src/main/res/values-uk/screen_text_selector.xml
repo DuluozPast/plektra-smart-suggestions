@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Вибір тексту</string>
+    <string name="screen_text_instructions">Виберіть фрагмент клавішами Nav і скопіюйте його. Локальна копія доступна лише для читання.</string>
+    <string name="screen_text_enable_service">Увімкніть Nav поза полями введення в спеціальних можливостях Android.</string>
+    <string name="screen_text_unavailable">На цьому екрані не знайдено доступного тексту.</string>
+    <string name="nav_mode_action_select_screen_text">Вибрати текст з екрана</string>
+    <string name="screen_text_settings_description">Якщо звичайне виділення не працює, призначте Вибрати текст з екрана клавіші Nav. Текст читається лише за запитом і не зберігається.</string>
+</resources>

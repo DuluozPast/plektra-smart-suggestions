@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Textauswahl</string>
+    <string name="screen_text_instructions">Wähle eine Textstelle mit den Nav-Tasten und kopiere sie. Diese lokale Kopie ist schreibgeschützt.</string>
+    <string name="screen_text_enable_service">Aktiviere Nav außerhalb von Eingabefeldern in den Android-Bedienungshilfen.</string>
+    <string name="screen_text_unavailable">Auf diesem Bildschirm wurde kein zugänglicher Text gefunden.</string>
+    <string name="nav_mode_action_select_screen_text">Bildschirmtext auswählen</string>
+    <string name="screen_text_settings_description">Falls die native Auswahl nicht funktioniert, weise Bildschirmtext auswählen einer Nav-Taste zu. Text wird nur auf Anforderung gelesen und nicht gespeichert.</string>
+</resources>

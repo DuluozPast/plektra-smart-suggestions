@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Foto: color o textura</string>
+    <string name="theme_texture_color">Color uniforme</string>
+    <string name="theme_texture_matter">Conservar la textura</string>
+    <string name="theme_texture_help">Mueve y amplía la foto bajo el marco. Arrastra la esquina para ajustar la zona seleccionada.</string>
+    <string name="theme_texture_sample">Usar esta zona</string>
+    <string name="theme_texture_preview">Vista previa de la textura</string>
+    <string name="theme_texture_cover">Rellenar</string>
+    <string name="theme_texture_fit">Ajustar</string>
+    <string name="theme_texture_tile">Repetir</string>
+    <string name="theme_texture_hardware">Teclado físico</string>
+    <string name="theme_texture_software">Teclado en pantalla</string>
+    <string name="theme_texture_enlargement">Esta zona se amplía ×%1$.1f. Selecciona una zona mayor para conservar más detalles.</string>
+    <string name="theme_texture_apply">Aplicar textura</string>
+    <string name="theme_texture_remove">Volver al color uniforme</string>
+    <string name="theme_texture_applied">Textura fotográfica</string>
+    <string name="theme_texture_resize">Cambiar el tamaño de la zona</string>
+</resources>

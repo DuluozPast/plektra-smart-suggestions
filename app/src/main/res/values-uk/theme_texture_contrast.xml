@@ -1,0 +1,6 @@
+<resources>
+    <string name="theme_texture_adapt_text">Підібрати текст до текстури</string>
+    <string name="theme_texture_manual_text">Використати мій колір тексту</string>
+    <string name="theme_texture_contrast_failed">Не вдалося проаналізувати текстуру. Ваші кольори збережено.</string>
+    <string name="theme_texture_change_photo">Змінити фото</string>
+</resources>

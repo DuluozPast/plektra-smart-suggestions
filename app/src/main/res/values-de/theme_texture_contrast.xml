@@ -1,0 +1,6 @@
+<resources>
+    <string name="theme_texture_adapt_text">Text an die Textur anpassen</string>
+    <string name="theme_texture_manual_text">Meine Textfarbe verwenden</string>
+    <string name="theme_texture_contrast_failed">Die Textur konnte nicht analysiert werden. Deine Farben bleiben erhalten.</string>
+    <string name="theme_texture_change_photo">Foto ändern</string>
+</resources>

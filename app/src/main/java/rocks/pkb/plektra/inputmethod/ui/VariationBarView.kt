@@ -170,7 +170,7 @@ class VariationBarView(
             field = value
             val label = value ?: context.getString(R.string.swipe_to_move_cursor)
             if (originalHintText != null) originalHintText = label else emptyHintView?.text = label
-            emptyHintView?.setTextColor(hintTextColor())
+            emptyHintView?.let { rocks.pkb.plektra.ThemeTextureContrast.text(it, hintTextColor(), themeOverride?.textures?.get("background")) }
             emptyHintView?.contentDescription = if (value == null) label
                 else "$value. ${context.getString(R.string.swipe_to_move_cursor)}"
         }
@@ -188,12 +188,13 @@ class VariationBarView(
                     iconColor = it.textAndIcons,
                     cornerRadiusRatio = it.keyCornerRadiusRatio,
                     borderColor = it.statusButtonBorder,
-                    borderWidthPx = dpToPx(1f)
+                    borderWidthPx = dpToPx(1f),
+                    texture = it.textures["status_bar_button"]
                 )
             }
-            wrapper?.setBackgroundColor(value?.background ?: Color.TRANSPARENT)
-            container?.setBackgroundColor(value?.background ?: Color.TRANSPARENT)
-            emptyHintView?.setTextColor(hintTextColor())
+            rocks.pkb.plektra.ThemeTextureBackground.set(wrapper, value?.background ?: Color.TRANSPARENT, value?.textures?.get("background"))
+            rocks.pkb.plektra.ThemeTextureBackground.set(container, value?.background ?: Color.TRANSPARENT, value?.textures?.get("background"))
+            emptyHintView?.let { rocks.pkb.plektra.ThemeTextureContrast.text(it, hintTextColor(), themeOverride?.textures?.get("background")) }
             swipeIndicator?.background = createSwipeIndicatorDrawable()
             applyHeight()
             lastThemeSignature = null
@@ -218,7 +219,7 @@ class VariationBarView(
                 variationsContainerHeight
             )
             visibility = View.GONE
-            setBackgroundColor(themeOverride?.background ?: Color.TRANSPARENT)
+            rocks.pkb.plektra.ThemeTextureBackground.set(this, themeOverride?.background ?: Color.TRANSPARENT, themeOverride?.textures?.get("background"))
             addOnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
                 if (right - left != oldRight - oldLeft && view.visibility == View.VISIBLE) {
                     view.post {
@@ -258,7 +259,7 @@ class VariationBarView(
                 variationsContainerHeight
             )
             visibility = View.GONE
-            setBackgroundColor(themeOverride?.background ?: Color.TRANSPARENT)
+            rocks.pkb.plektra.ThemeTextureBackground.set(this, themeOverride?.background ?: Color.TRANSPARENT, themeOverride?.textures?.get("background"))
             addView(container)
         }
 
@@ -1066,6 +1067,10 @@ class VariationBarView(
     private fun hintTextColor(): Int {
         if (themeName == null) return colorWithAlpha(themeOverride?.textAndIcons ?: Color.WHITE, 120)
         val configured = themeOverride?.cursorSwipe ?: themeOverride?.textAndIcons ?: Color.WHITE
+        // With a photo the plain backing color cannot predict the visible contrast.
+        // The texture's explicit automatic foreground is applied by ThemeTextureContrast;
+        // when it is off, respect the user's configured title color.
+        if (themeOverride?.textures?.get("background") != null) return configured
         val background = androidx.core.graphics.ColorUtils.setAlphaComponent(themeOverride?.background ?: Color.BLACK, 255)
         // *Keep the user's colour when readable. Otherwise adapt only the title, without changing saved colours.
         // This calculation runs on title/theme changes, not on unchanged typing renders.*
@@ -1082,7 +1087,7 @@ class VariationBarView(
                 else "$themeName. ${context.getString(R.string.swipe_to_move_cursor)}"
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setTextColor(hintTextColor())
+            rocks.pkb.plektra.ThemeTextureContrast.text(this, hintTextColor(), themeOverride?.textures?.get("background"))
             textSize = 13f
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER
@@ -1190,7 +1195,7 @@ class VariationBarView(
                 1,
                 TypedValue.COMPLEX_UNIT_SP
             )
-            setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
+            rocks.pkb.plektra.ThemeTextureContrast.text(this, themeOverride?.textAndIcons ?: Color.WHITE, themeOverride?.textures?.get("normal_key"))
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER
             maxLines = 1
@@ -1206,7 +1211,7 @@ class VariationBarView(
                 themeOverride?.normalKey ?: VariationButtonStyles.NORMAL_COLOR,
                 themeOverride?.accent ?: VariationButtonStyles.PRESSED_BLUE,
                 buttonHeight * (themeOverride?.chromeCornerRadiusRatio ?: VariationButtonStyles.BUTTON_CORNER_RADIUS_RATIO),
-                themeOverride?.divider, dpToPx(1f), stateListDrawable))
+                themeOverride?.divider, dpToPx(1f), stateListDrawable, themeOverride?.textures?.get("normal_key")))
             layoutParams = LinearLayout.LayoutParams(calculatedWidth, buttonHeight).apply {
                 marginEnd = if (isLast) 0 else spacingBetweenButtons
             }
@@ -1409,7 +1414,7 @@ class VariationBarView(
                 suggestion,
                 statusBarButton,
                 chromeCornerRadiusRatio,
-                variationsHeightScale
+                variationsHeightScale, textures
             ).hashCode()
         }
 }

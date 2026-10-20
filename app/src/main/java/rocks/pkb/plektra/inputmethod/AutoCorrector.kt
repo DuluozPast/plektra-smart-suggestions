@@ -38,6 +38,17 @@ object AutoCorrector {
     // Track custom languages loaded from external files
     private val customLanguages = mutableSetOf<String>()
 
+    // Rule identity folds case/apostrophe shape, never accents: a personal
+    // c'etait rule overrides a bundled C'etait rule instead of competing with it.
+    private fun ruleKey(text: String): String =
+        rocks.pkb.plektra.core.suggestions.WordNormalization.normalizeApostrophes(text).lowercase(java.util.Locale.ROOT)
+
+    private fun correctedSpelling(original: String, replacement: String): String {
+        val cased = applyCapitalization(original, replacement)
+        val apostrophe = original.firstOrNull { it == '’' || it == '‘' || it == 'ʼ' }
+        return if (apostrophe == null) cased else cased.replace('\'', apostrophe)
+    }
+
     private fun hasSymbolChar(text: String): Boolean {
         return text.any { !it.isLetterOrDigit() }
     }
@@ -67,14 +78,15 @@ object AutoCorrector {
             val langCorrections = corrections[lang] ?: continue
             for ((trigger, replacement) in langCorrections) {
                 if (trigger.isBlank() || !hasSymbolChar(trigger)) continue
-                if (!textUpToCursor.endsWith(trigger, ignoreCase = true)) continue
+                if (!ruleKey(textUpToCursor).endsWith(ruleKey(trigger))) continue
 
                 val start = textUpToCursor.length - trigger.length
                 if (!isBoundaryBeforeIndex(textUpToCursor, start)) continue
 
                 val currentBestLength = bestMatch?.first?.length ?: -1
                 if (trigger.length > currentBestLength) {
-                    bestMatch = Pair(trigger, replacement)
+                    val actual = textUpToCursor.substring(start)
+                    bestMatch = Pair(actual, correctedSpelling(actual, replacement))
                 }
             }
         }
@@ -101,7 +113,7 @@ object AutoCorrector {
                     // Load bundled defaults first, then overlay custom corrections.
                     val fileName = "common/autocorrect/auto_corrections_$locale.json"
                     val jsonString = assets.open(fileName).bufferedReader().use { it.readText() }
-                    loadCorrectionsFromJson(locale, jsonString)
+                    loadCorrectionsFromJson(locale, jsonString, preferLowercaseTrigger = true)
 
                     if (context != null) {
                         val customCorrections = rocks.pkb.plektra.SettingsManager.getCustomAutoCorrections(context, locale)
@@ -193,7 +205,7 @@ object AutoCorrector {
      * Ignores the special "__name" field that contains the language name.
      * Always adds the locale to corrections map, even if empty, so it appears in available languages.
      */
-    private fun loadCorrectionsFromJson(locale: String, jsonString: String) {
+    private fun loadCorrectionsFromJson(locale: String, jsonString: String, preferLowercaseTrigger: Boolean = false) {
         val jsonObject = JSONObject(jsonString)
         val correctionMap = corrections[locale]?.toMutableMap() ?: mutableMapOf()
 
@@ -204,7 +216,12 @@ object AutoCorrector {
             // Skip special name field
             if (key != "__name") {
                 val value = jsonObject.getString(key)
-                correctionMap[key] = value
+                val identity = ruleKey(key)
+                // Bundled files may list both Etre and etre. Prefer the lowercase
+                // rule as the casing template; personal overlays always win.
+                if (!preferLowercaseTrigger || key == identity || !correctionMap.containsKey(identity)) {
+                    correctionMap[identity] = value
+                }
             }
         }
 
@@ -325,13 +342,13 @@ object AutoCorrector {
         }
 
         // Search for correction using lowercase word (JSON keys are lowercase)
-        val wordLower = word.lowercase()
+        val wordLower = ruleKey(word)
 
         // Try specific locale first
         corrections[targetLocale]?.let { localeCorrections ->
             localeCorrections[wordLower]?.let { correction ->
                 // Applica la capitalizzazione originale alla correzione
-                return applyCapitalization(word, correction)
+                return correctedSpelling(word, correction)
             }
         }
 
@@ -341,8 +358,8 @@ object AutoCorrector {
     private fun getCustomCorrection(word: String, locale: String, context: Context?): String? {
         if (context == null) return null
         val customCorrections = rocks.pkb.plektra.SettingsManager.getCustomAutoCorrections(context, locale)
-        val correction = customCorrections[word.lowercase()] ?: return null
-        return applyCapitalization(word, correction)
+        val correction = customCorrections.entries.lastOrNull { ruleKey(it.key) == ruleKey(word) }?.value ?: return null
+        return correctedSpelling(word, correction)
     }
 
     private fun isOrthographicReplacement(original: String, replacement: String): Boolean {
@@ -566,7 +583,7 @@ object AutoCorrector {
         }
 
         // Check if this word has been rejected (undone with backspace)
-        val wordLower = word.lowercase()
+        val wordLower = ruleKey(word)
         if (rejectedWords.contains(wordLower)) {
             Log.d(TAG, "Word '$word' has been rejected, don't correct")
             return null

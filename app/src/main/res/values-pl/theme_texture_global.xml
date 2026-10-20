@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Jeden materiał na całą klawiaturę</string>
+    <string name="theme_texture_global_hint">Jeden kadr dla wszystkich powierzchni. Następnie dostosuj tekst i separatory.</string>
+</resources>

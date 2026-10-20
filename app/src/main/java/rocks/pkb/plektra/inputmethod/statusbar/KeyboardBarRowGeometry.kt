@@ -48,7 +48,8 @@ internal object KeyboardBarRowGeometry {
     }
 
     data class Style(val normal: Int, val pressed: Int, val radius: Float,
-        val border: Int?, val borderWidth: Int, val flat: Drawable)
+        val border: Int?, val borderWidth: Int, val flat: Drawable,
+        val texture: rocks.pkb.plektra.KeyboardThemeTexture? = null)
     private data class Surface(
         var style: Style,
         var left: Boolean = false,
@@ -254,14 +255,17 @@ internal object KeyboardBarRowGeometry {
         if (rounded && current != null && current.leftEdge == surface.left && current.rightEdge == surface.right &&
             current.matchesStyle(style.radius, style.borderWidth)) {
             current.updateColors(style.normal, style.pressed, style.border)
+            current.updateTexture(style.texture)
             return
         }
         if (!force && !rounded && current == null) return
         surface.placementKey = null
         view.background = if (rounded) CurvedCornerButtonDrawable(
             view, style.normal, style.pressed, style.radius,
-            style.border, style.borderWidth, surface.left, surface.right
-        ) else style.flat
+            style.border, style.borderWidth, surface.left, surface.right, style.texture
+        ) else if (style.texture != null) rocks.pkb.plektra.ThemeTextureDrawable(view.context,
+            style.normal, style.texture, style.radius, style.border, style.borderWidth.toFloat(), style.pressed)
+        else style.flat
     }
 
     private fun placeContent(view: View, surface: Surface) {

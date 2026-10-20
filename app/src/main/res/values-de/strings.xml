@@ -1633,4 +1633,9 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="delete_calibration_restart">Neu beginnen</string>
     <string name="delete_calibration_reset">Standardgeste wiederherstellen</string>
     <string name="enter_send_rejected">Der Editor hat Senden abgelehnt. Wählen Sie in den Eingabetasten-Einstellungen dieser App eine andere Sendemethode.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Nicht genügend Speicher für das gewählte Wörterbuch (%1$s). Für diese Sitzung wird das integrierte Wörterbuch verwendet.</string>
+    <string name="dictionary_memory_unavailable">Nicht genügend Speicher zum Laden des Wörterbuchs (%1$s). Vorschläge für diese Sprache sind in dieser Sitzung nicht verfügbar.</string>
+    <string name="keyboard_failure_report_title">Tastaturfehlerdiagnose</string>
 </resources>

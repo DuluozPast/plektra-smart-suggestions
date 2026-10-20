@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Απενεργοποιημένο</string>
+    <string name="quote_mode_deferred">Μετατροπή ολοκληρωμένου παραθέματος</string>
+    <string name="quote_mode_immediate">Άμεσα εισαγωγικά · γαλλική εμφώλευση</string>
+    <string name="quote_immediate_help">Στα γαλλικά: « εξωτερικό “εσωτερικό” ». Αλλάζουν μόνο τα εισαγωγικά. Σε αμφίβολες περιπτώσεις αντιστοιχίστε άνοιγμα, κλείσιμο ή ίσια εισαγωγικά στις συντομεύσεις Nav/Fn.</string>
+    <string name="quote_force_open">Εισαγωγή ανοίγματος εισαγωγικών</string>
+    <string name="quote_force_close">Εισαγωγή κλεισίματος εισαγωγικών</string>
+    <string name="quote_force_straight">Εισαγωγή ίσιων εισαγωγικών</string>
+    <string name="quote_editor_unavailable">Ο επεξεργαστής δεν επιτρέπει ασφαλή μετακίνηση γύρω από την επιλογή. Το κείμενο δεν αντικαταστάθηκε.</string>
+    <string name="theme_photo_title">Χρώμα από φωτογραφία</string>
+    <string name="theme_photo_camera">Λήψη φωτογραφίας</string>
+    <string name="theme_photo_gallery">Επιλογή εικόνας</string>
+    <string name="theme_photo_reuse">Χρήση της τελευταίας εικόνας</string>
+    <string name="theme_photo_help">Μεγεθύνετε και μετακινήστε την εικόνα κάτω από το στόχαστρο. Το σταγονόμετρο υπολογίζει τον μέσο όρο μιας μικρής περιοχής.</string>
+    <string name="theme_photo_use_color">Λήψη αυτού του χρώματος</string>
+    <string name="theme_photo_button">Λήψη χρώματος από φωτογραφία</string>
+    <string name="theme_photo_error">Δεν ανοίγει η εικόνα ή η κάμερα. Δοκιμάστε άλλη εικόνα.</string>
+    <string name="theme_photo_loading">Φόρτωση εικόνας…</string>
+    <string name="theme_photo_reset_view">Επαναφορά προβολής</string>
+    <string name="theme_photo_zoom">Μεγέθυνση</string>
+</resources>

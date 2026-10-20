@@ -742,6 +742,26 @@ class SuggestionControllerNextWordTest {
         )
     }
 
+    @Test fun acceptingAnAccentCorrectionClearsCurrentWordCandidates() {
+        fakeRepository.addTestEntry("état", 200)
+        val controller = newController()
+        typeWord(controller, "l'etat")
+        controller.onSuggestionCommitted("l'état")
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(controller.currentSuggestions().none { it.kind == SuggestionKind.CURRENT_WORD })
+        assertEquals(null, controller.pendingAddWord())
+    }
+
+    @Test fun repeatedCorrectionTrialsCanLegitimatelyPredictTheSameWordAgain() {
+        val controller = newController()
+        controller.onSuggestionCommitted("l'état")
+        controller.onSuggestionCommitted("l'état")
+        controller.flushNextWordLearningForTests()
+        val predictions = controller.currentSuggestions()
+        assertTrue(predictions.any { it.candidate == "l'état" && it.kind == SuggestionKind.NEXT_WORD })
+        assertTrue(predictions.none { it.kind == SuggestionKind.CURRENT_WORD })
+    }
+
     @Test
     fun committedMultiWordSuggestionLearnsEachBigramInSequence() {
         val controller = newController()

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quote_mode_off">Tắt</string>
+    <string name="quote_mode_deferred">Chuyển đổi trích dẫn đã hoàn tất</string>
+    <string name="quote_mode_immediate">Dấu ngoặc kép tức thì · lồng kiểu Pháp</string>
+    <string name="quote_immediate_help">Khi nhập tiếng Pháp: « ngoài “trong” ». Chỉ thay đổi dấu ngoặc. Khi ngữ cảnh không rõ, hãy gán thao tác mở, đóng hoặc dấu thẳng trong phím tắt Nav/Fn.</string>
+    <string name="quote_force_open">Chèn dấu ngoặc mở</string>
+    <string name="quote_force_close">Chèn dấu ngoặc đóng</string>
+    <string name="quote_force_straight">Chèn dấu ngoặc thẳng</string>
+    <string name="quote_editor_unavailable">Trình soạn thảo này không cho phép di chuyển an toàn quanh vùng chọn. Nội dung trích dẫn chưa bị thay thế.</string>
+    <string name="theme_photo_title">Màu từ ảnh</string>
+    <string name="theme_photo_camera">Chụp ảnh</string>
+    <string name="theme_photo_gallery">Chọn ảnh</string>
+    <string name="theme_photo_reuse">Dùng lại ảnh gần nhất</string>
+    <string name="theme_photo_help">Phóng to và di chuyển ảnh dưới tâm ngắm. Công cụ lấy màu tính trung bình một vùng nhỏ.</string>
+    <string name="theme_photo_use_color">Lấy màu này</string>
+    <string name="theme_photo_button">Lấy màu từ ảnh</string>
+    <string name="theme_photo_error">Không mở được ảnh hoặc máy ảnh. Hãy thử ảnh khác.</string>
+    <string name="theme_photo_loading">Đang tải ảnh…</string>
+    <string name="theme_photo_reset_view">Đặt lại khung nhìn</string>
+    <string name="theme_photo_zoom">Thu phóng</string>
+</resources>

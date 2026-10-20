@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Επιλογή κειμένου</string>
+    <string name="screen_text_instructions">Χρησιμοποιήστε τα πλήκτρα Nav για επιλογή και αντιγραφή. Το τοπικό αντίγραφο είναι μόνο για ανάγνωση.</string>
+    <string name="screen_text_enable_service">Ενεργοποιήστε το Nav εκτός πεδίων εισαγωγής στην Προσβασιμότητα Android.</string>
+    <string name="screen_text_unavailable">Δεν βρέθηκε προσβάσιμο κείμενο σε αυτή την οθόνη.</string>
+    <string name="nav_mode_action_select_screen_text">Επιλογή κειμένου οθόνης</string>
+    <string name="screen_text_settings_description">Αν η εγγενής επιλογή αποτύχει, αντιστοιχίστε την Επιλογή κειμένου οθόνης σε πλήκτρο Nav. Το κείμενο διαβάζεται μόνο κατόπιν αιτήματος και δεν αποθηκεύεται.</string>
+</resources>

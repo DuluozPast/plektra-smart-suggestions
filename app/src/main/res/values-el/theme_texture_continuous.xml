@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Συνεχής εικόνα ανάμεσα στα πλήκτρα</string>
+    <string name="theme_texture_per_key">Επανάληψη δείγματος σε κάθε πλήκτρο</string>
+</resources>

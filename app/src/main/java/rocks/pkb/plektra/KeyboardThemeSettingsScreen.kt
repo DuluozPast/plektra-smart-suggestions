@@ -62,6 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -129,7 +130,7 @@ fun KeyboardThemeScreen(
         }
     }
     val previewPagerState = rememberPagerState(initialPage = initialPreviewPage, pageCount = { 2 })
-    var customizationTab by remember {
+    var customizationTab by rememberSaveable {
         mutableStateOf(if (initialTab == KeyboardThemeEditorTab.Keys) 1 else 0)
     }
     val initialHardwarePreset = remember {
@@ -194,7 +195,7 @@ fun KeyboardThemeScreen(
     var showSaveAsDialog by remember { mutableStateOf(false) }
     var pendingImportedTheme by remember { mutableStateOf<KeyboardThemePreset?>(null) }
     var showNewDraftDialog by remember { mutableStateOf(false) }
-    var draftEditorName by remember { mutableStateOf<String?>(null) }
+    var draftEditorName by rememberSaveable { mutableStateOf<String?>(null) }
     val draftEditingGuard = remember { mutableStateOf(false) }
     var draftListFocusName by remember { mutableStateOf<String?>(null) }
     var deleteThemeRequest by remember { mutableStateOf<String?>(null) }
@@ -383,8 +384,11 @@ fun KeyboardThemeScreen(
         themeDrafts.firstOrNull { it.name.equals(name, ignoreCase = true) }
     }
     val draftPreset = editedDraft?.theme?.toKeyboardThemePreset(editedDraft.name)
+    val physicalKeyboardTheme = rocks.pkb.plektra.inputmethod.DeviceSpecific.isPhysicalKeyboardDevice(
+        SettingsManager.getPhysicalKeyboardProfileOverride(context)
+    ) || rocks.pkb.plektra.inputmethod.DeviceSpecific.hasConnectedHardwareKeyboard()
     val draftMissingFields = editedDraft?.let { draft ->
-        KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS - draft.populatedFields
+        keyboardThemeDraftMissingFields(draft.populatedFields, physicalKeyboardTheme)
     }.orEmpty()
     val draftComplete = editedDraft != null && draftMissingFields.isEmpty()
 
@@ -569,6 +573,7 @@ fun KeyboardThemeScreen(
                         val draft = themeDrafts[index - activeThemeOptions.size]
                         KeyboardThemeDraftCard(
                             draft = draft,
+                            physicalKeyboardTheme = physicalKeyboardTheme,
                             editing = editedDraft?.name.equals(draft.name, ignoreCase = true),
                             onClick = {
                                 draftEditingGuard.value = true
@@ -783,6 +788,21 @@ fun KeyboardThemeScreen(
                     )
                 }
             }
+            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                ThemePhotoColorButton(onColorSelected = {}, theme = draftPreset ?: activeTheme,
+                    surfaceRole = ThemeTextureModel.ALL_SURFACES, isSoftware = activePreviewPage == 1,
+                    onTextureSelected = { texture ->
+                        val updated = (draftPreset ?: activeTheme).withSurfaceTexture(ThemeTextureModel.ALL_SURFACES, texture)
+                        val draft = editedDraft
+                        if(draft == null) updateActiveTheme(updated) else {
+                            val surfaces = setOf(DRAFT_BACKGROUND, DRAFT_NORMAL_KEY, DRAFT_SPECIAL_KEY,
+                                DRAFT_SUGGESTION, DRAFT_STATUS_BUTTON, DRAFT_KEY_POPUP, DRAFT_KEY_POPUP_SELECTED)
+                            SettingsManager.saveKeyboardThemeDraft(context, draft.copy(theme = updated.toSettingsTheme(),
+                                populatedFields = if(texture == null) draft.populatedFields else draft.populatedFields + surfaces))
+                            themeDrafts = SettingsManager.getKeyboardThemeDrafts(context)
+                        }
+                    })
+            }
             TabRow(
                 selectedTabIndex = customizationTab,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -812,9 +832,15 @@ fun KeyboardThemeScreen(
                         onFieldChanged = ::updateDraft
                     )
                 } else if (editedDraft != null && draftPreset != null) {
+                    if (physicalKeyboardTheme) {
+                        Text(stringResource(R.string.keyboard_theme_keys_optional_physical),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(vertical = 8.dp))
+                    }
                     KeyboardThemeDraftKeysEditor(
                         theme = draftPreset,
-                        populatedFields = editedDraft.populatedFields,
+                        populatedFields = editedDraft.populatedFields +
+                            if (physicalKeyboardTheme) KEYBOARD_THEME_VIRTUAL_KEY_FIELDS else emptySet(),
                         onFieldChanged = ::updateDraft
                     )
                 } else if (customizationTab == 0) {
@@ -1116,6 +1142,7 @@ private fun KeyboardThemePresetCard(
 @Composable
 private fun KeyboardThemeDraftCard(
     draft: SettingsManager.KeyboardThemeDraft,
+    physicalKeyboardTheme: Boolean,
     editing: Boolean,
     onClick: () -> Unit
 ) {
@@ -1148,7 +1175,7 @@ private fun KeyboardThemeDraftCard(
                     } else {
                         stringResource(
                             R.string.keyboard_theme_required_missing,
-                            (KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS - draft.populatedFields).size
+                            (keyboardThemeDraftMissingFields(draft.populatedFields, physicalKeyboardTheme)).size
                         )
                     },
                     style = MaterialTheme.typography.labelSmall,
@@ -2156,7 +2183,7 @@ private fun KeyboardThemeDraftColorsEditor(
         KeyboardThemeDraftColorItem(DRAFT_DIVIDER, stringResource(R.string.keyboard_theme_dividers), theme.divider) { theme.copy(divider = it) },
         KeyboardThemeDraftColorItem(DRAFT_NORMAL_KEY, stringResource(R.string.keyboard_theme_normal_keys), theme.normalKey) { theme.copy(normalKey = it) },
         KeyboardThemeDraftColorItem(DRAFT_SPECIAL_KEY, stringResource(R.string.keyboard_theme_special_keys), theme.specialKey) { theme.copy(specialKey = it) },
-        KeyboardThemeDraftColorItem(DRAFT_TEXT_ICONS, stringResource(R.string.keyboard_theme_text_icons), theme.textAndIcons) { theme.copy(textAndIcons = it) },
+        KeyboardThemeDraftColorItem(DRAFT_TEXT_ICONS, stringResource(R.string.keyboard_theme_text_icons), theme.textAndIcons) { theme.withoutTextureContrast().copy(textAndIcons = it) },
         KeyboardThemeDraftColorItem(DRAFT_ACCENT, stringResource(R.string.keyboard_theme_accent), theme.accent) { theme.copy(accent = it) },
         KeyboardThemeDraftColorItem(DRAFT_SUGGESTION, stringResource(R.string.keyboard_theme_suggestions), theme.suggestion) { theme.copy(suggestion = it) },
         KeyboardThemeDraftColorItem(DRAFT_STATUS_BUTTON, stringResource(R.string.keyboard_theme_status_bar_buttons), theme.statusBarButton) { theme.copy(statusBarButton = it) },
@@ -2174,12 +2201,18 @@ private fun KeyboardThemeDraftColorsEditor(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 rowItems.forEach { item ->
+                    val role = if (item.field == DRAFT_STATUS_BUTTON) "status_bar_button" else item.field
                     KeyboardThemeDraftColorRow(
                         label = item.label,
                         color = item.color,
                         populated = item.field in populatedFields,
-                        onColorChanged = { color -> onFieldChanged(item.field, item.onColorChanged(color)) },
+                        onColorChanged = { color -> onFieldChanged(item.field, item.onColorChanged(color).withSurfaceTexture(role,null)) },
                         modifier = Modifier.weight(1f),
+                        texture = theme.textures[role],
+                        photoContent = { ThemePhotoColorButton(
+                            onColorSelected = { color -> onFieldChanged(item.field,item.onColorChanged(color).withSurfaceTexture(role,null)) },
+                            theme = theme, surfaceRole = role, isSoftware = true,
+                            onTextureSelected = { value -> onFieldChanged(item.field,theme.withSurfaceTexture(role,value)) }) },
                         linkId = if (item.field == DRAFT_LED_INACTIVE) {
                             "keyboard_theme.software.led_colors"
                         } else {
@@ -2225,7 +2258,9 @@ private fun KeyboardThemeDraftColorRow(
     populated: Boolean,
     onColorChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    linkId: String? = null
+    linkId: String? = null,
+    texture: KeyboardThemeTexture? = null,
+    photoContent: (@Composable () -> Unit)? = null
 ) {
     Surface(
         modifier = modifier
@@ -2239,7 +2274,10 @@ private fun KeyboardThemeDraftColorRow(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1)
+            Row(Modifier.fillMaxWidth().heightIn(min = 36.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 2)
+                if (photoContent != null) photoContent() else ThemePhotoColorButton(onColorSelected = onColorChanged)
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -2251,7 +2289,7 @@ private fun KeyboardThemeDraftColorRow(
                     showColor = populated
                 )
                 Text(
-                    text = if (populated) color.toHexColorLabel() else stringResource(R.string.keyboard_theme_required),
+                    text = if (texture != null) stringResource(R.string.theme_texture_applied) else if (populated) color.toHexColorLabel() else stringResource(R.string.keyboard_theme_required),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (populated) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f),
@@ -2343,9 +2381,10 @@ private fun KeyboardThemeColorsEditor(
         add(
             KeyboardThemeColorEditorItem(
                 label = stringResource(R.string.keyboard_theme_background),
+                surfaceRole = "background",
                 color = theme.background,
                 presetColor = preset.background,
-                onColorChanged = { onThemeChanged(theme.copy(background = it)) }
+                onColorChanged = { onThemeChanged(theme.copy(background = it).withSurfaceTexture("background", null, coupled = true)) }
             )
         )
         add(
@@ -2359,17 +2398,19 @@ private fun KeyboardThemeColorsEditor(
         add(
             KeyboardThemeColorEditorItem(
                 label = stringResource(R.string.keyboard_theme_normal_keys),
+                surfaceRole = "normal_key",
                 color = theme.normalKey,
                 presetColor = preset.normalKey,
-                onColorChanged = { onThemeChanged(theme.copy(normalKey = it, suggestion = it)) }
+                onColorChanged = { onThemeChanged(theme.copy(normalKey = it, suggestion = it).withSurfaceTexture("normal_key", null, coupled = true)) }
             )
         )
         add(
             KeyboardThemeColorEditorItem(
                 label = stringResource(R.string.keyboard_theme_special_keys),
+                surfaceRole = "special_key",
                 color = theme.specialKey,
                 presetColor = preset.specialKey,
-                onColorChanged = { onThemeChanged(theme.copy(specialKey = it, statusBarButton = it)) }
+                onColorChanged = { onThemeChanged(theme.copy(specialKey = it, statusBarButton = it).withSurfaceTexture("special_key", null, coupled = true)) }
             )
         )
         add(
@@ -2377,23 +2418,25 @@ private fun KeyboardThemeColorsEditor(
                 label = stringResource(R.string.keyboard_theme_text_icons),
                 color = theme.textAndIcons,
                 presetColor = preset.textAndIcons,
-                onColorChanged = { onThemeChanged(theme.copy(textAndIcons = it)) }
+                onColorChanged = { onThemeChanged(theme.withoutTextureContrast().copy(textAndIcons = it)) }
             )
         )
         add(
             KeyboardThemeColorEditorItem(
                 label = stringResource(R.string.menu_literal_861edba005),
+                surfaceRole = "suggestion",
                 color = theme.suggestion,
                 presetColor = preset.suggestion,
-                onColorChanged = { onThemeChanged(theme.copy(suggestion = it)) }
+                onColorChanged = { onThemeChanged(theme.copy(suggestion = it).withSurfaceTexture("suggestion", null, coupled = true)) }
             )
         )
         add(
             KeyboardThemeColorEditorItem(
                 label = stringResource(R.string.menu_literal_3abdbb8538),
+                surfaceRole = "status_bar_button",
                 color = theme.statusBarButton,
                 presetColor = preset.statusBarButton,
-                onColorChanged = { onThemeChanged(theme.copy(statusBarButton = it)) }
+                onColorChanged = { onThemeChanged(theme.copy(statusBarButton = it).withSurfaceTexture("status_bar_button", null, coupled = true)) }
             )
         )
         add(
@@ -2408,17 +2451,19 @@ private fun KeyboardThemeColorsEditor(
             add(
                 KeyboardThemeColorEditorItem(
                     label = stringResource(R.string.menu_literal_7de9a1a7f3),
-                    color = theme.keyPopup,
+                    surfaceRole = "key_popup",
+                color = theme.keyPopup,
                     presetColor = preset.keyPopup,
-                    onColorChanged = { onThemeChanged(theme.copy(keyPopup = it)) }
+                    onColorChanged = { onThemeChanged(theme.copy(keyPopup = it).withSurfaceTexture("key_popup", null, coupled = true)) }
                 )
             )
             add(
                 KeyboardThemeColorEditorItem(
                     label = stringResource(R.string.menu_literal_dcf513dc4b),
-                    color = theme.keyPopupSelected,
+                    surfaceRole = "key_popup_selected",
+                color = theme.keyPopupSelected,
                     presetColor = preset.keyPopupSelected,
-                    onColorChanged = { onThemeChanged(theme.copy(keyPopupSelected = it)) }
+                    onColorChanged = { onThemeChanged(theme.copy(keyPopupSelected = it).withSurfaceTexture("key_popup_selected", null, coupled = true)) }
                 )
             )
         }
@@ -2469,7 +2514,10 @@ private fun KeyboardThemeColorsEditor(
                         presetColor = item.presetColor,
                         onColorChanged = item.onColorChanged,
                         modifier = Modifier.weight(1f),
-                        linkId = item.linkId
+                        linkId = item.linkId,
+                        texture = theme.textures[item.surfaceRole],
+                        photoContent = { ThemePhotoColorButton(item.onColorChanged, theme, item.surfaceRole, isSoftware,
+                            coupled = true, onTextureSelected = { value -> onThemeChanged(theme.withSurfaceTexture(item.surfaceRole,value,true)) }) }
                     )
                 }
                 if (rowItems.size == 1) {
@@ -2485,7 +2533,8 @@ private data class KeyboardThemeColorEditorItem(
     val color: Int,
     val presetColor: Int,
     val onColorChanged: (Int) -> Unit,
-    val linkId: String? = null
+    val linkId: String? = null,
+    val surfaceRole: String? = null
 )
 
 @Composable
@@ -2725,7 +2774,9 @@ private fun KeyboardThemeColorRow(
     presetColor: Int,
     onColorChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    linkId: String? = null
+    linkId: String? = null,
+    texture: KeyboardThemeTexture? = null,
+    photoContent: (@Composable () -> Unit)? = null
 ) {
     Surface(
         modifier = modifier.fillMaxWidth().settingRow(linkId),
@@ -2736,12 +2787,11 @@ private fun KeyboardThemeColorRow(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1
-            )
+            Row(Modifier.fillMaxWidth().heightIn(min = 36.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(text = label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium, maxLines = 2)
+                if (photoContent != null) photoContent() else ThemePhotoColorButton(onColorSelected = onColorChanged)
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -2749,7 +2799,7 @@ private fun KeyboardThemeColorRow(
             ) {
                 KeyboardThemeSwatchButton(color = color, onColorChanged = onColorChanged)
                 Text(
-                    text = color.toHexColorLabel(),
+                    text = if (texture == null) color.toHexColorLabel() else stringResource(R.string.theme_texture_applied),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f),
                     maxLines = 1
@@ -2925,7 +2975,7 @@ private fun KeyboardThemeSwatchButton(
 }
 
 @Composable
-private fun KeyboardThemeColorPickerDialog(
+internal fun KeyboardThemeColorPickerDialog(
     initialColor: Int,
     onDismiss: () -> Unit,
     onColorSelected: (Int) -> Unit,

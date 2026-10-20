@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Foto: Farbe oder Textur</string>
+    <string name="theme_texture_color">Einfarbig</string>
+    <string name="theme_texture_matter">Textur beibehalten</string>
+    <string name="theme_texture_help">Verschiebe und vergrößere das Foto unter dem Rahmen. Ziehe die Ecke, um den Ausschnitt anzupassen.</string>
+    <string name="theme_texture_sample">Diesen Bereich verwenden</string>
+    <string name="theme_texture_preview">Texturvorschau</string>
+    <string name="theme_texture_cover">Füllen</string>
+    <string name="theme_texture_fit">Einpassen</string>
+    <string name="theme_texture_tile">Wiederholen</string>
+    <string name="theme_texture_hardware">Physische Tastatur</string>
+    <string name="theme_texture_software">Bildschirmtastatur</string>
+    <string name="theme_texture_enlargement">Dieser Bereich wird ×%1$.1f vergrößert. Wähle einen größeren Bereich, um mehr Details zu erhalten.</string>
+    <string name="theme_texture_apply">Textur anwenden</string>
+    <string name="theme_texture_remove">Zurück zur einheitlichen Farbe</string>
+    <string name="theme_texture_applied">Fototextur</string>
+    <string name="theme_texture_resize">Ausschnittgröße ändern</string>
+</resources>

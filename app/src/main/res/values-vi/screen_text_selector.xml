@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Chọn văn bản</string>
+    <string name="screen_text_instructions">Dùng các phím Nav để chọn một đoạn rồi sao chép. Bản sao cục bộ này chỉ cho phép đọc.</string>
+    <string name="screen_text_enable_service">Bật Nav ngoài ô nhập liệu trong phần Hỗ trợ tiếp cận của Android.</string>
+    <string name="screen_text_unavailable">Không tìm thấy văn bản có thể truy cập trên màn hình này.</string>
+    <string name="nav_mode_action_select_screen_text">Chọn văn bản trên màn hình</string>
+    <string name="screen_text_settings_description">Nếu cách chọn thông thường không hoạt động, hãy gán Chọn văn bản trên màn hình cho một phím Nav. Văn bản chỉ được đọc khi bạn yêu cầu và không được lưu.</string>
+</resources>

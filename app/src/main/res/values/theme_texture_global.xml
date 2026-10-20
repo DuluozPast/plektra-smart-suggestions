@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">One material for the whole keyboard</string>
+    <string name="theme_texture_global_hint">Choose one crop for all surfaces, then adjust text and dividers.</string>
+</resources>

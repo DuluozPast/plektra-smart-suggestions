@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Nav-Modus außerhalb von Textfeldern</string>
+    <string name="screen_nav_description">Wähle zuerst ein Wort aus, drücke Ctrl/Fn zweimal und verwende deine Nav-Tasten. Aktiviere diese optionale Weiterleitung unter Android-Bedienungshilfen. Die Unterstützung hängt von der App ab.</string>
+    <string name="screen_nav_service_description">Leitet Nav-Tasten weiter, wenn kein Textfeld aktiv ist. Deine Tastenbelegung bleibt erhalten.</string>
+    <string name="screen_nav_open_settings">Bedienungshilfen öffnen</string>
+    <string name="screen_nav_enabled">Weiterleitung aktiviert</string>
+    <string name="screen_nav_disabled">Weiterleitung deaktiviert</string>
+</resources>

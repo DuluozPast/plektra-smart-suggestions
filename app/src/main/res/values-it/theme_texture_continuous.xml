@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Immagine continua tra i tasti</string>
+    <string name="theme_texture_per_key">Ripeti il campione su ogni tasto</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_texture_photo_title">Foto: colore o trama</string>
+    <string name="theme_texture_color">Colore uniforme</string>
+    <string name="theme_texture_matter">Mantieni la trama</string>
+    <string name="theme_texture_help">Sposta e ingrandisci la foto sotto il riquadro. Trascina l’angolo per regolare l’area da prelevare.</string>
+    <string name="theme_texture_sample">Usa quest’area</string>
+    <string name="theme_texture_preview">Anteprima della trama</string>
+    <string name="theme_texture_cover">Riempi</string>
+    <string name="theme_texture_fit">Adatta</string>
+    <string name="theme_texture_tile">Ripeti</string>
+    <string name="theme_texture_hardware">Tastiera fisica</string>
+    <string name="theme_texture_software">Tastiera su schermo</string>
+    <string name="theme_texture_enlargement">Quest’area viene ingrandita ×%1$.1f. Seleziona un’area più grande per mantenere più dettagli.</string>
+    <string name="theme_texture_apply">Applica la trama</string>
+    <string name="theme_texture_remove">Torna al colore uniforme</string>
+    <string name="theme_texture_applied">Trama fotografica</string>
+    <string name="theme_texture_resize">Ridimensiona l’area da prelevare</string>
+</resources>

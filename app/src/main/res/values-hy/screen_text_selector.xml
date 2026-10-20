@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Տեքստի ընտրություն</string>
+    <string name="screen_text_instructions">Nav ստեղներով ընտրեք հատվածը, ապա պատճենեք։ Տեղային պատճենը միայն ընթերցման համար է։</string>
+    <string name="screen_text_enable_service">Android-ի մատչելիության կարգավորումներում միացրեք Nav-ը մուտքագրման դաշտերից դուրս։</string>
+    <string name="screen_text_unavailable">Այս էկրանին հասանելի տեքստ չի գտնվել։</string>
+    <string name="nav_mode_action_select_screen_text">Ընտրել էկրանի տեքստը</string>
+    <string name="screen_text_settings_description">Եթե սովորական ընտրությունը չի աշխատում, Nav ստեղնին նշանակեք էկրանի տեքստի ընտրությունը։ Տեքստը կարդացվում է միայն ձեր պահանջով և չի պահպանվում։</string>
+</resources>

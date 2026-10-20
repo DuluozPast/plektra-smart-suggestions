@@ -213,5 +213,33 @@ class DictionaryRepositoryTest {
             }
         )
     }
+
+    @Test fun boundedStarterSelectionPreservesRankingAcrossLargeInput() {
+        val entries = (0 until 2000).map { n ->
+            val suffix = "${('a'.code + n / 676).toChar()}${('a'.code + n / 26 % 26).toChar()}${('a'.code + n % 26).toChar()}"
+            DictionaryEntry("mot$suffix", (n * 37) % 256, SuggestionSource.MAIN)
+        } + listOf(DictionaryEntry("personnel", 1, SuggestionSource.USER),
+            DictionaryEntry("ignoré", 255, SuggestionSource.DEFAULT_USER))
+        repository.index(entries)
+        for (includeUsers in listOf(false, true)) {
+            val expected = entries.filter { it.source == SuggestionSource.MAIN ||
+                (includeUsers && it.source == SuggestionSource.USER) }
+                .sortedWith(compareByDescending<DictionaryEntry> { it.source == SuggestionSource.USER }
+                    .thenByDescending { repository.effectiveFrequency(it) }.thenBy { it.word.length })
+                .take(48)
+            assertEquals(expected, repository.topCommonEntries(48, includeUsers))
+            assertEquals(expected.take(3), repository.topCommonEntries(3, includeUsers))
+        }
+    }
+
+    @Test fun boundedMergedPrefixPreservesHighestFrequencyCompletionsInLargeBuckets() {
+        val entries = (0 until 3000).map { n ->
+            val suffix = "${('a'.code + n / 676).toChar()}${('a'.code + n / 26 % 26).toChar()}${('a'.code + n % 26).toChar()}"
+            DictionaryEntry("al$suffix", (n * 41) % 256)
+        }
+        repository.index(entries)
+        val expected = entries.sortedByDescending { repository.effectiveFrequency(it) }.take(200)
+        assertEquals(expected, repository.lookupByPrefixMerged("al", 200))
+    }
 }
 

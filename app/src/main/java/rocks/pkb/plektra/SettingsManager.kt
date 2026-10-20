@@ -62,6 +62,10 @@ object SettingsManager {
     private const val KEY_AUTO_SPACE_PUNCTUATION = "auto_space_punctuation"
     private const val KEY_SPACE_AFTER_PUNCTUATION = "space_after_punctuation"
     private const val KEY_SMART_QUOTES = "smart_quotes"
+    private const val KEY_SMART_QUOTES_MODE = "smart_quotes_mode"
+    const val SMART_QUOTES_OFF = "off"
+    const val SMART_QUOTES_DEFERRED = "deferred"
+    const val SMART_QUOTES_IMMEDIATE = "immediate"
     private const val KEY_SMART_QUOTES_STYLE = "smart_quotes_style"
     private const val KEY_SWIPE_TO_DELETE = "swipe_to_delete"
     private const val KEY_SWIPE_TO_DELETE_PROVIDER = "swipe_to_delete_provider"
@@ -540,7 +544,8 @@ object SettingsManager {
         val keyPopupAttached: Boolean = true,
         val keyPopupTailEnabled: Boolean = true,
         val keyPreviewAfterLongPress: Boolean = false,
-        val keyAlternatesPopupEnabled: Boolean = true
+        val keyAlternatesPopupEnabled: Boolean = true,
+        val textures: Map<String, KeyboardThemeTexture> = emptyMap()
     ) {
         fun toKeyboardThemeColors(): KeyboardThemeColors =
             KeyboardThemeColors(
@@ -561,7 +566,8 @@ object SettingsManager {
                 keyCornerRadiusRatio = keyCornerRadiusRatio,
                 chromeCornerRadiusRatio = chromeCornerRadiusRatio,
                 suggestionsHeightScale = suggestionsHeightScale,
-                variationsHeightScale = variationsHeightScale
+                variationsHeightScale = variationsHeightScale,
+                textures = textures
             )
     }
 
@@ -968,7 +974,8 @@ object SettingsManager {
                 keyPopupAttached = json.optBoolean("key_popup_attached", defaults.keyPopupAttached),
                 keyPopupTailEnabled = json.optBoolean("key_popup_tail_enabled", defaults.keyPopupTailEnabled),
                 keyPreviewAfterLongPress = json.optBoolean("key_preview_after_long_press", defaults.keyPreviewAfterLongPress),
-                keyAlternatesPopupEnabled = json.optBoolean("key_alternates_popup_enabled", defaults.keyAlternatesPopupEnabled)
+                keyAlternatesPopupEnabled = json.optBoolean("key_alternates_popup_enabled", defaults.keyAlternatesPopupEnabled),
+                textures = ThemeTextureModel.decode(json.optJSONObject("textures"))
             )
         } catch (error: Exception) {
             Log.e(TAG, "Fehler beim Laden des Keyboard-Themes", error)
@@ -1460,7 +1467,8 @@ object SettingsManager {
             keyPopupAttached = json.optBoolean("key_popup_attached", defaults.keyPopupAttached),
             keyPopupTailEnabled = json.optBoolean("key_popup_tail_enabled", defaults.keyPopupTailEnabled),
             keyPreviewAfterLongPress = json.optBoolean("key_preview_after_long_press", defaults.keyPreviewAfterLongPress),
-            keyAlternatesPopupEnabled = json.optBoolean("key_alternates_popup_enabled", defaults.keyAlternatesPopupEnabled)
+            keyAlternatesPopupEnabled = json.optBoolean("key_alternates_popup_enabled", defaults.keyAlternatesPopupEnabled),
+                textures = ThemeTextureModel.decode(json.optJSONObject("textures"))
         )
 
     private fun keyboardThemeToJson(theme: KeyboardThemeSettings): JSONObject =
@@ -1495,6 +1503,7 @@ object SettingsManager {
             put("key_popup_tail_enabled", theme.keyPopupTailEnabled)
             put("key_preview_after_long_press", theme.keyPreviewAfterLongPress)
             put("key_alternates_popup_enabled", theme.keyAlternatesPopupEnabled)
+            if (theme.textures.isNotEmpty()) put("textures", ThemeTextureModel.encode(theme.textures))
         }
 
     private fun normalizeKeyboardThemePopupStyle(value: String): String =
@@ -2187,14 +2196,25 @@ object SettingsManager {
             .toSet()
             .let { selected -> Punctuation.AUTO_SPACE_CANDIDATES.filter { it in selected } }
 
-    fun getSmartQuotes(context: Context): Boolean {
-        return getPreferences(context).getBoolean(KEY_SMART_QUOTES, DEFAULT_SMART_QUOTES)
+    fun getSmartQuotesMode(context: Context): String {
+        val prefs = getPreferences(context)
+        return when (val mode = prefs.getString(KEY_SMART_QUOTES_MODE, null)) {
+            SMART_QUOTES_OFF, SMART_QUOTES_DEFERRED, SMART_QUOTES_IMMEDIATE -> mode
+            else -> if (prefs.getBoolean(KEY_SMART_QUOTES, DEFAULT_SMART_QUOTES)) SMART_QUOTES_DEFERRED else SMART_QUOTES_OFF
+        }
     }
 
+    fun setSmartQuotesMode(context: Context, mode: String) {
+        val checked = mode.takeIf { it in setOf(SMART_QUOTES_OFF, SMART_QUOTES_DEFERRED, SMART_QUOTES_IMMEDIATE) } ?: SMART_QUOTES_OFF
+        getPreferences(context).edit().putString(KEY_SMART_QUOTES_MODE, checked)
+            .putBoolean(KEY_SMART_QUOTES, checked != SMART_QUOTES_OFF).apply()
+    }
+
+    fun getSmartQuotes(context: Context): Boolean = getSmartQuotesMode(context) != SMART_QUOTES_OFF
+
     fun setSmartQuotes(context: Context, enabled: Boolean) {
-        getPreferences(context).edit()
-            .putBoolean(KEY_SMART_QUOTES, enabled)
-            .apply()
+        setSmartQuotesMode(context, if (!enabled) SMART_QUOTES_OFF else
+            getSmartQuotesMode(context).takeIf { it != SMART_QUOTES_OFF } ?: SMART_QUOTES_DEFERRED)
     }
 
     fun getSmartQuotesStyle(context: Context): String {

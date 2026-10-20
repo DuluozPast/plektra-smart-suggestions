@@ -5,5 +5,6 @@
         <service
             android:name=".inputmethod.ClicksLauncherButtonAccessibilityService"
             tools:node="remove" />
+        <service android:name=".inputmethod.ScreenNavAccessibilityService" tools:node="remove" />
     </application>
 </manifest>

@@ -23,7 +23,8 @@ object SuggestionButtonHandler {
         inputConnection: InputConnection?,
         listener: VariationButtonHandler.OnVariationSelectedListener? = null,
         shouldDisableAutoCapitalize: Boolean,
-        onSuggestionCommitted: ((String, String) -> Unit)? = null
+        onSuggestionCommitted: ((String, String) -> Unit)? = null,
+        capsLockActive: () -> Boolean = { false }
     ): View.OnClickListener {
         return View.OnClickListener {
             Log.d(TAG, "Click on suggestion button: $suggestion")
@@ -43,7 +44,8 @@ object SuggestionButtonHandler {
             val result = replaceCurrentWord(
                 inputConnection,
                 suggestion,
-                forceLeadingCapital
+                forceLeadingCapital,
+                capsLockActive(), context.resources.configuration.locales[0]
             )
 
             if (result != null) {
@@ -65,14 +67,16 @@ object SuggestionButtonHandler {
     /**
      * Replace the word immediately before the cursor with the given suggestion.
      * Deletes up to the nearest whitespace/punctuation boundary and applies basic casing
-     * (leading capital only). All-caps input (e.g., CapsLock) will not force the suggestion to uppercase.
+     * including the explicit Caps Lock state for suggestions without a typed prefix.
      */
 
 
     private fun replaceCurrentWord(
         inputConnection: InputConnection,
         suggestion: String,
-        forceLeadingCapital: Boolean
+        forceLeadingCapital: Boolean,
+        capsLockActive: Boolean,
+        locale: java.util.Locale
     ): ReplacementResult? {
         val before = inputConnection.getTextBeforeCursor(64, 0)?.toString().orEmpty()
         val after = inputConnection.getTextAfterCursor(64, 0)?.toString().orEmpty()
@@ -112,7 +116,8 @@ object SuggestionButtonHandler {
         // Delete the full word around the cursor
         val deleteBefore = wordBeforeCursor.length
         val deleteAfter = wordAfterCursor.length + rocks.pkb.plektra.core.suggestions.PunctuatedPhrase.overlappingAfter(suggestion, after.substring(end))
-        val replacement = CasingHelper.applyCasing(suggestion, currentWord, forceLeadingCapital)
+        val replacement = CasingHelper.applyCasing(suggestion, currentWord, forceLeadingCapital,
+            forceUppercase = capsLockActive, locale = locale)
         val committed = SuggestionCommitter.commit(inputConnection, replacement, deleteBefore, deleteAfter, after)
         if (committed) {
             DebugCaptureStore.recordAutoCorrectionCommit(

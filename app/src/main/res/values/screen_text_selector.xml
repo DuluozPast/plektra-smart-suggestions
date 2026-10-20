@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_text_title">Text selector</string>
+    <string name="screen_text_instructions">Use your Nav keys to select a passage, then copy. This is a local read-only copy.</string>
+    <string name="screen_text_enable_service">Enable Nav outside text fields in Android Accessibility settings to use the text selector.</string>
+    <string name="screen_text_unavailable">No accessible text was found on this screen.</string>
+    <string name="nav_mode_action_select_screen_text">Select text from the screen</string>
+    <string name="screen_text_settings_description">If native selection fails, assign Select text from the screen to a Nav key. Text is read only when requested; nothing is saved.</string>
+</resources>

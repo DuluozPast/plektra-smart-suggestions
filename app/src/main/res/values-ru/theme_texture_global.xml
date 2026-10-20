@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Одна текстура для всей клавиатуры</string>
+    <string name="theme_texture_global_hint">Один фрагмент для всех поверхностей. Затем настройте текст и разделители.</string>
+</resources>

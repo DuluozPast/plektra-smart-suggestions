@@ -333,6 +333,12 @@ class UserDictionaryStore {
      * restored automatically if the new base no longer contains them.
      */
 
+    /** Include suppressed entries when rechecking coverage against a replacement base. */
+    internal fun personalKeysForBase(context: Context, locale: Locale): Set<String> =
+        (readActiveEntries(context).asSequence().map { it.word } +
+            loadSuppressedEntries(context).asSequence().map { it.entry.word })
+            .map { WordNormalization.normalizeForDictionary(it, locale) }.toSet()
+
     fun removeWordsAlreadyInBase(
         context: Context,
         baseNormalizedWords: Set<String>,

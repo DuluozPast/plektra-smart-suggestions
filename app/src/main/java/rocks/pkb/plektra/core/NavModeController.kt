@@ -312,6 +312,10 @@ class NavModeController(
         }
 
         when (action) {
+            "select_screen_text" -> {
+                if (rocks.pkb.plektra.inputmethod.ScreenTextSelectorBridge.open(context)) enterNavMode()
+                return true
+            }
             "expand_selection_left" ->
                 return TextSelectionHelper.expandSelectionLeft(inputConnection)
 

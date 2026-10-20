@@ -9,12 +9,13 @@ import java.nio.channels.FileChannel
 
 class CompactDictionaryV31Reader(
     file: File
-) : Closeable {
+) : StaticDictionaryReader {
 
     data class WordEntry(
         val word: String,
         val normalized: String,
-        val frequency: Int
+        val frequency: Int,
+        val source: Int = 0
     )
 
     companion object {
@@ -44,9 +45,9 @@ class CompactDictionaryV31Reader(
     val formatVersion: Int
     val normalizationVersion: Int
 
-    val wordCount: Int
-    val normalizedCount: Int
-    val prefixCount: Int
+    override val wordCount: Int
+    override val normalizedCount: Int
+    override val prefixCount: Int
     val symDeleteCount: Int
 
     val wordOffsetsOffset: Long
@@ -222,7 +223,7 @@ class CompactDictionaryV31Reader(
         return emptyList()
     }
 
-    fun normalizedEntries(normalized: String): List<WordEntry> {
+    override fun normalizedEntries(normalized: String): List<WordEntry> {
         var low = 0
         var high = normalizedCount - 1
 
@@ -289,7 +290,11 @@ class CompactDictionaryV31Reader(
         return emptyList()
     }
 
-    fun symDeleteEntries(deleteKey: String): List<WordEntry> {
+    fun symDeleteEntries(deleteKey: String): List<WordEntry> = buildList {
+        visitDeleteEntries(deleteKey) { add(it) }
+    }
+
+    override fun visitDeleteEntries(deleteKey: String, minLength: Int, maxLength: Int, visit: (WordEntry) -> Unit) {
         var low = 0
         var high = symDeleteCount - 1
 
@@ -316,14 +321,17 @@ class CompactDictionaryV31Reader(
                     val idCount = reader.int
                     require(idCount >= 0)
 
-                    return List(idCount) {
-                        wordEntryById(reader.int)
+                    repeat(idCount) {
+                        SuggestionWorkCancellation.check()
+                        val entry = wordEntryById(reader.int)
+                        if (entry.normalized.length in minLength..maxLength) visit(entry)
                     }
+                    return
                 }
             }
         }
 
-        return emptyList()
+        return
     }
 
     fun prefixWords(prefix: String): List<String> {
@@ -406,7 +414,7 @@ class CompactDictionaryV31Reader(
         return emptyList()
     }
 
-    fun prefixEntries(
+    override fun prefixEntries(
         prefix: String,
         limit: Int
     ): List<WordEntry> {

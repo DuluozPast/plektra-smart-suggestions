@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Durchgehendes Bild über die Tasten</string>
+    <string name="theme_texture_per_key">Ausschnitt auf jeder Taste wiederholen</string>
+</resources>

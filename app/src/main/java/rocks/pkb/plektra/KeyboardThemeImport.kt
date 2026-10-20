@@ -25,7 +25,6 @@ internal val KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS = setOf(
     DRAFT_ROW_SPACING,
     DRAFT_SUGGESTIONS_HEIGHT,
     DRAFT_VARIATIONS_HEIGHT,
-    DRAFT_SHOW_LEDS,
     DRAFT_DISTRIBUTE_SPACING,
     DRAFT_ORTHOLINEAR,
     DRAFT_ATTACH_POPUP,
@@ -33,6 +32,21 @@ internal val KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS = setOf(
     DRAFT_PREVIEW_ON_HOLD,
     DRAFT_CHARACTER_PICKER
 )
+
+// These fields belong to the virtual-key layout tab. Defaults remain in the
+// theme; skipping them must not mark them as explicitly edited in a draft.
+internal val KEYBOARD_THEME_VIRTUAL_KEY_FIELDS = setOf(
+    DRAFT_KEY_ROUNDING, DRAFT_CHROME_ROUNDING, DRAFT_KEY_HEIGHT,
+    DRAFT_NUMBER_ROW_HEIGHT, DRAFT_KEY_WIDTH, DRAFT_ROW_SPACING,
+    DRAFT_SUGGESTIONS_HEIGHT, DRAFT_VARIATIONS_HEIGHT, DRAFT_DISTRIBUTE_SPACING,
+    DRAFT_ORTHOLINEAR, DRAFT_ATTACH_POPUP, DRAFT_POPUP_TAIL,
+    DRAFT_PREVIEW_ON_HOLD, DRAFT_CHARACTER_PICKER
+)
+
+internal fun keyboardThemeDraftMissingFields(
+    populatedFields: Set<String>, physicalKeyboard: Boolean
+): Set<String> = (KEYBOARD_THEME_DRAFT_REQUIRED_FIELDS -
+    if (physicalKeyboard) KEYBOARD_THEME_VIRTUAL_KEY_FIELDS else emptySet()) - populatedFields
 
 internal fun keyboardThemeNameExists(context: Context, name: String): Boolean {
     val normalizedName = name.trim()

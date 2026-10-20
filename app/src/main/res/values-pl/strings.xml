@@ -899,4 +899,9 @@ Każdy klawisz można skonfigurować jako Keycode, Akcja, Native Ctrl lub Brak. 
     <string name="delete_calibration_restart">Zacznij ponownie</string>
     <string name="delete_calibration_reset">Przywróć gest domyślny</string>
     <string name="enter_send_rejected">Edytor odrzucił wysłanie. Wybierz inną metodę w ustawieniach klawisza Enter dla aplikacji.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Za mało pamięci na wybrany słownik (%1$s). W tej sesji używany jest słownik wbudowany.</string>
+    <string name="dictionary_memory_unavailable">Za mało pamięci na wczytanie słownika (%1$s). Podpowiedzi w tym języku są niedostępne w tej sesji.</string>
+    <string name="keyboard_failure_report_title">Diagnostyka błędu klawiatury</string>
 </resources>

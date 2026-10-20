@@ -31,6 +31,7 @@ class NavCommandSource : CommandSource {
 
     private fun actionCommands(context: Context): List<CommandTarget> {
         return listOf(
+            "select_screen_text" to context.getString(R.string.nav_mode_action_select_screen_text),
             "copy" to "Copy",
             "paste" to "Paste",
             "cut" to "Cut",

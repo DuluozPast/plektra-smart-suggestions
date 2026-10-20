@@ -1,0 +1,403 @@
+{
+  "totals": {
+    "tests": 498,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "name": "rocks.pkb.plektra.backup.IntegrationLearningMigrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.backup.NotesAndDictionaryBackupTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.backup.RestoreManagerIntegrationTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.backup.ThemeImageBackupTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.backup.ThemeTextureBackupTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.AutoCorrectionApostropheRegressionTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.AutoCorrectionManagerTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.DoubleSpaceEventTimingTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.ImmediateSmartQuotesTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.ModifierStateControllerTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.PunctuationAfterSpaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.SuggestionProvisionalSpaceTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.AutoReplaceControllerLogicTest",
+      "tests": "34",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.CasingHelperTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.DictionaryLoadSafetyTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.DictionaryRepositoryTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.DictionaryResourceLifecycleTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.DiskDictionaryReaderTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.MultilingualDictionarySafetyTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.SuggestionControllerNextWordTest",
+      "tests": "51",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.SuggestionDictionaryReloadTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.SuggestionNormalizationCacheTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.UserDictionaryStoreTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.suggestions.UserOnlyDictionaryTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.core.TextInputControllerTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.dictionaries.StreamingDictionaryValidatorTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.AlternateCharacterManagerTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.CornerButtonThemeTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.DisabledSmartFeaturesRegressionTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.EditorSendPolicyTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.ImmediateQuoteServiceE2ETest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.InputEventRouterBoundaryTextTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.InputEventRouterCtrlHoldNavModeTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.MappedImmediateQuotesTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.ScreenNavRelayTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.ScreenTextSelectionTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.ScreenTextSelectorTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.SoftwareKeyboardTextInputHandlerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.SpaceHardwareRepeatTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.SuggestionCapsLockTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.suggestions.SuggestionCommitterTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.inputmethod.TextFormattingShortcutsTest",
+      "tests": "34",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.IntegrationUpgradeMigrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.KeyboardThemeImportTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.KeyboardThemeModelTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ScopedThemeRotationTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.SettingsManagerKeyboardThemeAssignmentTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.statistics.TypingStatisticsBackupTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.statistics.TypingStatisticsIntegrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.statistics.TypingStatisticsStoreTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.statistics.TypingStatisticsTrackerTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ThemePhotoImageStoreTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ThemeTextureContrastTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ThemeTextureFrameTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ThemeTextureModelTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "rocks.pkb.plektra.ThemeTextureSurfaceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "scope": "Selected unit/Robolectric suites; full suite and native pixel rendering tests not run."
+}

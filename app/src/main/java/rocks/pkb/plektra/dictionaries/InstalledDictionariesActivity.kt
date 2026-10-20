@@ -62,6 +62,8 @@ import rocks.pkb.plektra.ui.theme.PlektraTheme
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import android.provider.OpenableColumns
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -878,7 +880,7 @@ private sealed interface UninstallResult {
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): ImportResult {
+private suspend fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): ImportResult {
     val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
         val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (nameIndex != -1 && cursor.moveToFirst()) {
@@ -893,28 +895,22 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
     val destFile = File(destDir, name)
 
     return try {
-        // Validate the dictionary and keep its index for post-install deduplication.
-        val dictionaryIndex = context.contentResolver.openInputStream(uri)?.use { input ->
-            validateDictionaryStream(input)
-        } ?: return ImportResult.CopyError
-
-        // Copy once more because stream was consumed during validation
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            destFile.outputStream().use { output ->
-                input.copyTo(output)
+        require(destFile.canonicalFile.parentFile == destDir.canonicalFile) { "Invalid dictionary name" }
+        val languageCode = DictionaryRepositoryManager.extractLanguageCode(name)
+        val locale = Locale.forLanguageTag(languageCode)
+        val normalizedWords = withContext(Dispatchers.IO) {
+            val personalKeys = UserDictionaryStore().personalKeysForBase(context, locale)
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                DictionaryFileInstaller.install(input, destFile, personalKeys)
             }
         } ?: return ImportResult.CopyError
+        // Return to the UI/IME thread before updating personal entries, so an
+        // import does not introduce concurrent read-modify-write operations.
 
-// Keep the personal dictionary focused on words not already covered
-// by the newly installed base dictionary.
-        val languageCode =
-            DictionaryRepositoryManager.extractLanguageCode(name)
-
-        val locale = Locale.forLanguageTag(languageCode)
 
         val removedDuplicates = UserDictionaryStore().removeWordsAlreadyInBase(
             context = context,
-            baseNormalizedWords = dictionaryIndex.normalizedIndex.keys,
+            baseNormalizedWords = normalizedWords,
             locale = locale
         )
 
@@ -934,26 +930,22 @@ private fun importDictionaryFromSaf(context: Context, uri: android.net.Uri): Imp
         )
 
         ImportResult.Success(destFile.name)
+    } catch (oom: OutOfMemoryError) {
+        // Validation expands legacy Extended files in memory; keep the app alive.
+        rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-import-memory", oom)
+        Log.e("InstalledDictionaries", "Not enough memory to validate dictionary", oom)
+        ImportResult.CopyError
     } catch (e: SerializationException) {
+        rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-import-format", e)
         Log.e("InstalledDictionaries", "Invalid dictionary format", e)
         ImportResult.InvalidFormat
     } catch (e: Exception) {
+        rocks.pkb.plektra.KeyboardFailureReport.record(context, "dictionary-import-io", e)
         Log.e("InstalledDictionaries", "Error importing dictionary", e)
         ImportResult.CopyError
     }
 }
 
-@OptIn(ExperimentalSerializationApi::class)
-private fun validateDictionaryStream(input: InputStream): DictionaryIndex {
-    val bytes = input.readBytes()
-    val isJson = bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
-    return if (isJson) {
-        val json = Json { ignoreUnknownKeys = true }
-        json.decodeFromString<DictionaryIndex>(bytes.decodeToString())
-    } else {
-        Cbor.decodeFromByteArray<DictionaryIndex>(bytes)
-    }
-}
 
 private fun deleteDictionaryFile(
     context: Context,

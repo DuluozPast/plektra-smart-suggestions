@@ -1,0 +1,6 @@
+<resources>
+    <string name="theme_texture_adapt_text">Dostosuj tekst do tekstury</string>
+    <string name="theme_texture_manual_text">Użyj mojego koloru tekstu</string>
+    <string name="theme_texture_contrast_failed">Nie można przeanalizować tekstury. Twoje kolory pozostają bez zmian.</string>
+    <string name="theme_texture_change_photo">Zmień zdjęcie</string>
+</resources>

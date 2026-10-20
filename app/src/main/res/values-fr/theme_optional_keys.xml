@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_keys_optional_physical">Facultatif avec un clavier physique. Les valeurs actuelles sont conservées si vous ne les modifiez pas.</string>
+</resources>

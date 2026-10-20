@@ -19,10 +19,20 @@ import rocks.pkb.plektra.inputmethod.AutoCapitalizeHelper
 class TextInputController(
     private val context: Context,
     private val modifierStateController: ModifierStateController,
-    private val doubleTapThreshold: Long
+    private val doubleTapThreshold: Long,
+    private val editorPackageNameProvider: () -> String? = { null }
 ) {
 
-    private var lastSpacePressTime: Long = 0L
+    private var lastSpacePressTime: Long? = null
+
+    /** Called before routing: even a key handled by Alt/long-press must break the pair. */
+    fun observeKeyDown(keyCode: Int, repeatCount: Int = 0) {
+        if (keyCode != KeyEvent.KEYCODE_SPACE || repeatCount > 0) resetDoubleSpaceSequence()
+    }
+
+    fun resetDoubleSpaceSequence() {
+        lastSpacePressTime = null
+    }
 
     data class SmartQuotePair(
         val opening: String,
@@ -34,30 +44,28 @@ class TextInputController(
         inputConnection: InputConnection?,
         shouldDisableDoubleSpaceToPeriod: Boolean,
         shouldDisableAutoCapitalize: Boolean,
-        onStatusBarUpdate: () -> Unit
+        onStatusBarUpdate: () -> Unit,
+        eventTimeMs: Long = android.os.SystemClock.uptimeMillis()
     ): Boolean {
         // Detects a "double space" pattern and replaces the trailing space
         // with ". ". The decision to enable Shift one-shot after that is
         // delegated to AutoCapitalizeHelper so it can be tracked as a
         // smart auto-capitalization (and cleared when context changes).
         if (keyCode != KeyEvent.KEYCODE_SPACE || shouldDisableDoubleSpaceToPeriod) {
-            if (lastSpacePressTime > 0) {
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastSpacePressTime >= doubleTapThreshold) {
-                    lastSpacePressTime = 0
-                }
-            }
+            lastSpacePressTime = null
             return false
         }
 
         if (!SettingsManager.getDoubleSpaceToPeriod(context)) {
-            lastSpacePressTime = 0
+            lastSpacePressTime = null
             return false
         }
 
-        val currentTime = System.currentTimeMillis()
-        val isDoubleTap = lastSpacePressTime > 0 &&
-            (currentTime - lastSpacePressTime) < doubleTapThreshold
+        // KeyEvent timestamps describe the physical presses even when dictionary work
+        // delays dispatch. Use the same monotonic clock for software-keyboard presses.
+        val currentTime = eventTimeMs
+        val elapsed = lastSpacePressTime?.let { currentTime - it }
+        val isDoubleTap = elapsed != null && elapsed > 0 && elapsed < doubleTapThreshold
 
         if (!isDoubleTap || inputConnection == null) {
             lastSpacePressTime = currentTime
@@ -98,7 +106,9 @@ class TextInputController(
 
         val spacesToReplace = if (endsWithDoubleSpaceAfterAutoSpace) 2 else 1
         inputConnection.deleteSurroundingText(spacesToReplace, 0)
-        inputConnection.commitText(". ", 1)
+        if (inputConnection.commitText(". ", 1)) {
+            PunctuationAfterSpace.recordAutoSpace(inputConnection, '.')
+        }
         AutoSpaceTracker.clear()
         AutoCapitalizeHelper.enableAfterPunctuation(
             context = context,
@@ -108,7 +118,7 @@ class TextInputController(
             disableShift = { modifierStateController.consumeShiftOneShot() },
             onUpdateStatusBar = onStatusBarUpdate
         )
-        lastSpacePressTime = 0
+        lastSpacePressTime = null
         return true
     }
 
@@ -217,7 +227,7 @@ class TextInputController(
             typedText.isEmpty() ||
             inputConnection == null ||
             shouldDisableSmartPunctuation ||
-            !SettingsManager.getSmartQuotes(context)
+            SettingsManager.getSmartQuotesMode(context) != SettingsManager.SMART_QUOTES_DEFERRED
         ) {
             return false
         }
@@ -244,10 +254,11 @@ class TextInputController(
             return false
         }
 
-        val replacement = pair.opening + quotedText + pair.closing + typedText
-        inputConnection.deleteSurroundingText(before.length - openingIndex, 0)
-        inputConnection.commitText(replacement, 1)
-        return true
+        val result = ImmediateQuoteEditor.replacePair(inputConnection, before, openingIndex,
+            pair.opening, pair.closing, typedText, packageName = editorPackageNameProvider())
+        if (result.unsupportedSelection) android.widget.Toast.makeText(context,
+            rocks.pkb.plektra.R.string.quote_editor_unavailable, android.widget.Toast.LENGTH_SHORT).show()
+        return result.consumed
     }
 
     private fun isSmartQuoteTrailingDelimiter(typedText: String): Boolean {

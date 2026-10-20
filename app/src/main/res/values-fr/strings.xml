@@ -901,4 +901,9 @@ Chaque touche peut être configurée comme Keycode, Action, Native Ctrl ou Aucun
     <string name="delete_calibration_restart">Recommencer</string>
     <string name="delete_calibration_reset">Rétablir le geste par défaut</string>
     <string name="enter_send_rejected">L’éditeur a refusé la demande d’envoi. Choisissez une autre méthode dans les réglages de la touche Entrée par application.</string>
+
+    <!-- Memory pressure must never close the keyboard when several dictionaries are active. -->
+    <string name="dictionary_memory_fallback">Mémoire insuffisante pour le dictionnaire choisi (%1$s). Le dictionnaire intégré est utilisé pour cette session.</string>
+    <string name="dictionary_memory_unavailable">Mémoire insuffisante pour charger le dictionnaire (%1$s). Les suggestions de cette langue sont indisponibles pour cette session.</string>
+    <string name="keyboard_failure_report_title">Diagnostic d’erreur du clavier</string>
 </resources>

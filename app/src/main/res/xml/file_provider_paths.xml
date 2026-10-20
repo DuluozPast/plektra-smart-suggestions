@@ -6,4 +6,5 @@
     <cache-path
         name="sbom"
         path="sbom/" />
+    <cache-path name="theme_photos" path="theme-photos/" />
 </paths>

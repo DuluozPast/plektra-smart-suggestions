@@ -869,6 +869,88 @@ class AutoReplaceControllerLogicTest {
         assertEquals("und ", inputConnection.text)
     }
 
+
+    @Test fun acknowledgedSpaceWithStaleReadbackIsCommittedExactlyOnce() {
+        assertBoundarySpaceOnce(acceptCommit=true)
+    }
+
+    @Test fun rejectedSpaceUsesOneNativeFallbackAndConsumesOriginalEvent() {
+        assertBoundarySpaceOnce(acceptCommit=false)
+    }
+
+    private fun assertBoundarySpaceOnce(acceptCommit:Boolean) {
+        val context=RuntimeEnvironment.getApplication()
+        val repository=FakeDictionaryRepository().apply { isReady=true }
+        val controller=AutoReplaceController(repository, SuggestionEngine(repository),
+            settingsProvider={SuggestionSettings(autoReplaceOnSpaceEnter=false)})
+        val tracker=CurrentWordTracker(onWordChanged={},onWordReset={}).apply { setWord("bonjour") }
+        val input=object:BaseInputConnection(View(context),true) {
+            val buffer=StringBuilder("bonjour")
+            var nativeDowns=0
+            // The editor applies edits but exposes its pre-edit text until its next frame.
+            override fun getTextBeforeCursor(n:Int,flags:Int):CharSequence="bonjour".takeLast(n)
+            override fun commitText(text:CharSequence?,newCursorPosition:Int):Boolean {
+                if(acceptCommit) buffer.append(text);return acceptCommit
+            }
+            override fun sendKeyEvent(event:KeyEvent):Boolean {
+                if(event.action==KeyEvent.ACTION_DOWN && event.keyCode==KeyEvent.KEYCODE_SPACE) {nativeDowns++;buffer.append(" ")}
+                return false // BaseInputConnection can dispatch successfully and return false.
+            }
+        }
+        val result=controller.handleBoundary(KeyEvent.KEYCODE_SPACE,
+            KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_SPACE),tracker,input)
+        // This is the caller contract: an unconsumed physical event would insert another space.
+        if(!result.committed) input.buffer.append(" ")
+        assertTrue(result.committed)
+        assertEquals("bonjour ",input.buffer.toString())
+        assertEquals(if(acceptCommit) 0 else 1,input.nativeDowns)
+    }
+
+    @Test
+    fun exactKnownSpellingSkipsFuzzySearchAtTheSpaceBoundary() {
+        val base = FakeDictionaryRepository().apply {
+            isReady = true
+            addTestEntry("bonjour", 255)
+            addTestEntry("bonjours", 255)
+        }
+        var fuzzyCalls = 0
+        val repository = object : DictionaryRepository by base {
+            override fun symSpellLookup(term: String, maxSuggestions: Int): List<SymSpell.SuggestItem> {
+                fuzzyCalls++
+                return base.symSpellLookup(term, maxSuggestions)
+            }
+        }
+        val controller = AutoReplaceController(repository, SuggestionEngine(repository),
+            { SuggestionSettings(autoReplaceOnSpaceEnter = true) })
+        val tracker = CurrentWordTracker(onWordChanged = {}, onWordReset = {}).apply { setWord("bonjour") }
+        val input = FakeInputConnection(RuntimeEnvironment.getApplication(), "bonjour")
+        val result = controller.handleBoundary(KeyEvent.KEYCODE_SPACE, null, tracker, input)
+        assertFalse(result.replaced)
+        assertTrue(result.committed)
+        assertEquals("bonjour ", input.text)
+        assertEquals("Exact valid words must not start fuzzy correction on the UI thread", 0, fuzzyCalls)
+    }
+
+    @Test
+    fun unknownSpellingStillSearchesAndCorrectsAtTheSpaceBoundary() {
+        val base = FakeDictionaryRepository().apply { isReady = true; addTestEntry("bonjour", 255) }
+        var fuzzyCalls = 0
+        val repository = object : DictionaryRepository by base {
+            override fun symSpellLookup(term: String, maxSuggestions: Int): List<SymSpell.SuggestItem> {
+                fuzzyCalls++
+                return base.symSpellLookup(term, maxSuggestions)
+            }
+        }
+        val controller = AutoReplaceController(repository, SuggestionEngine(repository),
+            { SuggestionSettings(autoReplaceOnSpaceEnter = true) })
+        val tracker = CurrentWordTracker(onWordChanged = {}, onWordReset = {}).apply { setWord("bonjpur") }
+        val input = FakeInputConnection(RuntimeEnvironment.getApplication(), "bonjpur")
+        val result = controller.handleBoundary(KeyEvent.KEYCODE_SPACE, null, tracker, input)
+        assertTrue(result.replaced)
+        assertEquals("bonjour ", input.text)
+        assertTrue("Unknown words must retain typo correction", fuzzyCalls > 0)
+    }
+
     private class FakeInputConnection(
         context: Context,
         initialText: String

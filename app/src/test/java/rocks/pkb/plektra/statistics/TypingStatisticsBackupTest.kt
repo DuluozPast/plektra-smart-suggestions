@@ -16,25 +16,58 @@ import java.io.File
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class TypingStatisticsBackupTest {
-    @Test fun countersSurvivePreferenceExportAndRestore() {
+    @Test fun newExportsLeaveCountersOnTheDevice() {
         val context = RuntimeEnvironment.getApplication()
         val preferences = SettingsManager.getPreferences(context)
         preferences.edit().putLong(TypingStatisticsStore.MANUAL_KEY, 12)
             .putLong(TypingStatisticsStore.SUGGESTED_KEY, 20).commit()
         val store = TypingStatisticsStore.get(context)
-        store.record(1, 2)
-        store.flush()
-        preferences.edit().commit()
+        store.record(1, 2); store.flush(); preferences.edit().commit()
         val directory = File(context.cacheDir, "statistics-backup").apply { mkdirs() }
-        val components = PreferencesBackupHelper.dumpSharedPreferences(context, directory, false)
-        assertTrue(components.contains("prefs/plektra_prefs.json"))
+        PreferencesBackupHelper.dumpSharedPreferences(context, directory, false)
         val entries = JSONObject(File(directory, "plektra_prefs.json").readText()).getJSONObject("entries")
-        assertEquals(13L, entries.getJSONObject(TypingStatisticsStore.MANUAL_KEY).getLong("value"))
-        assertEquals(22L, entries.getJSONObject(TypingStatisticsStore.SUGGESTED_KEY).getLong("value"))
-        preferences.edit().putLong(TypingStatisticsStore.MANUAL_KEY, 0)
-            .putLong(TypingStatisticsStore.SUGGESTED_KEY, 0).commit()
-        PreferencesBackupHelper.restorePreferences(context, PreferencesBackupHelper.readPreferencesFromBackup(directory))
-        shadowOf(Looper.getMainLooper()).idle()
+        assertFalse(entries.has(TypingStatisticsStore.MANUAL_KEY))
+        assertFalse(entries.has(TypingStatisticsStore.SUGGESTED_KEY))
         assertEquals(TypingStatisticsSnapshot(13, 22), store.snapshot.value)
+    }
+
+    @Test fun olderAndNewerLegacyCountersCannotReplaceLocalTotals() {
+        val context = RuntimeEnvironment.getApplication()
+        val preferences = SettingsManager.getPreferences(context)
+        preferences.edit().putLong(TypingStatisticsStore.MANUAL_KEY, 100)
+            .putLong(TypingStatisticsStore.SUGGESTED_KEY, 50).commit()
+        val store = TypingStatisticsStore.get(context)
+        store.record(2, 3)
+        for (importedCount in listOf(1L, 999999L)) {
+            val legacy = mapOf("plektra_prefs" to mapOf(
+                TypingStatisticsStore.MANUAL_KEY to rocks.pkb.plektra.backup.PreferenceValue(rocks.pkb.plektra.backup.PreferenceValueType.LONG, importedCount),
+                TypingStatisticsStore.SUGGESTED_KEY to rocks.pkb.plektra.backup.PreferenceValue(rocks.pkb.plektra.backup.PreferenceValueType.LONG, importedCount)))
+            PreferencesBackupHelper.restorePreferences(context, legacy)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(TypingStatisticsSnapshot(102, 53), store.snapshot.value)
+        }
+        store.flush()
+        assertEquals(102L, preferences.getLong(TypingStatisticsStore.MANUAL_KEY, -1))
+        assertEquals(53L, preferences.getLong(TypingStatisticsStore.SUGGESTED_KEY, -1))
+    }
+
+    @Test fun anImportedCounterCannotSeedAnotherUsersInstallation() {
+        val context = RuntimeEnvironment.getApplication()
+        val store = TypingStatisticsStore.get(context)
+        PreferencesBackupHelper.restorePreferences(context, mapOf("plektra_prefs" to mapOf(
+            TypingStatisticsStore.MANUAL_KEY to rocks.pkb.plektra.backup.PreferenceValue(rocks.pkb.plektra.backup.PreferenceValueType.LONG, 12345L))))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(0L, store.snapshot.value.totalWords)
+    }
+
+    @Test fun installationDateComesFromAndroidRatherThanImportedPreferences() {
+        val context = RuntimeEnvironment.getApplication()
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        info.firstInstallTime = 1600000000000L
+        org.robolectric.Shadows.shadowOf(context.packageManager).installPackage(info)
+        assertEquals(info.firstInstallTime, TypingStatisticsStore.installationStartedAt(context))
+        PreferencesBackupHelper.restorePreferences(context, mapOf("plektra_prefs" to mapOf(
+            "typing_statistics_installation_date" to rocks.pkb.plektra.backup.PreferenceValue(rocks.pkb.plektra.backup.PreferenceValueType.LONG, 1700000000000L))))
+        assertEquals(1600000000000L, TypingStatisticsStore.installationStartedAt(context))
     }
 }

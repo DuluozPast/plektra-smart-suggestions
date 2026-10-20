@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Tryb Nav poza polami tekstowymi</string>
+    <string name="screen_nav_description">Najpierw zaznacz słowo, naciśnij dwukrotnie Ctrl/Fn i użyj swoich klawiszy Nav. Włącz opcjonalne przekazywanie w Ułatwieniach dostępu Androida. Obsługa zależy od aplikacji.</string>
+    <string name="screen_nav_service_description">Przekazuje klawisze Nav, gdy żadne pole tekstowe nie jest aktywne. Zachowuje przypisania klawiszy.</string>
+    <string name="screen_nav_open_settings">Otwórz ustawienia ułatwień dostępu</string>
+    <string name="screen_nav_enabled">Przekazywanie włączone</string>
+    <string name="screen_nav_disabled">Przekazywanie wyłączone</string>
+</resources>

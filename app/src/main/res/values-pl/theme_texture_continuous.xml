@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Ciągły obraz między klawiszami</string>
+    <string name="theme_texture_per_key">Powtarzaj próbkę na każdym klawiszu</string>
+</resources>

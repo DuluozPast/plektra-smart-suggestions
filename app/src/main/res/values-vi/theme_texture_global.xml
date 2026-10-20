@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Một chất liệu cho toàn bộ bàn phím</string>
+    <string name="theme_texture_global_hint">Chọn một vùng ảnh cho mọi bề mặt, sau đó chỉnh chữ và đường phân cách.</string>
+</resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_global">Un materiale per tutta la tastiera</string>
+    <string name="theme_texture_global_hint">Un solo ritaglio per tutte le superfici, poi regola testo e divisori.</string>
+</resources>

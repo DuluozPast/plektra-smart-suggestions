@@ -1,0 +1,8 @@
+<resources>
+    <string name="screen_nav_title">Modo Nav fuera de los campos de texto</string>
+    <string name="screen_nav_description">Selecciona primero una palabra, pulsa Ctrl/Fn dos veces y usa tus teclas Nav. Activa este enlace opcional en Accesibilidad de Android. La compatibilidad depende de la app.</string>
+    <string name="screen_nav_service_description">Transmite las teclas Nav cuando no hay un campo de texto activo. Se conservan tus asignaciones.</string>
+    <string name="screen_nav_open_settings">Abrir ajustes de accesibilidad</string>
+    <string name="screen_nav_enabled">Enlace activado</string>
+    <string name="screen_nav_disabled">Enlace desactivado</string>
+</resources>

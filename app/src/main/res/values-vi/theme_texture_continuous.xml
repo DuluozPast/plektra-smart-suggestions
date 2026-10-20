@@ -1,0 +1,4 @@
+<resources>
+    <string name="theme_texture_continuous">Ảnh liên tục trên các phím</string>
+    <string name="theme_texture_per_key">Lặp lại mẫu trên từng phím</string>
+</resources>

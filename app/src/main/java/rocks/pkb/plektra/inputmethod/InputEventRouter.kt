@@ -607,6 +607,9 @@ class InputEventRouter(
             event?.unicodeChar?.takeIf { it != 0 } != null -> event.unicodeChar.toChar().toString()
             else -> ""
         }
+        if (handleImmediateQuote(smartReplacementText, ic, params.shouldDisableSmartFeatures, callbacks.updateStatusBar)) {
+            return EditableFieldRoutingResult.Consume
+        }
         if (
             controllers.textInputController.handlePendingMidWordQuoteToApostrophe(
                 typedText = smartReplacementText,
@@ -949,7 +952,8 @@ return EditableFieldRoutingResult.CallSuper
                 inputConnection,
                 shouldDisableDoubleSpaceToPeriod,
                 shouldDisableAutoCapitalize,
-                onStatusBarUpdate = updateStatusBar
+                onStatusBarUpdate = updateStatusBar,
+                eventTimeMs = event?.eventTime ?: android.os.SystemClock.uptimeMillis()
             )
         ) {
             suggestionController?.onContextReset()
@@ -968,6 +972,8 @@ return EditableFieldRoutingResult.CallSuper
 
         val smartReplacementTextForPipeline =
             if (isSpaceKey) " " else event?.unicodeChar?.takeIf { it != 0 }?.toChar()?.toString().orEmpty()
+        if (handleImmediateQuote(smartReplacementTextForPipeline, inputConnection,
+                inputContextState?.shouldDisableSmartFeatures == true, updateStatusBar)) return true
         if (
             textInputController.handlePendingMidWordQuoteToApostrophe(
                 typedText = smartReplacementTextForPipeline,
@@ -1377,6 +1383,11 @@ return EditableFieldRoutingResult.CallSuper
             ctrlMapping?.type == "action" &&
                 ctrlMapping.value in restrictedFieldBasicCtrlActions
 
+        if (ctrlMapping?.type == "action" && ctrlMapping.value == "select_screen_text") {
+            if (ScreenTextSelectorBridge.open(context)) navModeController.enterNavMode()
+            return true
+        }
+
         fun passThroughCtrlCombo(): Boolean {
             val ic = inputConnection ?: return false
             if (event != null) {
@@ -1385,6 +1396,22 @@ return EditableFieldRoutingResult.CallSuper
                 val meta = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON or KeyEvent.META_CTRL_RIGHT_ON
                 val down = KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, shortcutKeyCode, 0, meta)
                 ic.sendKeyEvent(down)
+            }
+            return true
+        }
+
+        val quoteAction = ctrlMapping?.takeIf { it.type == "action" }?.value?.let { actionName ->
+            when (actionName) {
+                "quote_open" -> rocks.pkb.plektra.core.ImmediateQuotePolicy.Action.OPEN
+                "quote_close" -> rocks.pkb.plektra.core.ImmediateQuotePolicy.Action.CLOSE
+                "quote_straight" -> rocks.pkb.plektra.core.ImmediateQuotePolicy.Action.STRAIGHT
+                else -> null
+            }
+        }
+        if (quoteAction != null && allowFormatting && !forceBasicContextMenuActions && inputConnection != null) {
+            if (ctrlOneShot && !ctrlLatchFromNavMode) clearCtrlOneShot()
+            if (event == null || event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                applyQuoteAction(inputConnection, quoteAction, updateStatusBar)
             }
             return true
         }
@@ -1842,4 +1869,24 @@ return EditableFieldRoutingResult.CallSuper
             source
         )
     }
+    internal fun handleImmediateQuote(text: String, input: InputConnection?, disabled: Boolean,
+        update: () -> Unit): Boolean {
+        if (!rocks.pkb.plektra.core.ImmediateQuotePolicy.isQuoteInput(text) || input == null || disabled ||
+            SettingsManager.getSmartQuotesMode(context) != SettingsManager.SMART_QUOTES_IMMEDIATE) return false
+        return applyQuoteAction(input, rocks.pkb.plektra.core.ImmediateQuotePolicy.Action.AUTO, update)
+    }
+
+    private fun applyQuoteAction(input: InputConnection,
+        action: rocks.pkb.plektra.core.ImmediateQuotePolicy.Action, update: () -> Unit): Boolean {
+        val result = rocks.pkb.plektra.core.ImmediateQuoteEditor.apply(input, typingLocaleProvider(), action, packageName = editorInfoProvider()?.packageName)
+        if (!result.consumed) return false
+        if (result.selectionChanged) suggestionController?.onContextReset()
+        else result.committedText?.let { suggestionController?.onCharacterCommitted(it, input) }
+        if (result.unsupportedSelection) android.widget.Toast.makeText(context,
+            rocks.pkb.plektra.R.string.quote_editor_unavailable, android.widget.Toast.LENGTH_SHORT).show()
+        onCommitText?.invoke()
+        update()
+        return true
+    }
+
 }
