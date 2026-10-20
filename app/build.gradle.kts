@@ -363,6 +363,10 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Gradle's 512 MB default runs out on the full Robolectric suite (OutOfMemoryError mid-run).
+            it.maxHeapSize = "2g"
+        }
     }
 }
 
