@@ -17,7 +17,7 @@ class TypographyPreviewActivity:Activity() {
   val config=Configuration(resources.configuration).apply {setLocale(Locale.ENGLISH)}
   val demo=createConfigurationContext(config)
   val root=LinearLayout(this).apply {orientation=LinearLayout.VERTICAL;setPadding(24,32,24,24);setBackgroundColor(Color.WHITE)}
-  root.addView(TextView(demo).apply {text="Keyboard text size â€” real renderer";textSize=20f;setTextColor(Color.BLACK)})
+  root.addView(TextView(demo).apply {text="Keyboard text size: real renderer";textSize=20f;setTextColor(Color.BLACK)})
   val preview=KeyboardTextScalePreview(demo);preview.setLabelColor(Color.BLACK);root.addView(preview)
   root.addView(TextView(demo).apply {text="The reference stays at 100%. The selected size cycles through 85%, 100%, 125%. Long suggestions still shrink to fit.";textSize=16f;setTextColor(Color.BLACK)})
   root.setOnApplyWindowInsetsListener { view, insets ->

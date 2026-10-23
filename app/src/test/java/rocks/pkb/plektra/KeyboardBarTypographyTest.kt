@@ -36,7 +36,7 @@ class KeyboardBarTypographyTest {
  }
  @Test fun unchangedCandidatesRefreshAfterASizeChangeAndKeepTheirOriginalFittingMinimum() {
   val bar=FullSuggestionsBar(context);val root=bar.ensureView()
-  val words=listOf("Bonjour","cÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢est pourquoi","ÃƒÆ’Ã‚Â  tout ÃƒÆ’Ã‚Â  lÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢heure")
+  val words=listOf("Bonjour","c\u2019est pourquoi","\u00e0 tout \u00e0 l\u2019heure")
   fun render()=bar.update(words,true,null,null,false,null,null,null,null,null,null,null)
   render()
   val original=labels(root,words.toSet());assertEquals(3,original.size)
@@ -51,7 +51,7 @@ class KeyboardBarTypographyTest {
  }
  @Test fun enlargedMeasuredSuggestionsKeepWholeWordsAndThreeWordGroups() {
   KeyboardBarTypography.setScale(context,1.25f)
-  val words=listOf("anticonstitutionnellement","cÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢est pourquoi","ÃƒÆ’Ã‚Â  tout ÃƒÆ’Ã‚Â  lÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢heure")
+  val words=listOf("anticonstitutionnellement","c\u2019est pourquoi","\u00e0 tout \u00e0 l\u2019heure")
   val bar=FullSuggestionsBar(context);bar.showPreview(words);val root=bar.ensureView()
   // Rounded surface geometry adjusts text padding on the first layout, scheduling another pass.
   repeat(3) {
