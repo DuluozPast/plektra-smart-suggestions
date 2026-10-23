@@ -29,4 +29,8 @@ Relevant checks:
 ./gradlew :app:lintStableDebug :app:assembleStableDebug
 ```
 
-Device evidence is pending. Use an isolated review installation and synthetic words; demonstrate a manual word, accepted suggestion, failed/edited input where practical, counters and a field change. Do not instrument the user's everyday IME. Obtain approval for any recording before uploading it.
+## Device evidence
+
+Tested on a Titan 2 running Android 16 with a separately installed review APK. The recording uses the app's existing Notes editor with synthetic text only. After entering `Hello` manually, typing `wo` and tapping the `work` suggestion, the statistics screen reports 3 manual words and 1 suggested word (4 total). Two manual words were already present from exploratory testing before recording, so this take adds exactly one manual word and one suggested word. No counters were seeded for the demonstration.
+
+The phone's original default IME and exact enabled-IME list were restored and checked after recording. Status/navigation areas and audio are omitted; every exported frame was inspected for personal content before publication. Device evidence covers ordinary manual entry, successful suggestion acceptance and viewing totals after leaving the editor. Failed commits, multiword acceptance and ZIP restoration are covered by automated tests rather than this video.
