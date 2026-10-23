@@ -16,7 +16,7 @@ Initial focused checks passed (41 cases), and the debug APK and Android lint com
 
 After that comparison, the saved prototype route ID `advanced.appearance` was retained and a regression for that URI was added. After this last adjustment, all 42 focused tests passed, along with `:app:lintStableDebug` and `:app:assembleStableDebug`. The source includes 72 combinations of light/dark mode and extreme/saturated main/selection colours with 18 foreground/background pairs per combination. This numerical coverage does not validate every disabled, blended or rendered component state.
 
-Real-device validation and recording remain pending. Submission awaits the approved device evidence.
+A separate review installation on a Titan 2 running Android 16 was checked using the actual production settings screen in English. The recording shows the disabled default, blue and purple presets with persistent selection, an independently chosen orange selected-item colour, and reset to system colours. These checks cover the light-mode layout shown; dark-mode and additional font-scale device runs are not claimed. The 31-second recording and its screenshot are awaiting the user's approval before upload.
 
 Focused checks to run:
 
@@ -30,5 +30,5 @@ The focused tests cover unchanged system palette, opacity and reset isolation, i
 ## Remaining review
 
 - Review all overridden Material colour pairs, disabled controls, outlines and large-font/long-label layouts.
-- Record the exact independently built branch on an isolated review installation using synthetic settings, showing defaults, palette selection, custom selected-item colour and reset. Include source commit and APK checksum.
-- Do not instrument the active everyday IME. Arrange phone availability for this recording and obtain approval for the final media before uploading.
+- Device recording source: `99dcc530dcc0f0c5583f57a1706ff0beb97caea9`; isolated package `rocks.pkb.plektra.review.appearance`; APK SHA-256 `63ce64d3d30d8f591298909d33b47023374e4955a3ce0d4d0c618153482df284`. Documentation-only follow-ups do not change the recorded implementation.
+- The everyday IME and accessibility configuration were preserved. The final clip excludes status/navigation areas, contains no audio or inherited recording/device metadata, and was checked across all output frames. Obtain user approval before uploading it.
