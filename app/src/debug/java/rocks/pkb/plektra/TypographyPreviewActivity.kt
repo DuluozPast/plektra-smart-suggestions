@@ -21,8 +21,14 @@ class TypographyPreviewActivity:Activity() {
   val preview=KeyboardTextScalePreview(demo);preview.setLabelColor(Color.BLACK);root.addView(preview)
   root.addView(TextView(demo).apply {text="The reference stays at 100%. The selected size cycles through 85%, 100%, 125%. Long suggestions still shrink to fit.";textSize=16f;setTextColor(Color.BLACK)})
   root.setOnApplyWindowInsetsListener { view, insets ->
-   val bars = insets.getInsets(android.view.WindowInsets.Type.systemBars())
-   view.setPadding(24 + bars.left, 24 + bars.top, 24 + bars.right, 24 + bars.bottom)
+   if (android.os.Build.VERSION.SDK_INT >= 30) {
+    val bars = insets.getInsets(android.view.WindowInsets.Type.systemBars())
+    view.setPadding(24 + bars.left, 24 + bars.top, 24 + bars.right, 24 + bars.bottom)
+   } else {
+    @Suppress("DEPRECATION")
+    view.setPadding(24 + insets.systemWindowInsetLeft, 24 + insets.systemWindowInsetTop,
+        24 + insets.systemWindowInsetRight, 24 + insets.systemWindowInsetBottom)
+   }
    insets
   }
   setContentView(root)

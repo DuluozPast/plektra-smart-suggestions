@@ -40,3 +40,9 @@ Source commit: `809e7351a29c5b8e0bbaf13b58ccd12339cb3363`. APK SHA-256: `2e1bfdd
 - A 20-second real-device recording shows the actual comparison widget. System bars and unused screen space were cropped; no text rendering or size transitions were simulated in editing. Audio and inherited metadata were removed.
 - The author approved the cropped recording and its extracted screenshot after privacy review. These are supplied as pull-request attachments, rather than binary assets in the source tree.
 - Diagnostic applications were removed afterwards. Everyday IME settings and existing prototype applications were not changed.
+
+## CI follow-up
+
+The first CI run found one failure in 1,108 stable-debug unit tests: the new UI hook was missing from the settings-link registry. The control is now registered with its title, summary and Keyboard bar destination. The coverage check remains enabled.
+
+After the fix, all 42 typography, preview, ZIP and settings-link tests passed locally, and `:app:lintStableDebug` passed. The debug capture activity also guards its inset API for Android 10/API 29. These follow-up changes do not change the Android 16 typography rendering shown in the approved recording. The full CI workflow must be rerun on the updated branch.
