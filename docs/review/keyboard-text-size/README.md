@@ -30,4 +30,13 @@ adb pull /data/local/tmp/keyboard-text-size.mp4
 
 For this review APK, a local Gradle initialization script adds `.review.textsize` to the debug application ID, allowing it to coexist with everyday keyboards. That script also selects the local debug keystore and offline test dependencies; none of those machine paths or signing keys belongs to the PR. No keyboard activation or accessibility permission is needed to view the synthetic comparison.
 
-Validation results and media are added below after the exact branch APK has been checked.
+## Validation on 23 October 2026
+
+Source commit: `809e7351a29c5b8e0bbaf13b58ccd12339cb3363`. APK SHA-256: `2e1bfdd2e27e8ea22248a807d5510fe453025aa95b1e0b54acd50515a38b8e02`.
+
+- Seven focused tests passed (4 typography/render refresh, 2 preview/pixel configuration, 1 ZIP export-clear-restore). No failures or skipped tests. The full suite was not rerun.
+- Native Android 16/API 36, Titan 2, 1076px width, density 1.84375, system font scale 1.3. Twenty-four synthetic candidates were measured at 85%, 100%, 110%, 125% with the installed production renderer.
+- Short samples measured 29px, 34px, 37px, 43px respectively. All tested candidates retained their complete text with zero ellipsis and no measured horizontal overflow. A long word remained at 27px to fit rather than growing beyond its slot.
+- A 20-second real-device recording shows the actual comparison widget. System bars and unused screen space were cropped; no text rendering or size transitions were simulated in editing. Audio and inherited metadata were removed.
+- The author approved the cropped recording and its extracted screenshot after privacy review. These are supplied as pull-request attachments, rather than binary assets in the source tree.
+- Diagnostic applications were removed afterwards. Everyday IME settings and existing prototype applications were not changed.
