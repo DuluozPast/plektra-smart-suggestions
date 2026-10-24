@@ -32,6 +32,7 @@
   "deviceEvidence": "Titan 2 Android16: literal dictionary field, preserved two spaces and deliberate Shift, saved synthetic entry, automatic capitalization restored in ordinary search",
   "deviceLimitations": "Not all six fields exercised on device; automatic replacement remained disabled in review app",
   "originalDefaultAndEnabledImesRestored": true,
-  "mediaApproval": "pending",
-  "videoFramesInspected": 96
+  "mediaApproval": "User approved the capture with English explanatory captions; captioned version shown before publication",
+  "videoFramesInspected": 96,
+  "videoCaptions": "English; lowercase, double space and manual Shift; original capture unchanged"
 }

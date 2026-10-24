@@ -31,7 +31,7 @@ Tested on a Titan 2 running Android 16/API 36 in the separate `rocks.pkb.plektra
 
 The device demonstration checks dictionary-entry capitalization, double-space behaviour and manual Shift. It does not claim a manual pass over every edited field or a blocked replacement-rule demonstration: automatic replacements remained at their default disabled setting in this review installation. The unit suite covers the literal correction/suggestion policy and the existing replacement stores and expansion paths.
 
-The 16-second capture is cropped to the dictionary dialog, with no audio, status bar, navigation or inherited media metadata. All 96 exported frames were visually inspected. A matching still is available. Media publication is pending Emmanuel's approval.
+The 16-second capture is cropped to the dictionary dialog, with no audio, status bar, navigation or inherited media metadata. All 96 exported frames were visually inspected. A matching still is available. The user approved keeping the capture with English captions; the captioned version was shown before publication. Captions explain the lowercase spelling, preserved double space and deliberate Shift. The underlying device capture is unchanged.
 
 The exact original default keyboard and enabled-keyboard list were restored and verified. Everyday installations and their preferences were not instrumented or replaced.
 
