@@ -20,9 +20,20 @@ No preference, route, permission, resource string, locale file or ZIP schema is 
 
 The lint task completing does not mean the repository is lint-clean: upstream has `abortOnError = false`. Its report contains 2,038 findings, with no additional canonical finding compared with the independently extracted PR160 branch (which has one extra warning in its statistics store). Lint configuration was not relaxed or changed by this branch.
 
-## Device evidence (pending user availability and media approval)
+## Device evidence
 
-Use a separate `rocks.pkb.plektra.review.literalentry` installation. Record only synthetic dictionary/replacement or snippet entries. Temporarily switch to this review keyboard only with user authorization, then restore the exact original default and enabled IME list. Verify the focused editor belongs to the review package before typing or recording. Demonstrate lowercase intentional spelling, retained text on editing/saving and a deliberate capital; verify normal-field suggestions/capitalization separately. No actual contacts/messages in the recording. Show the final cropped video to Emmanuel before uploading it.
+Tested on a Titan 2 running Android 16/API 36 in the separate `rocks.pkb.plektra.review.literalentry` installation. Synthetic key events were delivered through the actual keyboard service into the application's dictionary editor:
+
+- The focused editor exposes `inputType=0x80001` and the exact literal-entry private IME option.
+- `teh`, two spaces and `test` remain lowercase, with no double-space full stop; deliberate Shift then T adds the final capital, giving `teh  testT`.
+- A separate `teh` entry saves unchanged in the review application's dictionary store.
+- Moving to the ordinary dictionary search field removes the literal option and typing `test` produces `Test`, confirming normal automatic capitalization resumes.
+
+The device demonstration checks dictionary-entry capitalization, double-space behaviour and manual Shift. It does not claim a manual pass over every edited field or a blocked replacement-rule demonstration: automatic replacements remained at their default disabled setting in this review installation. The unit suite covers the literal correction/suggestion policy and the existing replacement stores and expansion paths.
+
+The 16-second capture is cropped to the dictionary dialog, with no audio, status bar, navigation or inherited media metadata. All 96 exported frames were visually inspected. A matching still is available. Media publication is pending Emmanuel's approval.
+
+The exact original default keyboard and enabled-keyboard list were restored and verified. Everyday installations and their preferences were not instrumented or replaced.
 
 ## Durability
 

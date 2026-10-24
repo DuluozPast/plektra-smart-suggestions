@@ -29,5 +29,9 @@
   "newPermissions": false,
   "newPreferences": false,
   "backupSchemaChanged": false,
-  "deviceEvidence": "Pending availability and media approval"
+  "deviceEvidence": "Titan 2 Android16: literal dictionary field, preserved two spaces and deliberate Shift, saved synthetic entry, automatic capitalization restored in ordinary search",
+  "deviceLimitations": "Not all six fields exercised on device; automatic replacement remained disabled in review app",
+  "originalDefaultAndEnabledImesRestored": true,
+  "mediaApproval": "pending",
+  "videoFramesInspected": 96
 }
