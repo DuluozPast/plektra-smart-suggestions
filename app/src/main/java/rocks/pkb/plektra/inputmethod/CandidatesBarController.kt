@@ -378,6 +378,9 @@ class CandidatesBarController(
         }
     }
 
+    fun modifierIndicatorColors(): Pair<Int, Int> =
+        (if (candidatesSurfaceActive) candidatesStatusBar else inputStatusBar).modifierIndicatorColors()
+
     fun updateClipboardCount(count: Int) {
         inputStatusBar.updateClipboardCount(count)
         candidatesStatusBar.updateClipboardCount(count)

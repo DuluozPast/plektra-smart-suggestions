@@ -279,6 +279,7 @@ internal fun KeyboardBarSettingsScreen(
                     setIndicator(id, enabled)
                 }
             }
+            CaretBadgeSettingsSection()
         }
         if (page == KeyboardBarSettingsPage.Variations) {
             SettingsSectionDivider(stringResource(R.string.extended_status_bar_features_section))
