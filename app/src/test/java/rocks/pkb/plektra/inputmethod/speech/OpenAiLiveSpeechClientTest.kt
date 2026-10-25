@@ -7,7 +7,9 @@ import okhttp3.*
 import okhttp3.mockwebserver.*
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class OpenAiLiveSpeechClientTest {
     private fun request() = SpeechRequest(SpeechProvider.OPENAI, SpeechModels.openAiDefaults.first(), "test-key", "de-DE", 1)
@@ -138,11 +140,66 @@ class OpenAiLiveSpeechClientTest {
         }
     }
 
+    @Test fun cancellationDuringHandshakeStopsCaptureAndDoesNotReconnect() = runBlocking {
+        MockWebServer().use { server ->
+            val upgradeRequested = CompletableDeferred<Unit>()
+            val allowUpgrade = CountDownLatch(1)
+            val connected = AtomicBoolean(false)
+            server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    upgradeRequested.complete(Unit)
+                    allowUpgrade.await()
+                    return MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                        override fun onOpen(webSocket: WebSocket, response: Response) {
+                            connected.set(true)
+                        }
+                    })
+                }
+            }
+            val recording = CompletableDeferred<Unit>()
+            var stopped = false
+            val recorder = object : SpeechAudioRecorder {
+                override suspend fun record(silenceMs: Long, onLevel: (Float, Long?) -> Unit): RecordedSpeech = error("Batch recording")
+                override suspend fun recordStreaming(silenceMs: Long, onLevel: (Float, Long?) -> Unit,
+                    onPcm: suspend (ByteArray) -> Unit): RecordedSpeech {
+                    try {
+                        onPcm(ByteArray(4800))
+                        recording.complete(Unit)
+                        awaitCancellation()
+                    } finally { stopped = true }
+                }
+                override fun finish() {}
+            }
+            val task = launch { OpenAiLiveSpeechClient(url = server.url("/").toString())
+                .transcribe(request(), recorder, { _, _ -> }, { fail("Unexpected text") }, {}) }
+            try {
+                withTimeout(3000) {
+                    recording.await()
+                    upgradeRequested.await()
+                    task.cancelAndJoin()
+                }
+                assertTrue(task.isCancelled)
+                assertTrue(stopped)
+                assertFalse(connected.get())
+                assertNotNull(server.takeRequest(3, TimeUnit.SECONDS))
+                assertNull(server.takeRequest(250, TimeUnit.MILLISECONDS))
+                assertEquals(1, server.requestCount)
+            } finally {
+                task.cancel()
+                allowUpgrade.countDown()
+            }
+        }
+    }
+
     @Test fun cancellationStopsCaptureAndDoesNotReconnect() = runBlocking {
         MockWebServer().use { server ->
+            val configured = CompletableDeferred<Unit>()
             server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
                 override fun onMessage(socket: WebSocket, text: String) {
-                    if (text.contains("session.update")) socket.send("""{"type":"session.updated"}""")
+                    if (text.contains("session.update")) {
+                        socket.send("""{"type":"session.updated"}""")
+                        configured.complete(Unit)
+                    }
                 }
             }))
             val recording = CompletableDeferred<Unit>()
@@ -161,7 +218,7 @@ class OpenAiLiveSpeechClientTest {
             }
             val task = launch { OpenAiLiveSpeechClient(url = server.url("/").toString())
                 .transcribe(request(), recorder, { _, _ -> }, { fail("Unexpected text") }, {}) }
-            withTimeout(3000) { recording.await() }
+            withTimeout(3000) { recording.await(); configured.await() }
             task.cancelAndJoin()
             assertTrue(stopped)
             assertEquals(1, server.requestCount)
