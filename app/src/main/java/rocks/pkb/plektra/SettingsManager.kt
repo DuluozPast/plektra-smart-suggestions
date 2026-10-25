@@ -6182,6 +6182,7 @@ object SettingsManager {
     private const val KEY_CARET_MODIFIER_BADGE = "caret_modifier_badge"
     private const val KEY_CARET_BADGE_ARMED_COLOR = "caret_badge_armed_color"
     private const val KEY_CARET_BADGE_LOCKED_COLOR = "caret_badge_locked_color"
+    private const val KEY_CARET_BADGE_CUSTOM_COLORS = "caret_badge_custom_colors"
     private const val DEFAULT_CARET_MODIFIER_BADGE = false
     /** One click: armed for the next key only. */
     const val DEFAULT_CARET_BADGE_ARMED_COLOR = 0xFF2563EB.toInt()
@@ -6203,6 +6204,13 @@ object SettingsManager {
         getPreferences(context).edit()
             .putBoolean(KEY_CARET_MODIFIER_BADGE, enabled)
             .apply()
+    }
+
+    fun getCaretBadgeCustomColors(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_CARET_BADGE_CUSTOM_COLORS, false)
+
+    fun setCaretBadgeCustomColors(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_CARET_BADGE_CUSTOM_COLORS, enabled).apply()
     }
 
     /** Colour of a modifier that is armed for one key only. */

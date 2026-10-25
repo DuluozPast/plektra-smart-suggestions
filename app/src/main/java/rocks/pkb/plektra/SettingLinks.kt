@@ -156,6 +156,7 @@ object SettingLinkIds {
 
     // Modifier badge beside the text cursor (rendered on the modifiers screen)
     const val MODIFIERS_CARET_BADGE = "modifiers.caret_badge"
+    const val MODIFIERS_CARET_BADGE_CUSTOM_COLORS = "modifiers.caret_badge_custom_colors"
     const val MODIFIERS_CARET_BADGE_ARMED_COLOR = "modifiers.caret_badge_armed_color"
     const val MODIFIERS_CARET_BADGE_LOCKED_COLOR = "modifiers.caret_badge_locked_color"
 }
@@ -969,19 +970,25 @@ object SettingLinkRegistry {
             SettingLinkIds.MODIFIERS_CARET_BADGE,
             R.string.caret_modifier_badge_title,
             R.string.caret_modifier_badge_description,
-            destination = SettingsDestination.Modifiers
+            destination = SettingsDestination.ModifierIndicators
+        ),
+        entry(
+            SettingLinkIds.MODIFIERS_CARET_BADGE_CUSTOM_COLORS,
+            R.string.caret_badge_custom_colors_title,
+            R.string.caret_badge_custom_colors_description,
+            destination = SettingsDestination.ModifierIndicators
         ),
         entry(
             SettingLinkIds.MODIFIERS_CARET_BADGE_ARMED_COLOR,
             R.string.caret_badge_color_armed,
             R.string.caret_badge_color_armed_description,
-            destination = SettingsDestination.Modifiers
+            destination = SettingsDestination.ModifierIndicators
         ),
         entry(
             SettingLinkIds.MODIFIERS_CARET_BADGE_LOCKED_COLOR,
             R.string.caret_badge_color_locked,
             R.string.caret_badge_color_locked_description,
-            destination = SettingsDestination.Modifiers
+            destination = SettingsDestination.ModifierIndicators
         )
     ) + customizationSettingEntries() + inputDeviceSettingEntries() + systemSettingEntries()
 

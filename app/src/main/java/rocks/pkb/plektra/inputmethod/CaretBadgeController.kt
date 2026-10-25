@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.CursorAnchorInfo
 import rocks.pkb.plektra.inputmethod.ui.CaretBadgeView
+import rocks.pkb.plektra.SettingsManager
 
 /**
  * Shows the active modifier as a small label beside the text cursor, the way a hardware-keyboard
@@ -26,7 +27,13 @@ import rocks.pkb.plektra.inputmethod.ui.CaretBadgeView
  * Editors are not obliged to report a cursor position. When one does not, there is nothing to anchor
  * to and the badge simply stays hidden; the status bar and the optional LED strip still show state.
  */
-class CaretBadgeController(private val service: InputMethodService) {
+class CaretBadgeController(
+    private val service: InputMethodService,
+    private val themeColors: () -> Pair<Int, Int> = {
+        val theme = SettingsManager.getEffectiveKeyboardTheme(service, SettingsManager.KeyboardThemeTarget.HARDWARE)
+        theme.ledActive to theme.ledLocked
+    }
+) {
 
     /**
      * The badge is an overlay window, and a window must be created from a context typed for it:
@@ -74,7 +81,10 @@ class CaretBadgeController(private val service: InputMethodService) {
      */
     fun onSnapshot(snapshot: StatusBarController.StatusSnapshot, enabled: Boolean) {
         val items = if (enabled && editorActive) caretBadgeItemsFor(snapshot) else emptyList()
-        if (items == currentItems) return
+        if (items == currentItems) {
+            badgeView?.let(::updateColors)
+            return
+        }
         currentItems = items
         if (items.isEmpty()) hide() else lastCaret?.let { show(items, it) }
     }
@@ -140,13 +150,20 @@ class CaretBadgeController(private val service: InputMethodService) {
         return Caret(x = points[0], top = points[1], bottom = points[3])
     }
 
+    private fun updateColors(view: CaretBadgeView) {
+        val (armed, locked) = if (SettingsManager.getCaretBadgeCustomColors(context)) {
+            SettingsManager.getCaretBadgeArmedColor(context) to SettingsManager.getCaretBadgeLockedColor(context)
+        } else {
+            themeColors()
+        }
+        view.armedColor = armed
+        view.lockedColor = locked
+    }
+
     private fun show(items: List<CaretBadgeView.Item>, caret: Caret) {
         if (overlayRejected || !canDrawOverlays()) return
         val view = badgeView ?: CaretBadgeView(context).also { badgeView = it }
-        // Read here rather than cached: the settings screen writes straight to preferences, and a
-        // colour picked while a field is open should take effect on the very next keypress.
-        view.armedColor = rocks.pkb.plektra.SettingsManager.getCaretBadgeArmedColor(context)
-        view.lockedColor = rocks.pkb.plektra.SettingsManager.getCaretBadgeLockedColor(context)
+        updateColors(view)
         view.items = items
 
         val metrics = context.resources.displayMetrics

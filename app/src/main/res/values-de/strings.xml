@@ -1634,4 +1634,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_theme_led_inactive">LED: inaktiv</string>
     <string name="keyboard_theme_led_active">LED: aktiv</string>
     <string name="keyboard_theme_led_locked">LED: eingerastet</string>
+    <string name="caret_badge_custom_colors_title">Eigene Farben verwenden</string>
+    <string name="caret_badge_custom_colors_description">Farben des Keyboard-Themes ersetzen.</string>
 </resources>

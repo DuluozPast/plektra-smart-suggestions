@@ -446,6 +446,11 @@ class StatusBarController(
     ): SettingsManager.KeyboardThemeSettings =
         if (isFullSoftwareKeyboardMode) softwareTheme() else hardwareTheme()
 
+    fun modifierIndicatorColors(): Pair<Int, Int> {
+        val theme = activeThemeSettings()
+        return theme.ledActive to theme.ledLocked
+    }
+
     private fun activeThemeColors(
         isFullSoftwareKeyboardMode: Boolean =
             mode == Mode.INPUT_VIEW &&

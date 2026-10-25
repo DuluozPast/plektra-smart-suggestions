@@ -151,7 +151,6 @@ fun ModifierSettingsScreen(
                 }
             )
 
-            CaretBadgeSettingsSection()
 
             SettingsSectionDivider(stringResource(R.string.modifiers_section_sym))
             ModifierNavigationRow(

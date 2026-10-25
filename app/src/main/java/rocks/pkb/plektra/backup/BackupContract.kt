@@ -255,6 +255,7 @@ internal object BackupPreferenceContract {
             "caret_modifier_badge" to PreferenceValueType.BOOLEAN,
             "caret_badge_armed_color" to PreferenceValueType.INT,
             "caret_badge_locked_color" to PreferenceValueType.INT,
+            "caret_badge_custom_colors" to PreferenceValueType.BOOLEAN,
             "auto_show_keyboard" to PreferenceValueType.BOOLEAN,
             "keyboard_bar_show_on_launcher" to PreferenceValueType.BOOLEAN,
             "accessibility_live_announcements_enabled" to PreferenceValueType.BOOLEAN,

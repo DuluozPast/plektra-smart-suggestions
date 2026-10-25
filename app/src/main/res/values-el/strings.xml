@@ -1720,4 +1720,6 @@ QWERTZ σε φυσικό QWERTY
     <string name="caret_badge_color_locked_description">Caps lock, κλείδωμα Alt και κλείδωμα Ctrl, που μένουν ενεργά μέχρι να τα απενεργοποιήσετε</string>
     <string name="caret_badge_color_pick">Ένας τροποποιητής που κρατιέται πατημένος εμφανίζεται σε αχνότερη απόχρωση αυτών των χρωμάτων.</string>
     <string name="kw_caret_modifier_badge">δρομέας, κέρσορας, shift, alt, ctrl, sym, caps lock, επικάλυψη, σήμα, τροποποιητής, ένδειξη</string>
+    <string name="caret_badge_custom_colors_title">Χρήση προσαρμοσμένων χρωμάτων</string>
+    <string name="caret_badge_custom_colors_description">Αντικατάσταση των χρωμάτων του θέματος πληκτρολογίου.</string>
 </resources>

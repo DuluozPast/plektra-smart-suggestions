@@ -339,7 +339,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var replayingProtectedNumberKey = false
     private val uiHandler = Handler(Looper.getMainLooper())
     // Modifier badge beside the text cursor, and the state of its cursor-update request
-    private val caretBadgeController by lazy { CaretBadgeController(this) }
+    private val caretBadgeController by lazy {
+        CaretBadgeController(this) { candidatesBarController.modifierIndicatorColors() }
+    }
     /** True while a modifier is on and the badge can actually be drawn, i.e. while it needs the caret position. */
     private var caretBadgeMonitoring = false
     private var cursorUpdatesAccepted = false
