@@ -6,9 +6,17 @@
 
 Free software under [GPLv3](LICENSE), with source code you can inspect, modify and share.
 
+Plektra grew out of Pastiera, created by Andrea Palumbo (PalSoftware). Patrick Zauner took over maintenance of Pastiera and later continued the project as Plektra.
+
 [Product page](https://pkb.rocks/) · [Releases](https://github.com/pkb-rocks/plektra/releases) · [Installation guide](docs/getting-started.md)
 
 <a href="https://opencollective.com/plektra"><img src="docs/branding/opencollective-button.png" alt="Support Plektra on Open Collective" width="298" height="48"></a>
+
+## Special thanks to Clicks Technology
+
+We thank [Clicks Technology](https://clicks.tech) for their foundational support. Their support enables us to bring Plektra to more devices and sustain its development over the long term.
+
+Our ambition is to make Plektra **the** keyboard app for power users.
 
 ## Contents
 

@@ -1,14 +1,28 @@
 
 # Plektra — Strike keys. Strike chords.
 ---
-#### Creator
-Andrea Palumbo (PalSoftware) · [Support the creator on Ko-fi](https://ko-fi.com/palsoftware)
+#### Special thanks to Clicks Technology
 
-#### Main Developers
-Patrick Zauner, Andrea Palumbo
+We thank [Clicks Technology](https://clicks.tech) for their foundational support. Their support enables us to bring Plektra to more devices and sustain its development over the long term.
+
+Our ambition is to make Plektra **the** keyboard app for power users.
+
+#### Maintainer
+
+Patrick Zauner
+
+#### Open Collective Administrators
+
+Jean (DuluozPast), Vittorio
+
+#### Heritage
+
+Plektra grew out of Pastiera, created by Andrea Palumbo (PalSoftware). Patrick Zauner took over maintenance of Pastiera and later continued the project as Plektra.
+
+[Support Pastiera's original creator on Ko-fi](https://ko-fi.com/palsoftware)
 
 #### Additional Contributors
-Justin Mitchell, NeoTheFox, Oleksii Ilienko, Nikola Vukobrat, Mircea Horea IONICĂ, Nikita Tseykovets, Ivan Bulanov, Ratmir Karabut, Troidem, Vasu Bhatia, Zsolt Sz. Sz. Raven, Burekmaster (SVG logo assets), glebkuchay, drpepper240, Matej Drobnič, astroboii47
+Justin Mitchell, NeoTheFox, Oleksii Ilienko, Nikola Vukobrat, Mircea Horea IONICĂ, Nikita Tseykovets, Ivan Bulanov, Ratmir Karabut, Troidem, Vasu Bhatia, Zsolt Sz. Sz. Raven, Burekmaster (SVG logo assets), glebkuchay, drpepper240, Matej Drobnič, astroboii47, Daniel JB Clark (djbclark)
 ---
 #### Plektra Beta Testing Team
 Laggy Luke, Vittorio, Emmanuel, Sadako, NotTeganQuinn, DrumSyBeat, [Shane Craig (ShaneCraig.Tech)](https://shanecraig.tech/), [Returning Retro (Retro Jake)](https://www.returningretro.com/)
