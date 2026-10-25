@@ -84,8 +84,8 @@
     <string name="smart_quotes_title">Quotation mark style</string>
 
     <!-- Clear Alt on Space Section -->
-    <string name="clear_alt_on_space_title">Release Alt with Space</string>
-    <string name="clear_alt_on_space_description">End Alt or Alt-Lock when Space is pressed.</string>
+    <string name="clear_alt_on_space_title">Release Alt with Space and Enter</string>
+    <string name="clear_alt_on_space_description">Clear one-shot Alt and Alt-Lock, unless “Keep Alt-Lock” is enabled below.</string>
     
     <!-- Swipe to Delete Section -->
     <string name="swipe_to_delete_title">Enable Swipe to Delete</string>
@@ -350,8 +350,8 @@
     <string name="shift_tap_latches_description">Tap Shift once to lock caps instead of one-shot uppercase.</string>
     <string name="alt_tap_latches_title">Single-tap locks Alt</string>
     <string name="alt_tap_latches_description">Tap Alt once to keep the Device SYM layer active until Alt is tapped again.</string>
-    <string name="alt_latch_stays_on_space_title">Keep locked Alt after Space</string>
-    <string name="alt_latch_stays_on_space_description">When Alt is locked, Space keeps the Device SYM layer active instead of ending the lock.</string>
+    <string name="alt_latch_stays_on_space_title">Keep Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Space and Enter clear one-shot Alt but keep Alt-Lock active.</string>
     <string name="ctrl_tap_latches_title">Single-tap locks Ctrl</string>
     <string name="ctrl_tap_latches_description">Tap Ctrl once to keep Ctrl active until Ctrl is tapped again.</string>
     <string name="ctrl_latch_stays_on_space_title">Keep locked Ctrl after Ctrl+Space</string>

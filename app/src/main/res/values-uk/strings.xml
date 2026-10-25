@@ -25,8 +25,8 @@
     <string name="auto_capitalize_after_period_description">Автоматично робить наступну літеру великою після крапки з пробілом (кінець речення).</string>
     <string name="double_space_to_period_title">Подвійний пробіл → крапка</string>
     <string name="double_space_to_period_description">Подвійне натискання пробілу вставляє крапку з пробілом. Наступна літера буде великою.</string>
-    <string name="clear_alt_on_space_title">Скасувати Alt на пробіл</string>
-    <string name="clear_alt_on_space_description">Автоматично вимикає Alt при натисканні пробілу.</string>
+    <string name="clear_alt_on_space_title">Скидати Alt пробілом і Enter</string>
+    <string name="clear_alt_on_space_description">Скидає одноразовий Alt і Alt-Lock, якщо нижче не ввімкнено «Зберігати Alt-Lock».</string>
     <string name="swipe_to_delete_title">Свайп для видалення</string>
     <string name="swipe_incremental_threshold_title">Чутливість свайпу</string>
     <string name="swipe_incremental_threshold_description">Відстань для переміщення курсора на одну позицію. Менші числа прискорюють курсор.</string>
@@ -878,4 +878,6 @@ Ctrl-ярлики застосунків із урахуванням розкл�
     <string name="app_raw_mode_webapk_note">Вебзастосунок — вводить усередині %1$s, тож %1$s також виключено</string>
     <string name="caret_badge_custom_colors_title">Використовувати власні кольори</string>
     <string name="caret_badge_custom_colors_description">Замінити кольори теми клавіатури.</string>
+    <string name="alt_latch_stays_on_space_title">Зберігати Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Пробіл і Enter скидають одноразовий Alt, але залишають Alt-Lock активним.</string>
 </resources>

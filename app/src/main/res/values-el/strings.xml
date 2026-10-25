@@ -76,8 +76,8 @@
     <string name="smart_quotes_title">Στυλ εισαγωγικών</string>
 
     <!-- Clear Alt on Space Section -->
-    <string name="clear_alt_on_space_title">Απελευθέρωση Alt με Space</string>
-    <string name="clear_alt_on_space_description">Τερματίζει Alt ή Alt-Lock όταν πατηθεί Space.</string>
+    <string name="clear_alt_on_space_title">Απελευθέρωση Alt με Space και Enter</string>
+    <string name="clear_alt_on_space_description">Απενεργοποιεί το Alt μίας χρήσης και το Alt-Lock, εκτός αν είναι ενεργή η παρακάτω επιλογή διατήρησης Alt-Lock.</string>
 
     <!-- Swipe to Delete Section -->
     <string name="swipe_to_delete_title">Ενεργοποίηση σάρωσης για διαγραφή</string>
@@ -341,8 +341,8 @@
     <string name="shift_tap_latches_description">Πατήστε Shift μία φορά για κλείδωμα κεφαλαίων αντί για ένα μόνο κεφαλαίο.</string>
     <string name="alt_tap_latches_title">Ένα πάτημα κλειδώνει το Alt</string>
     <string name="alt_tap_latches_description">Πατήστε Alt μία φορά για να παραμείνει ενεργό το επίπεδο Device SYM μέχρι να ξαναπατηθεί Alt.</string>
-    <string name="alt_latch_stays_on_space_title">Διατήρηση κλειδωμένου Alt μετά το Space</string>
-    <string name="alt_latch_stays_on_space_description">Όταν το Alt είναι κλειδωμένο, το Space κρατά ενεργό το επίπεδο Device SYM αντί να τερματίζει το κλείδωμα.</string>
+    <string name="alt_latch_stays_on_space_title">Διατήρηση Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Τα Space και Enter απενεργοποιούν το Alt μίας χρήσης, αλλά διατηρούν ενεργό το Alt-Lock.</string>
     <string name="ctrl_tap_latches_title">Ένα πάτημα κλειδώνει το Ctrl</string>
     <string name="ctrl_tap_latches_description">Πατήστε Ctrl μία φορά για να παραμείνει ενεργό το Ctrl μέχρι να ξαναπατηθεί Ctrl.</string>
     <string name="ctrl_latch_stays_on_space_title">Διατήρηση κλειδωμένου Ctrl μετά το Ctrl+Space</string>

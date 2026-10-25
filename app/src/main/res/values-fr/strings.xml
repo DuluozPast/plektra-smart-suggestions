@@ -21,8 +21,8 @@
     <string name="auto_capitalize_after_period_description">Majuscule après \". \".</string>
     <string name="double_space_to_period_title">Double espace → point</string>
     <string name="double_space_to_period_description">Double espace → \". \" + majuscule.</string>
-    <string name="clear_alt_on_space_title">Espace annule Alt</string>
-    <string name="clear_alt_on_space_description">Espace désactive Alt/Alt-Lock.</string>
+    <string name="clear_alt_on_space_title">Relâcher Alt avec Espace et Entrée</string>
+    <string name="clear_alt_on_space_description">Désactive Alt ponctuel et Alt-Lock, sauf si « Conserver Alt-Lock » est activé ci-dessous.</string>
     <string name="swipe_to_delete_title">Balayer pour supprimer</string>
     <string name="auto_show_keyboard_title">Afficher Automatiquement le Clavier</string>
     <string name="info_title">Informations</string>
@@ -878,4 +878,6 @@ Chaque touche peut être configurée comme Keycode, Action, Native Ctrl ou Aucun
     <string name="app_raw_mode_webapk_note">Application web : tape dans %1$s, donc %1$s est aussi exclu</string>
     <string name="caret_badge_custom_colors_title">Utiliser des couleurs personnalisées</string>
     <string name="caret_badge_custom_colors_description">Remplacer les couleurs du thème du clavier.</string>
+    <string name="alt_latch_stays_on_space_title">Conserver Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Espace et Entrée désactivent Alt ponctuel mais gardent Alt-Lock actif.</string>
 </resources>

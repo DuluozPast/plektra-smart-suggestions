@@ -435,7 +435,7 @@ object SettingLinkRegistry {
             SettingLinkIds.TEXT_INPUT_CLEAR_ALT_ON_SPACE,
             R.string.clear_alt_on_space_title,
             R.string.clear_alt_on_space_description,
-            destination = SettingsDestination.TextInput
+            destination = SettingsDestination.Modifiers
         ),
         entry(
             SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,

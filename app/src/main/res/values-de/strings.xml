@@ -58,8 +58,8 @@
     <string name="auto_space_punctuation_choose_off">Aus</string>
     <string name="auto_space_punctuation_reset">Zurücksetzen</string>
     <string name="smart_quotes_title">Anführungszeichen-Stil</string>
-    <string name="clear_alt_on_space_title">Alt mit Leertaste lösen</string>
-    <string name="clear_alt_on_space_description">Deaktiviert Alt auch dann, wenn es eingerastet ist, sobald die Leertaste gedrückt wird.</string>
+    <string name="clear_alt_on_space_title">Alt mit Leertaste und Enter lösen</string>
+    <string name="clear_alt_on_space_description">Deaktiviert einmaliges und eingerastetes Alt, sofern „Alt eingerastet lassen“ unten ausgeschaltet ist.</string>
     <string name="swipe_to_delete_title">Wischen zum Löschen aktivieren</string>
     <string name="swipe_to_delete_description">Aktuell nur Titan 2.</string>
     <string name="swipe_incremental_threshold_title">Wischleisten-Empfindlichkeit</string>
@@ -1636,4 +1636,6 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="keyboard_theme_led_locked">LED: eingerastet</string>
     <string name="caret_badge_custom_colors_title">Eigene Farben verwenden</string>
     <string name="caret_badge_custom_colors_description">Farben des Keyboard-Themes ersetzen.</string>
+    <string name="alt_latch_stays_on_space_title">Alt eingerastet lassen</string>
+    <string name="alt_latch_stays_on_space_description">Leertaste und Enter deaktivieren einmaliges Alt, lassen eingerastetes Alt aber aktiv.</string>
 </resources>

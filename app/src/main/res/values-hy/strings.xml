@@ -15,8 +15,8 @@
     <string name="auto_capitalize_after_period_description">Ավտոմատ մեծացնում է հաջորդ տառը կետի ու դրանից հետո գտնվող բացատից (նախադասության վերջից) հետո։</string>
     <string name="double_space_to_period_title">Կրկնակի բացատը դնում է կետ</string>
     <string name="double_space_to_period_description">Երկու անգամ բացատ սեղմելը դնում է կետ՝ հետևված բացատով։ Մեծացնում է հաջորդ տառը։</string>
-    <string name="clear_alt_on_space_title">Ապաակտիվացնել Alt-ը Բացատի վրա</string>
-    <string name="clear_alt_on_space_description">Ավտոմատ անջատում է Alt ստեղնը Բացատ սեղմելիս</string>
+    <string name="clear_alt_on_space_title">Անջատել Alt-ը Բացատով և Enter-ով</string>
+    <string name="clear_alt_on_space_description">Անջատում է մեկանգամյա Alt-ը և Alt-Lock-ը, եթե ստորև միացված չէ «Պահպանել Alt-Lock-ը» տարբերակը։</string>
     <string name="swipe_to_delete_title">Միացնել Սվայփով Ջնջումը</string>
     <string name="swipe_incremental_threshold_title">Սվայփի զգայունությունը</string>
     <string name="swipe_incremental_threshold_description">Հեռավորությունը՝ կուրսորը մեկ դիրքով տեղափոխելու համար։ Ավելի փոքր արժեքները արագացնում են կուրսորը։</string>
@@ -878,4 +878,6 @@ Nav Mode-ը օգտագործում է ստեղնի ֆիզիկական դիրքը
     <string name="app_raw_mode_webapk_note">Վեբ հավելված՝ մուտքագրում է %1$s-ի ներսում, ուստի %1$s-ը նույնպես բացառված է</string>
     <string name="caret_badge_custom_colors_title">Օգտագործել սեփական գույներ</string>
     <string name="caret_badge_custom_colors_description">Փոխարինել ստեղնաշարի թեմայի գույները։</string>
+    <string name="alt_latch_stays_on_space_title">Պահպանել Alt-Lock-ը</string>
+    <string name="alt_latch_stays_on_space_description">Բացատը և Enter-ը անջատում են մեկանգամյա Alt-ը, բայց պահպանում են Alt-Lock-ը։</string>
 </resources>

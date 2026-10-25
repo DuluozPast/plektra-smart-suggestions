@@ -25,8 +25,8 @@
     <string name="auto_capitalize_after_period_description">Автоматически озаглавливает следующую букву после точки, за которой следует пробел (конец предложения).</string>
     <string name="double_space_to_period_title">Двойной пробел ставит точку</string>
     <string name="double_space_to_period_description">Двойное нажатие пробела вставляет точку, за которой следует пробел. Озаглавливает следующую букву.</string>
-    <string name="clear_alt_on_space_title">Отменить Alt на Пробел</string>
-    <string name="clear_alt_on_space_description">Автоматически отключает Alt при нажатии на Пробел</string>
+    <string name="clear_alt_on_space_title">Сбрасывать Alt по пробелу и Enter</string>
+    <string name="clear_alt_on_space_description">Сбрасывает одноразовый Alt и Alt-Lock, если ниже не включено «Сохранять Alt-Lock».</string>
     <string name="swipe_to_delete_title">Включить удаление свайпом</string>
     <string name="swipe_incremental_threshold_title">Чувствительность полоски свайпа</string>
     <string name="swipe_incremental_threshold_description">Расстояние, необходимая чтобы сдвинуть курсор на одну позицию. Уменьшение значения заставляет курсор двигаться быстрее.</string>
@@ -878,4 +878,6 @@ Nav Mode использует физическое положение клави
     <string name="app_raw_mode_webapk_note">Веб-приложение — вводит внутри %1$s, поэтому %1$s тоже исключено</string>
     <string name="caret_badge_custom_colors_title">Использовать свои цвета</string>
     <string name="caret_badge_custom_colors_description">Заменить цвета темы клавиатуры.</string>
+    <string name="alt_latch_stays_on_space_title">Сохранять Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Пробел и Enter сбрасывают одноразовый Alt, но оставляют Alt-Lock активным.</string>
 </resources>

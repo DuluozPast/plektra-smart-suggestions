@@ -22,8 +22,8 @@
     <string name="auto_capitalize_after_period_description">Pone automáticamente en mayúscula la siguiente letra después de escribir un punto seguido de un espacio (fin de oración).</string>
     <string name="double_space_to_period_title">Doble Espacio a Punto</string>
     <string name="double_space_to_period_description">Doble toque en espacio para insertar un punto seguido de un espacio y poner en mayúscula la siguiente letra.</string>
-    <string name="clear_alt_on_space_title">Limpiar Alt en Espacio</string>
-    <string name="clear_alt_on_space_description">Desactiva automáticamente Alt o Alt-Lock al presionar Espacio.</string>
+    <string name="clear_alt_on_space_title">Desactivar Alt con Espacio y Enter</string>
+    <string name="clear_alt_on_space_description">Desactiva Alt de un solo uso y Alt-Lock, salvo si «Mantener Alt-Lock» está activado debajo.</string>
     <string name="swipe_to_delete_title">Activar Deslizar para Eliminar</string>
     <string name="swipe_incremental_threshold_title">Sensibilidad de la Barra de Deslizamiento</string>
     <string name="auto_show_keyboard_title">Mostrar Automáticamente el Teclado</string>
@@ -878,4 +878,6 @@ Cada tecla puede configurarse como Keycode, Acción, Native Ctrl o Ninguno. Usa 
     <string name="app_raw_mode_webapk_note">Aplicación web: escribe dentro de %1$s, así que %1$s también queda excluida</string>
     <string name="caret_badge_custom_colors_title">Usar colores personalizados</string>
     <string name="caret_badge_custom_colors_description">Sustituir los colores del tema del teclado.</string>
+    <string name="alt_latch_stays_on_space_title">Mantener Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Espacio y Enter desactivan Alt de un solo uso, pero mantienen Alt-Lock activo.</string>
 </resources>

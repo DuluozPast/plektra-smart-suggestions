@@ -39,8 +39,8 @@
     <string name="double_space_to_period_description">Doppio tap su spazio per inserire un punto seguito da spazio e capitalizzare la lettera successiva.</string>
     
     <!-- Clear Alt on Space Section -->
-    <string name="clear_alt_on_space_title">Cancella Alt su Spazio</string>
-    <string name="clear_alt_on_space_description">Disattiva automaticamente Alt o Alt-Lock quando si preme Spazio.</string>
+    <string name="clear_alt_on_space_title">Rilascia Alt con Spazio e Invio</string>
+    <string name="clear_alt_on_space_description">Disattiva Alt singolo e Alt-Lock, salvo quando è attiva l’opzione «Mantieni Alt-Lock» qui sotto.</string>
     
     <!-- Swipe to Delete Section -->
     <string name="swipe_to_delete_title">Abilita Swipe per Cancellare</string>
@@ -1055,4 +1055,6 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="app_raw_mode_webapk_note">Web app: scrive dentro %1$s, quindi anche %1$s è escluso</string>
     <string name="caret_badge_custom_colors_title">Usa colori personalizzati</string>
     <string name="caret_badge_custom_colors_description">Sostituisci i colori del tema della tastiera.</string>
+    <string name="alt_latch_stays_on_space_title">Mantieni Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Spazio e Invio disattivano Alt singolo ma mantengono attivo Alt-Lock.</string>
 </resources>

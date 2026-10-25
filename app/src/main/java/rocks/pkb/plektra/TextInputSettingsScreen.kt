@@ -117,10 +117,6 @@ fun TextInputSettingsScreen(
 
     var smartQuotesExpanded by remember { mutableStateOf(false) }
 
-    var clearAltOnSpace by remember {
-        mutableStateOf(SettingsManager.getClearAltOnSpace(context))
-    }
-
     var autoShowKeyboard by remember {
         mutableStateOf(SettingsManager.getAutoShowKeyboard(context))
     }
@@ -493,16 +489,6 @@ fun TextInputSettingsScreen(
             )
 
             SettingsSectionHeader(text = stringResource(R.string.text_input_section_keyboard_behavior))
-            SettingsSwitchRow(
-                title = stringResource(R.string.clear_alt_on_space_title),
-                description = stringResource(R.string.clear_alt_on_space_description),
-                checked = clearAltOnSpace,
-                linkId = SettingLinkIds.TEXT_INPUT_CLEAR_ALT_ON_SPACE,
-                onCheckedChange = { enabled ->
-                    clearAltOnSpace = enabled
-                    SettingsManager.setClearAltOnSpace(context, enabled)
-                }
-            )
             SettingsSwitchRow(
                 title = stringResource(R.string.auto_show_keyboard_title),
                 description = stringResource(R.string.auto_show_keyboard_description),

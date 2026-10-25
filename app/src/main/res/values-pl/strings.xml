@@ -22,8 +22,8 @@
     <string name="auto_capitalize_after_period_description">Automatycznie pisze wielką literą następną literę po wpisaniu kropki następującej po spacji (koniec zdania).</string>
     <string name="double_space_to_period_title">Podwójna Spacja na Kropkę</string>
     <string name="double_space_to_period_description">Podwójne naciśnięcie spacji, aby wstawić kropkę następującą po spacji i napisać wielką literą następną literę.</string>
-    <string name="clear_alt_on_space_title">Wyczyść Alt na Spacji</string>
-    <string name="clear_alt_on_space_description">Automatycznie wyłącza Alt lub Alt-Lock po naciśnięciu Spacji.</string>
+    <string name="clear_alt_on_space_title">Zwalniaj Alt klawiszem Spacja lub Enter</string>
+    <string name="clear_alt_on_space_description">Wyłącza jednorazowy Alt i Alt-Lock, chyba że poniżej włączono „Zachowaj Alt-Lock”.</string>
     <string name="swipe_to_delete_title">Włącz Przesunięcie do Usunięcia</string>
     <string name="swipe_incremental_threshold_title">Czułość Paska Przesuwania</string>
     <string name="auto_show_keyboard_title">Automatycznie Pokaż Klawiaturę</string>
@@ -878,4 +878,6 @@ Każdy klawisz można skonfigurować jako Keycode, Akcja, Native Ctrl lub Brak. 
     <string name="app_raw_mode_webapk_note">Aplikacja webowa — pisze wewnątrz %1$s, więc %1$s też jest wykluczona</string>
     <string name="caret_badge_custom_colors_title">Używaj własnych kolorów</string>
     <string name="caret_badge_custom_colors_description">Zastąp kolory motywu klawiatury.</string>
+    <string name="alt_latch_stays_on_space_title">Zachowaj Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Spacja i Enter wyłączają jednorazowy Alt, ale pozostawiają Alt-Lock aktywny.</string>
 </resources>

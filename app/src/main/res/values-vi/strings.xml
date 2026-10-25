@@ -26,8 +26,8 @@
     <string name="auto_capitalize_after_period_description">Tự động viết hoa chữ tiếp theo sau khi nhập dấu chấm và dấu cách (kết thúc câu).</string>
     <string name="double_space_to_period_title">Nhấn đúp dấu cách để chèn dấu chấm</string>
     <string name="double_space_to_period_description">Nhấn đúp phím cách để chèn dấu chấm, thêm dấu cách và viết hoa chữ tiếp theo.</string>
-    <string name="clear_alt_on_space_title">Tắt Alt khi nhấn Space</string>
-    <string name="clear_alt_on_space_description">Tự động tắt Alt hoặc Alt-Lock khi nhấn phím cách.</string>
+    <string name="clear_alt_on_space_title">Tắt Alt bằng Space và Enter</string>
+    <string name="clear_alt_on_space_description">Tắt Alt một lần và Alt-Lock, trừ khi bật “Giữ Alt-Lock” bên dưới.</string>
     <string name="swipe_to_delete_title">Bật vuốt để xóa</string>
     <string name="delete_alternatives_title">Xóa</string>
     <string name="delete_alternatives_description">Các cách thay thế để xóa ký tự bên phải con trỏ</string>
@@ -878,4 +878,6 @@ Mỗi phím có thể cấu hình là Keycode, Action, Native Ctrl hoặc None. 
     <string name="app_raw_mode_webapk_note">Ứng dụng web — gõ bên trong %1$s, nên %1$s cũng được loại trừ</string>
     <string name="caret_badge_custom_colors_title">Dùng màu tùy chỉnh</string>
     <string name="caret_badge_custom_colors_description">Thay thế màu của giao diện bàn phím.</string>
+    <string name="alt_latch_stays_on_space_title">Giữ Alt-Lock</string>
+    <string name="alt_latch_stays_on_space_description">Space và Enter tắt Alt một lần nhưng vẫn giữ Alt-Lock hoạt động.</string>
 </resources>
