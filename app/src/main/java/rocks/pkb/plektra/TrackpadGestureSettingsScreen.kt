@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -310,8 +312,9 @@ fun TrackpadGestureSettingsScreen(
                 }
             }
 
+            val providerTitle = stringResource(R.string.trackpad_provider_title)
             Text(
-                text = stringResource(R.string.trackpad_provider_title),
+                text = providerTitle,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -328,11 +331,11 @@ fun TrackpadGestureSettingsScreen(
                     onValueChange = {},
                     readOnly = true,
                     singleLine = true,
-                    label = { Text(stringResource(R.string.trackpad_provider_title)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerMenuExpanded) },
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                     modifier = Modifier
                         .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .semantics { contentDescription = providerTitle }
                         .fillMaxWidth()
                 )
                 ExposedDropdownMenu(
