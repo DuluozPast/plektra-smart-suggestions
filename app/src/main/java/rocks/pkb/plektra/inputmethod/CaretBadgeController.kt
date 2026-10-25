@@ -153,22 +153,11 @@ class CaretBadgeController(private val service: InputMethodService) {
         view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val width = view.measuredWidth
         val height = view.measuredHeight
-        // Just right of the caret, with the glyphs' feet inside the top of the line box.
-        //
-        // Not centred on the caret: half the glyph then sits over the last letter typed, which is
-        // what made it read as overlapping. Starting at the caret puts all of it in the empty space
-        // the cursor is about to move into.
-        //
-        // One placement, always. Sitting beside the caret reads better when the space there happens
-        // to be empty, but it is not empty in an empty field - the editor draws its hint exactly
-        // there - so that rule needed a second placement, and the badge then jumped between the two
-        // as the field filled and emptied. A position that never collides never has to move.
-        //
-        // Measured from the foot of the ink rather than the bottom of the view, which also carries
-        // the font's descent and room for a lock bar.
+        // Place the badge beside the caret using the ink's baseline; the view's bottom
+        // includes extra room for the font descent and lock bar.
         val lineHeight = caret.bottom - caret.top
         var x = (caret.x + dp(4)).toInt()
-        var y = (caret.top + lineHeight * LINE_OVERLAP - view.glyphBottomOffset).toInt()
+        var y = (caret.top + lineHeight * LINE_OVERLAP - view.glyphBottomOffset + dp(11)).toInt()
         // At the right-hand edge there is no room after the caret, so it flips to the other side
         // rather than being clamped back over the text it was clearing.
         if (x + width > metrics.widthPixels) x = (caret.x - dp(4)).toInt() - width
@@ -240,6 +229,7 @@ internal fun caretBadgeItemsFor(snapshot: StatusBarController.StatusSnapshot): L
 
     val arrow = CaretBadgeView.Shape.ARROW
     val alt = CaretBadgeView.Shape.ALT
+    val control = CaretBadgeView.Shape.CONTROL
     val word = CaretBadgeView.Shape.TEXT
 
     when {
@@ -256,9 +246,9 @@ internal fun caretBadgeItemsFor(snapshot: StatusBarController.StatusSnapshot): L
     // that would pin a Ctrl badge beside the cursor permanently rather than report a press.
     when {
         snapshot.ctrlLatchActive && !snapshot.ctrlLatchFromNavMode ->
-            add(word, "CTRL", locked = true, faint = false)
-        snapshot.ctrlOneShot -> add(word, "CTRL", locked = false, faint = false)
-        snapshot.ctrlPhysicallyPressed -> add(word, "CTRL", locked = false, faint = true)
+            add(control, null, locked = true, faint = false)
+        snapshot.ctrlOneShot -> add(control, null, locked = false, faint = false)
+        snapshot.ctrlPhysicallyPressed -> add(control, null, locked = false, faint = true)
     }
     if (snapshot.symPage != 0) add(word, "SYM", locked = false, faint = false)
     return items
