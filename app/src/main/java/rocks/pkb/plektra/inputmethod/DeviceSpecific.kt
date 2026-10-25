@@ -116,7 +116,8 @@ object DeviceSpecific {
         event: KeyEvent?
     ): RemappedHardwareEvent {
         val usesCanonicalAlphabeticPositions =
-            model == KeyboardModel.KEY2 || model == KeyboardModel.CLICKS_POWER
+            model == KeyboardModel.KEY2 || model == KeyboardModel.Q25 ||
+                model == KeyboardModel.CLICKS_POWER
         if (!usesCanonicalAlphabeticPositions) {
             return RemappedHardwareEvent(keyCode, event)
         }
