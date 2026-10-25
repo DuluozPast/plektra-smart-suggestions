@@ -3253,7 +3253,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
      * key to drive a retry - the first Shift of a field would otherwise be spent establishing this.
      */
     private fun beginCursorAnchorMonitoring() {
-        caretBadgeController.onEditorGone()
+        caretBadgeController.onEditorStarted()
         // The new editor starts with updates off; the next status refresh decides whether the badge needs them.
         caretBadgeMonitoring = false
         cursorUpdatesAccepted = false

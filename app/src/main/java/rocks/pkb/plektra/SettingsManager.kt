@@ -6182,7 +6182,7 @@ object SettingsManager {
     private const val KEY_CARET_MODIFIER_BADGE = "caret_modifier_badge"
     private const val KEY_CARET_BADGE_ARMED_COLOR = "caret_badge_armed_color"
     private const val KEY_CARET_BADGE_LOCKED_COLOR = "caret_badge_locked_color"
-    private const val DEFAULT_CARET_MODIFIER_BADGE = true
+    private const val DEFAULT_CARET_MODIFIER_BADGE = false
     /** One click: armed for the next key only. */
     const val DEFAULT_CARET_BADGE_ARMED_COLOR = 0xFF2563EB.toInt()
     /** Two clicks: stuck on until it is turned off. */

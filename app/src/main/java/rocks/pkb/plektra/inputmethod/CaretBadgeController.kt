@@ -54,6 +54,7 @@ class CaretBadgeController(private val service: InputMethodService) {
     private var overlayRejected = false
 
     private var currentItems: List<CaretBadgeView.Item> = emptyList()
+    private var editorActive = false
 
     /** Whether any modifier is currently being shown, i.e. whether the caret position is needed. */
     val hasItems: Boolean get() = currentItems.isNotEmpty()
@@ -72,7 +73,7 @@ class CaretBadgeController(private val service: InputMethodService) {
      * show at all (setting off, restricted field, no overlay permission).
      */
     fun onSnapshot(snapshot: StatusBarController.StatusSnapshot, enabled: Boolean) {
-        val items = if (enabled) caretBadgeItemsFor(snapshot) else emptyList()
+        val items = if (enabled && editorActive) caretBadgeItemsFor(snapshot) else emptyList()
         if (items == currentItems) return
         currentItems = items
         if (items.isEmpty()) hide() else lastCaret?.let { show(items, it) }
@@ -80,14 +81,22 @@ class CaretBadgeController(private val service: InputMethodService) {
 
     /** Positions the badge from the caret the editor just reported. */
     fun onCursorAnchorInfo(info: CursorAnchorInfo?) {
+        if (!editorActive) return
         val caret = caretRect(info)
         lastCaret = caret
         if (currentItems.isEmpty()) return
         if (caret == null) hide() else show(currentItems, caret)
     }
 
+    fun onEditorStarted() {
+        onEditorGone()
+        editorActive = true
+    }
+
     /** Called when the editor goes away - the cached caret belongs to it, not to the next one. */
     fun onEditorGone() {
+        editorActive = false
+        currentItems = emptyList()
         lastCaret = null
         hide()
     }
@@ -100,7 +109,7 @@ class CaretBadgeController(private val service: InputMethodService) {
     }
 
     fun destroy() {
-        hide()
+        onEditorGone()
         badgeView = null
         windowManager = null
         currentItems = emptyList()
