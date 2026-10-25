@@ -1621,4 +1621,8 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="caret_badge_color_locked_description">Caps Lock, Alt-Lock und Ctrl-Lock, die an bleiben, bis du sie ausschaltest</string>
     <string name="caret_badge_color_pick">Ein gehaltener Modifier wird in einer abgeschwächten Version dieser Farben angezeigt.</string>
     <string name="kw_caret_modifier_badge">Cursor, Caret, Shift, Alt, Ctrl, Sym, Caps Lock, Overlay, Badge, Modifier, Anzeige</string>
+    <string name="app_raw_mode_title">Exaktes Tippen</string>
+    <string name="app_raw_mode_row_description">Für Terminals, SSH und Code: Was du tippst, kommt an – nichts wird korrigiert oder großgeschrieben</string>
+    <string name="app_raw_mode_description">In den hier ausgewählten Apps sendet Plektra jeden Tastendruck unverändert: keine Vorschläge, keine automatische Korrektur, kein Großbuchstabe am Zeilenanfang, kein Punkt durch doppeltes Leerzeichen. Gedacht für Terminals, SSH-Clients, Code-Editoren und alles andere, wo eine hilfreiche Korrektur aus einem Befehl einen Tippfehler macht – `ls -la` darf nie zu `Ls -la.` werden</string>
+    <string name="app_raw_mode_webapk_note">Web-App – tippt innerhalb von %1$s, daher ist %1$s ebenfalls ausgeschlossen</string>
 </resources>

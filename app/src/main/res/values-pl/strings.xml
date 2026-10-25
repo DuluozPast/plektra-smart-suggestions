@@ -872,4 +872,8 @@ Każdy klawisz można skonfigurować jako Keycode, Akcja, Native Ctrl lub Brak. 
     <string name="caret_badge_color_locked_description">Caps lock, blokada Alt i blokada Ctrl, które pozostają włączone, dopóki ich nie wyłączysz</string>
     <string name="caret_badge_color_pick">Przytrzymany modyfikator jest pokazywany w wyblakłej wersji tych kolorów.</string>
     <string name="kw_caret_modifier_badge">kursor, caret, shift, alt, ctrl, sym, caps lock, nakładka, plakietka, modyfikator, wskaźnik</string>
+    <string name="app_raw_mode_title">Dokładne pisanie</string>
+    <string name="app_raw_mode_row_description">Dla terminali, SSH i kodu: to, co wpisujesz, trafia bez zmian, bez korekt i wielkich liter</string>
+    <string name="app_raw_mode_description">W wybranych tutaj aplikacjach Plektra wysyła każde naciśnięcie klawisza bez zmian: bez sugestii, bez autokorekty, bez wielkiej litery na początku wiersza, bez kropki z podwójnej spacji. Przeznaczone dla terminali, klientów SSH, edytorów kodu i wszystkiego, gdzie pomocna korekta zamienia polecenie w literówkę — `ls -la` nigdy nie powinno stać się `Ls -la.`</string>
+    <string name="app_raw_mode_webapk_note">Aplikacja webowa — pisze wewnątrz %1$s, więc %1$s też jest wykluczona</string>
 </resources>
