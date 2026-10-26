@@ -42,4 +42,4 @@ The isolated debug review APK is named **Plektra Ranking Test**, with an externa
 
 ## On-device verification
 
-A separate **Plektra Ranking Test** install on Titan2 verified the ranking change after typed-word learning, unchanged fixture dictionary frequencies and reset through the actual settings UI. The daily keyboard configuration was restored exactly. See [device-demo.md](device-demo.md) for the synthetic setup, injected-event limitations and privacy review. The recording has been shown to the user and is awaiting approval before upload.
+A separate **Plektra Ranking Test** install on Titan2 verified the ranking change after typed-word learning, unchanged fixture dictionary frequencies and reset through the actual settings UI. The daily keyboard configuration was restored exactly. See [device-demo.md](device-demo.md) for the synthetic setup, injected-event limitations and privacy review. The user approved the sanitized recording for publication with this contribution. It will be attached to the PR.

@@ -25,7 +25,7 @@
   ],
   "build": "assembleStableDebug successful; external review suffix and label only",
   "deviceVerified": true,
-  "videoApproved": false,
+  "videoApproved": true,
   "device": {
     "model": "Titan2",
     "androidApi": 36,
@@ -42,7 +42,7 @@
     "sha256": "8a4033c5b1863024c3f2b0d6684e0656341a17da8258f4688f96c4f9340415fb",
     "audioStreams": 0,
     "nativeFramesReviewed": 124,
-    "userApproved": false,
+    "userApproved": true,
     "uploaded": false
   }
 }
