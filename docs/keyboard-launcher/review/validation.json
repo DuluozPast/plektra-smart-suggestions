@@ -1,0 +1,23 @@
+{
+  "base": "3ead4703e335ac7e879074278068d16021020319",
+  "tests": {
+    "targeted": 174,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "checks": {
+    "testStableDebugUnitTest": "passed selected launcher/settings/modifier/device/Clicks suites",
+    "lintStableDebug": "completed; existing findings remain, not lint clean",
+    "assembleStableDebug": "passed"
+  },
+  "device": {
+    "tested": false,
+    "recording": "pending user-reviewed demonstration",
+    "isolatedApplicationId": "rocks.pkb.plektra.review.launcher"
+  },
+  "defaultEnabled": false,
+  "navMappingsMigrated": false,
+  "newScreenContentCapability": false,
+  "fullUnitSuiteRun": false
+}
