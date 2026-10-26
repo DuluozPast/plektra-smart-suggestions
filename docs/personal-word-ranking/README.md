@@ -40,8 +40,6 @@ On the official base3ead470,140 focused tests passed with zero failures, errors 
 
 The isolated debug review APK is named **Plektra Ranking Test**, with an external local suffix `.review.wordranking`. Its suffix, SDK/cache paths, debug signing key and runtime helpers are outside the contribution. No production app was installed or replaced for these checks.
 
-## Device verification still required
+## On-device verification
 
-Use a separate review install and a fictional text-editor fixture. Configure two equal-frequency synthetic dictionary entries such as `planer` and `planet`. Type the same prefix, complete one word repeatedly, and verify its candidate moves ahead while the dictionary frequencies stay fixed. Verify the reset control and ZIP round trip on the review dataset. Restore the user's original keyboard configuration after testing.
-
-A real recording must be shown to the user and approved before upload. No device result or video is claimed yet.
+A separate **Plektra Ranking Test** install on Titan2 verified the ranking change after typed-word learning, unchanged fixture dictionary frequencies and reset through the actual settings UI. The daily keyboard configuration was restored exactly. See [device-demo.md](device-demo.md) for the synthetic setup, injected-event limitations and privacy review. The recording has been shown to the user and is awaiting approval before upload.

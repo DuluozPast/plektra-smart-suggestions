@@ -24,6 +24,25 @@
     "rocks.pkb.plektra.core.suggestions.WordUsageStoreTest"
   ],
   "build": "assembleStableDebug successful; external review suffix and label only",
-  "deviceVerified": false,
-  "videoApproved": false
+  "deviceVerified": true,
+  "videoApproved": false,
+  "device": {
+    "model": "Titan2",
+    "androidApi": 36,
+    "kind": "Isolated review app and fictional editor; ADB-generated keyboard events",
+    "rankingOrderChanged": true,
+    "dictionaryFrequenciesUnchanged": true,
+    "resetVerifiedThroughSettingsUI": true,
+    "originalKeyboardAndAccessibilitySettingsRestored": true
+  },
+  "media": {
+    "durationSeconds": 23.84,
+    "width": 808,
+    "height": 916,
+    "sha256": "8a4033c5b1863024c3f2b0d6684e0656341a17da8258f4688f96c4f9340415fb",
+    "audioStreams": 0,
+    "nativeFramesReviewed": 124,
+    "userApproved": false,
+    "uploaded": false
+  }
 }
