@@ -1,0 +1,29 @@
+{
+  "officialBase": "3ead4703e335ac7e879074278068d16021020319",
+  "host": "Windows;JDK21;RobolectricAPI33",
+  "automated": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    "rocks.pkb.plektra.backup.BackupPreferenceContractIntegrationTest",
+    "rocks.pkb.plektra.backup.LearningOperationGateTest",
+    "rocks.pkb.plektra.backup.NotesAndDictionaryBackupTest",
+    "rocks.pkb.plektra.backup.PersonalWordUsageBackupTest",
+    "rocks.pkb.plektra.backup.RestoreManagerAndBackupContractTest",
+    "rocks.pkb.plektra.backup.RestoreManagerIntegrationTest",
+    "rocks.pkb.plektra.core.suggestions.LearnedWordRankingTest",
+    "rocks.pkb.plektra.core.suggestions.OrderedPersistenceQueueTest",
+    "rocks.pkb.plektra.core.suggestions.SuggestionControllerNextWordTest",
+    "rocks.pkb.plektra.core.suggestions.SuggestionControllerPersonalLearningTest",
+    "rocks.pkb.plektra.core.suggestions.SuggestionControllerReplacementReadinessTest",
+    "rocks.pkb.plektra.core.suggestions.SuggestionEngineTest",
+    "rocks.pkb.plektra.core.suggestions.WordUsageNegativeCacheTest",
+    "rocks.pkb.plektra.core.suggestions.WordUsageStoreTest"
+  ],
+  "build": "assembleStableDebug successful; external review suffix and label only",
+  "deviceVerified": false,
+  "videoApproved": false
+}
