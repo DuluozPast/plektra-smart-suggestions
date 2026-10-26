@@ -58,4 +58,10 @@ The ZIP includes the launcher's four typed preferences and its existing command 
 
 ## Validation and recording
 
-Automated validation and an isolated, exact-branch review APK are prepared separately. The reviewer notes must record actual results, not an estimate. The device demonstration will use fictional destinations/content and show the enable switch, short/long assignments, ordinary typing after release and the untouched opposite Shift. A recording is published only after the user reviews it. No personal message, contact list, backup or conversation screenshot is a public fixture.
+The [validation record](review/validation.json) separates 174 focused tests, build/lint results and the on-device demonstration. Lint completed with findings; this is not a lint-clean or full-unit-suite claim.
+
+The [approved 32-second recording](https://github.com/user-attachments/assets/65bf22c5-6eb2-42ff-b368-2d665ca975bb) uses an isolated build of commit `893b21d` on a Titan 2 (Android 16), two fictional apps with no network permissions, and Android's Display settings. It shows short/long Left Shift + A assignments, ordinary typing after releasing Shift, returning to the retained editor, and Left Shift + G opening a settings submenu. The status bar and source metadata were removed; there is no audio or personal conversation/contact content. The device owner reviewed and approved this video before upload, and the original IME/accessibility configuration was restored.
+
+**Evidence limits:** the key events were injected through Android input dispatch using ADB; this is not a filmed physical-key or endurance test. The sample editor was focused before recording, so its retained focus does not establish automatic focus in other apps. The Display command only opens settings: it does not change brightness or establish Shizuku/system-toggle behavior. Fn double taps, opposite Shift, cancellation and locked-screen rejection have automated coverage, but are not all shown in the video. Other hardware profiles/app versions need their own checks.
+
+See [device-demo.md](review/device-demo.md) for the exact sequence and the small throwaway fixture sources. No personal backup or production data is a public test fixture.
