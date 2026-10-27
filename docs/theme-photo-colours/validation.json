@@ -68,6 +68,18 @@
     "label": "Plektra Photo Colours Test",
     "signatureVerified": true
   },
-  "deviceVerified": false,
-  "videoApproved": false
+  "deviceVerified": true,
+  "videoApproved": false,
+  "deviceCodeCommit": "c8b7b1f",
+  "video": {
+    "filename": "plektra-theme-photo-colors-demo-en-20261027.mp4",
+    "sha256": "268a92c1bba8c8ac1b6589a4b5db062655e676c12a7fbac3b78754ef04cfe2c6",
+    "durationSeconds": 24.92,
+    "dimensions": "808x916",
+    "audioStreams": 0,
+    "nativeFramesReviewed": 116,
+    "statusBarRemoved": true,
+    "approvedForPublication": false,
+    "uploaded": false
+  }
 }
