@@ -44,7 +44,8 @@ class SuggestionController(
     private val appContext = context.applicationContext
     private val debugLogging: Boolean = debugLogging
     private val userDictionaryStore = UserDictionaryStore()
-    private val wordUsage = wordUsageRepositoryOverride ?: PersonalWordLearning.store(appContext)
+    // Disabled/unused smart suggestions must not allocate a persistent learning store.
+    private val wordUsage by lazy { wordUsageRepositoryOverride ?: PersonalWordLearning.store(appContext) }
     private val dictionaryRepositoryCache = mutableMapOf<String, DictionaryRepository>()
     private var dictionaryRepository: DictionaryRepository = createDictionaryRepository(currentLocale)
     private var suggestionEngine = createSuggestionEngine(dictionaryRepository, currentLocale, keyboardLayoutProvider())

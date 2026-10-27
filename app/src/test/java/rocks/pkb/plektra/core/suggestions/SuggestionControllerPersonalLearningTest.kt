@@ -110,4 +110,20 @@ class SuggestionControllerPersonalLearningTest {
         val c=controller();c.onSuggestionCommitted(editor("a".repeat(200)+" "))
         assertNull(store.getExactUsage(Locale.ENGLISH,"a".repeat(48)))
     }
+    @Test fun unusedAndDisabledControllerDoesNotCreateAPersistentLearningStore() {
+        PersonalWordLearning.closeForTests(context)
+        val field=PersonalWordLearning.javaClass.getDeclaredField("stores").apply {isAccessible=true}
+        val registered=field.get(PersonalWordLearning) as Map<*,*>
+        val before=registered.size
+        val c=SuggestionController(context,context.assets,
+            settingsProvider={SuggestionSettings(suggestionsEnabled=false)},isEnabled={false},
+            onSuggestionsUpdated={},currentLocale=Locale.ENGLISH,
+            dictionaryRepositoryFactory={_,_,_,_,_->repository},
+            nextWordPredictorOverride=NextWordPredictor(Mockito.mock(UserNGramRepository::class.java),asyncLearning=false))
+        try {
+            c.onCharacterCommitted("synthetic",null)
+            c.onBoundaryKey(KeyEvent.KEYCODE_SPACE,null,null)
+            assertEquals(before,registered.size)
+        } finally {c.destroy()}
+    }
 }

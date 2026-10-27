@@ -42,4 +42,10 @@ The isolated debug review APK is named **Plektra Ranking Test**, with an externa
 
 ## On-device verification
 
-A separate **Plektra Ranking Test** install on Titan2 verified the ranking change after typed-word learning, unchanged fixture dictionary frequencies and reset through the actual settings UI. The daily keyboard configuration was restored exactly. See [device-demo.md](device-demo.md) for the synthetic setup, injected-event limitations and privacy review. The user approved the sanitized recording for publication with this contribution. It will be attached to the PR.
+A separate **Plektra Ranking Test** install on Titan2 verified the ranking change after typed-word learning, unchanged fixture dictionary frequencies and reset through the actual settings UI. The daily keyboard configuration was restored exactly. See [device-demo.md](device-demo.md) for the synthetic setup, injected-event limitations and privacy review. The user approved the sanitized recording for publication with this contribution. [The approved recording is attached to PR167](https://github.com/pkb-rocks/plektra/pull/167).
+
+## CI memory follow-up
+
+The initial full Linux CI run completed1183tests but reported five heap-exhaustion failures. Unused controllers now defer creation of the persistent learning store, with a regression test for disabled/unused suggestions. Unit-test workers are renewed after each class to bound Robolectric sandbox/resource retention; their existing2GB heap limit is unchanged. On Windows,90 focused tests covering the affected IME/text-navigation/keyboard classes and141 ranking/controller/backup tests pass in separate checks. Full multi-variant Linux CI must still be rerun; these focused results do not claim that full CI is green.
+
+The recording demonstrates application source f9c2abd; the follow-up changes deferred store allocation and test isolation, not the recorded ranking/backup behaviour.
