@@ -69,7 +69,7 @@
     "signatureVerified": true
   },
   "deviceVerified": true,
-  "videoApproved": false,
+  "videoApproved": true,
   "deviceCodeCommit": "c8b7b1f",
   "video": {
     "filename": "plektra-theme-photo-colors-demo-en-20261027.mp4",
@@ -79,7 +79,7 @@
     "audioStreams": 0,
     "nativeFramesReviewed": 116,
     "statusBarRemoved": true,
-    "approvedForPublication": false,
+    "approvedForPublication": true,
     "uploaded": false
   }
 }

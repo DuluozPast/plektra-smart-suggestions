@@ -10,4 +10,4 @@ The current/default keyboard and enabled keyboard/accessibility settings were un
 
 The English recording removes the Android status bar, audio and source metadata. All 116 native frames were reviewed in four contact sheets. It contains only the synthetic image and review settings. A three-second hold repeats the final verified preview for readability. The full-system photo-picker screen is excluded.
 
-The exact video checksum and approval status are recorded in validation.json. Do not upload the raw device recording. Public upload of the sanitized recording remains pending user approval.
+The exact video checksum and approval status are recorded in validation.json. Do not upload the raw device recording. The user explicitly approved this exact sanitized recording for GitHub publication. Upload is pending.
