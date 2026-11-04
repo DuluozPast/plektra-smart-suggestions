@@ -169,6 +169,16 @@ class DocumentWordExportTest {
         )
         val numbering = parse(files.getValue("word/numbering.xml"))
         assertEquals(3, elements(numbering, "num").size)
+        // Word may continue a shared abstract numbering definition unless a new
+        // numbering instance explicitly overrides its starting value.
+        elements(numbering, "num").forEach { instance ->
+            val overrides = instance.getElementsByTagNameNS(word, "lvlOverride")
+            assertEquals(1, overrides.length)
+            val level = overrides.item(0) as Element
+            assertEquals("0", level.getAttributeNS(word, "ilvl"))
+            val start = level.getElementsByTagNameNS(word, "startOverride").item(0) as Element
+            assertEquals("1", start.getAttributeNS(word, "val"))
+        }
         val rels =
             parse(files.getValue("word/_rels/document.xml.rels"))
                 .getElementsByTagNameNS(relationships, "Relationship")

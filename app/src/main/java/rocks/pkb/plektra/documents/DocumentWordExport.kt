@@ -174,7 +174,7 @@ internal object DocumentWordExport {
                 val numbers =
                     groups
                         .mapIndexed { index, type ->
-                            """<w:num w:numId="${index+1}"><w:abstractNumId w:val="${if(type == "bullet") 1 else 2}"/></w:num>"""
+                            """<w:num w:numId="${index+1}"><w:abstractNumId w:val="${if(type == "bullet") 1 else 2}"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>"""
                         }
                         .joinToString("")
                 entry(
